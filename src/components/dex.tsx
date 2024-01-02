@@ -30,7 +30,7 @@ export default function Dex() {
         console.log(sell, buy);
     }
 
-    const is_ok = sell.token && buy.token && sell.amount && buy.amount && wallet && sell.token.symbol !== buy.token.symbol && sell.amount > 0 && buy.amount > 0;
+    const isOk = sell.token && buy.token && sell.amount && buy.amount && wallet && sell.token.symbol !== buy.token.symbol && sell.amount > 0 && buy.amount > 0;
 
     return (
         <div className="text-slate-100 flex flex-col md:min-w-[50%] min-w-full p-10">
@@ -69,7 +69,7 @@ export default function Dex() {
                         <button className="rounded-2xl border p-2 m-2 basis-1/4 grow-on-hover" onClick={onClear}>Clear</button>
                         {
                             wallet ?
-                                <button className="basis-3/4 rounded-2xl border p-2 m-2 enabled:grow-on-hover disabled:opacity-50" disabled={!is_ok} onClick={onSwap}>Preview the transaction</button>
+                                <button className="basis-3/4 rounded-2xl border p-2 m-2 enabled:grow-on-hover disabled:opacity-50" disabled={!isOk} onClick={onSwap}>Preview the transaction</button>
                                 : <button className="basis-3/4 rounded-2xl border p-2 m-2 grow-on-hover" onClick={onLogin}>Connect wallet</button>
                         }
                     </div>
