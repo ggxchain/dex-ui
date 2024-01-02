@@ -86,15 +86,15 @@ export default function TokenSelector() {
 
                     formatOptionLabel={(token) => {
                         return (
-                            <div className="flex items-center text-white w-full scale-95 hover:scale-100 transition-all transform-all duration-500 border-white">
-                                <img src={`/svg/${token.symbol}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
+                            <div className="flex items-center text-white w-full scale-95 hover:scale-100 transition-all transform-all duration-500 border-white text-base sm:text-xs">
+                                <img src={`/svg/${token.symbol}.svg`} className="md:w-10 md:h-10 w-6 h-6 my-1 mr-2" alt={`${token.name} icon`} />
                                 <p>{token.name}</p>
                                 <sup className="pl-1 ">{token.network}</sup>
                             </div>
                         );
                     }}
                 />
-                <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-1.5 pr-2 rounded-r-[1rem] flex flex-col text-base">
+                <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-0.5 md:p-1.5 pr-2 rounded-r-[1rem] flex flex-col md:text-base text-xs">
                     <input step="2" className="w-full text-right" type="number" placeholder="0.00" onChange={handleAmountChange} />
                     <p className="text-xs whitespace-nowrap">~= {Math.round((amount || 0.0) * 10)}$</p>
                 </div>
