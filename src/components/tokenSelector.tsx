@@ -86,5 +86,4 @@ export default function TokenSelector({ token, amount, onChange }: TokenSelector
             </div>
         </div>
     );
-
 }
