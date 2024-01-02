@@ -47,6 +47,9 @@ export default function TokenSelector() {
     };
 
     const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (Number(e.target.value) > 10000000) {
+            return;
+        }
         setAmount(Number(e.target.value));
     };
 
@@ -66,7 +69,9 @@ export default function TokenSelector() {
                         control: (baseStyles, state) => ({
                             ...baseStyles,
                             backgroundColor: 'transparent',
-                            borderRadius: '1rem'
+                            borderRadius: '0px',
+                            borderTopLeftRadius: '1rem',
+                            borderBottomLeftRadius: '1rem'
                         }),
                         option: (baseStyles, state) => ({
                             ...baseStyles,
@@ -89,9 +94,10 @@ export default function TokenSelector() {
                         );
                     }}
                 />
-
-
-
+                <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-1.5 pr-2 rounded-r-[1rem] flex flex-col text-base">
+                    <input placeholder="0.00" className="w-full text-right" type="number" value={amount} onChange={handleAmountChange} />
+                    <p className="text-xs whitespace-nowrap">~= {Math.round(amount * 10)}$</p>
+                </div>
             </div>
         </div>
     );
