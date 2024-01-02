@@ -2,6 +2,7 @@
 import { ChangeEvent, useEffect } from "react";
 import ReactSelect, { OnChangeValue } from "react-select";
 import Spinner from "./spinner";
+import mocked_tokens from "@/mock";
 
 interface TokenSelectorProps {
     token: Token;

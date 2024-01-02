@@ -1,5 +1,5 @@
 // Returns a list of tokens
-function mocked_tokens(): Token[] {
+export default function mocked_tokens(): Token[] {
     return [
         {
             "id": 1,
