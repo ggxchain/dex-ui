@@ -14,11 +14,22 @@ type FormData = {
 export default function Dex() {
     const [isMaker, setIsMaker] = useState<boolean>(false);
     const [formData, setFormData] = useState<FormData>({} as FormData);
+    const [wallet, setWallet] = useState<boolean>(false);
 
     const onClear = () => {
         setFormData({} as FormData);
     }
 
+    const onLogin = () => {
+        // Here we should connect wallet or use some api but for now we just set some data
+        setWallet(true);
+    }
+
+    const onSwap = () => {
+        console.log(formData);
+    }
+
+    const is_ok = formData.sell_token && formData.buy_token && formData.sell_amount && formData.buy_amount && wallet && formData.sell_token.symbol !== formData.buy_token.symbol && formData.sell_amount > 0 && formData.buy_amount > 0;
 
     return (
         <div className="text-slate-100 flex flex-col md:min-w-[50%] min-w-full p-10">
@@ -55,7 +66,11 @@ export default function Dex() {
 
                     <div className="flex justify-around mt-5">
                         <button className="rounded-2xl border p-2 m-2 basis-1/4 grow-on-hover" onClick={onClear}>Clear</button>
-                        <button className="basis-3/4 rounded-2xl border p-2 m-2 grow-on-hover" onClick={() => console.log(formData)}>Connect wallet</button>
+                        {
+                            wallet ?
+                                <button className="basis-3/4 rounded-2xl border p-2 m-2 enabled:grow-on-hover disabled:opacity-50" disabled={!is_ok} onClick={onSwap}>Preview the transaction</button>
+                                : <button className="basis-3/4 rounded-2xl border p-2 m-2 grow-on-hover" onClick={onLogin}>Connect wallet</button>
+                        }
                     </div>
                 </div>
             </div>
