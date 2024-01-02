@@ -4,20 +4,21 @@ import { useState } from "react";
 import TokenSelector from "./tokenSelector";
 import Ruler from "./ruler";
 
-type FormData = {
-    sell_token: Token;
-    buy_token: Token;
-    sell_amount: number;
-    buy_amount: number;
+type TokenData = {
+    token: Token;
+    amount: number;
 }
 
 export default function Dex() {
     const [isMaker, setIsMaker] = useState<boolean>(false);
-    const [formData, setFormData] = useState<FormData>({} as FormData);
+    const [sell, setSell] = useState<TokenData>({} as TokenData);
+    const [buy, setBuy] = useState<TokenData>({} as TokenData);
+
     const [wallet, setWallet] = useState<boolean>(false);
 
     const onClear = () => {
-        setFormData({} as FormData);
+        setSell({} as TokenData);
+        setBuy({} as TokenData);
     }
 
     const onLogin = () => {
@@ -26,10 +27,10 @@ export default function Dex() {
     }
 
     const onSwap = () => {
-        console.log(formData);
+        console.log(sell, buy);
     }
 
-    const is_ok = formData.sell_token && formData.buy_token && formData.sell_amount && formData.buy_amount && wallet && formData.sell_token.symbol !== formData.buy_token.symbol && formData.sell_amount > 0 && formData.buy_amount > 0;
+    const is_ok = sell.token && buy.token && sell.amount && buy.amount && wallet && sell.token.symbol !== buy.token.symbol && sell.amount > 0 && buy.amount > 0;
 
     return (
         <div className="text-slate-100 flex flex-col md:min-w-[50%] min-w-full p-10">
@@ -46,10 +47,10 @@ export default function Dex() {
 
             <div className="flex flex-col rounded-3xl secondary-gradient p-5 md:mx-[25px] mt-5">
                 <p className="text-sm">Sell</p>
-                <TokenSelector token={formData.sell_token} amount={formData.sell_amount} onChange={(sell_token: Token, sell_amount: number) => { setFormData({ ...formData, sell_amount, sell_token }) }} />
+                <TokenSelector token={sell.token} amount={sell.amount} onChange={(token: Token, amount: number) => { setSell({ token, amount }) }} />
 
                 <p className="text-sm mt-2">Buy</p>
-                <TokenSelector token={formData.buy_token} amount={formData.buy_amount} onChange={(buy_token: Token, buy_amount: number) => { setFormData({ ...formData, buy_token, buy_amount }) }} />
+                <TokenSelector token={buy.token} amount={buy.amount} onChange={(token: Token, amount: number) => { setBuy({ token, amount }) }} />
 
                 <Ruler />
 
