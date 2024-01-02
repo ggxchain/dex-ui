@@ -8,7 +8,7 @@ export default function Dex() {
     const [isMaker, setIsMaker] = useState(false);
 
     return (
-        <div className="text-slate-100 flex flex-col md:min-w-[550px] min-w-full p-10">
+        <div className="text-slate-100 flex flex-col md:min-w-[50%] min-w-full p-10">
             <div className="flex text-md justify-between">
                 <button onClick={() => setIsMaker(false)}>
                     <p className={isMaker ? "text-slate-500" : ""}>Taker order</p>

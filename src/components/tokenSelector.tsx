@@ -38,7 +38,7 @@ export default function TokenSelector() {
     const tokens = mocked_tokens();
 
     const [selectedCrypto, setSelectedCrypto] = useState<Token | null>(tokens[0] as Token);
-    const [amount, setAmount] = useState<number>(0);
+    const [amount, setAmount] = useState<number | null>(null);
 
     const handleSelectChange = (e: OnChangeValue<Token, false>) => {
         setSelectedCrypto(e);
@@ -95,8 +95,8 @@ export default function TokenSelector() {
                     }}
                 />
                 <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-1.5 pr-2 rounded-r-[1rem] flex flex-col text-base">
-                    <input placeholder="0.00" className="w-full text-right" type="number" value={amount} onChange={handleAmountChange} />
-                    <p className="text-xs whitespace-nowrap">~= {Math.round(amount * 10)}$</p>
+                    <input step="2" className="w-full text-right" type="number" placeholder="0.00" onChange={handleAmountChange} />
+                    <p className="text-xs whitespace-nowrap">~= {Math.round((amount || 0.0) * 10)}$</p>
                 </div>
             </div>
         </div>
