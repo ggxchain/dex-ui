@@ -20,7 +20,7 @@ export default function Dex() {
 
             <Ruler />
 
-            <div className="flex flex-col rounded-3xl bg-gradient-to-t from-indigo-600 to-blue-900 p-5 md:mx-[25px] mt-5">
+            <div className="flex flex-col rounded-3xl secondary-gradient p-5 md:mx-[25px] mt-5">
                 <p className="text-sm">Sell</p>
                 <TokenSelector />
 
@@ -39,8 +39,12 @@ export default function Dex() {
                         <p>Total fee:</p>
                         <p>0.00</p>
                     </div>
-                </div>
 
+                    <div className="flex justify-around mt-5">
+                        <button className="rounded-2xl border p-2 m-2 basis-1/4 grow-on-hover">Clear</button>
+                        <button className="basis-3/4 rounded-2xl border p-2 m-2 grow-on-hover">Connect wallet</button>
+                    </div>
+                </div>
             </div>
         </div>
     )

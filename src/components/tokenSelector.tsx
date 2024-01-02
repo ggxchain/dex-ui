@@ -86,7 +86,7 @@ export default function TokenSelector() {
 
                     formatOptionLabel={(token) => {
                         return (
-                            <div className="flex items-center text-white w-full scale-95 hover:scale-100 transition-all transform-all duration-500 border-white text-base sm:text-xs">
+                            <div className="flex items-center text-white w-full grow-on-hover border-white text-base sm:text-xs">
                                 <img src={`/svg/${token.symbol}.svg`} className="md:w-10 md:h-10 w-6 h-6 my-1 mr-2" alt={`${token.name} icon`} />
                                 <p>{token.name}</p>
                                 <sup className="pl-1 ">{token.network}</sup>
