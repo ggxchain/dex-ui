@@ -67,6 +67,10 @@ export default function TokenSelector({ token, amount, onChange }: TokenSelector
                         menu: (baseStyles, state) => ({
                             ...baseStyles,
                             backgroundColor: 'transparent',
+                            boxShadow: 'none',
+                        }),
+                        menuList: (baseStyles, state) => ({
+                            ...baseStyles,
                         }),
                     }}
 
