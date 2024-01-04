@@ -84,7 +84,7 @@ export default function Dex() {
 
           <div className="font-semibold mt-4">
             <div className="flex justify-between">
-              <p>Balance:</p>
+              <p>Rate:</p>
               <p>0.00</p>
             </div>
 

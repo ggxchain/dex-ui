@@ -1,6 +1,7 @@
 "use client"
 
 import Spinner from "@/components/spinner";
+import CexService from "@/services/cex";
 import Contract from "@/services/contract";
 import { Token, TokenId, Amount } from "@/types";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -11,6 +12,8 @@ export default function Wallet() {
     const [ownedTokens, setOwnedTokens] = useState<Token[]>([]);
     const [balances, setBalance] = useState<Map<TokenId, Amount>>(new Map<TokenId, Amount>());
     const [search, setSearch] = useState<string>("");
+    const [tokenPrices, setTokenPrices] = useState<Map<TokenId, Amount>>(new Map<TokenId, Amount>());
+
     // A hack to force a re-render
     const [update, setUpdate] = useState<boolean>(false);
 
@@ -41,6 +44,18 @@ export default function Wallet() {
 
             })
         }
+
+        const cex = new CexService();
+        cex.tokenPrices(ownedTokens.map((token) => token.symbol)).then((prices) => {
+            const map = new Map<TokenId, Amount>();
+            prices.forEach((value, key) => {
+                const token = ownedTokens.find((token) => token.symbol === key);
+                if (token !== undefined) {
+                    map.set(token.id, value);
+                }
+            });
+            setTokenPrices(map);
+        });
     }, [ownedTokens]);
 
     const onSearch = (e: ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +69,14 @@ export default function Wallet() {
 
     const filteredTokens = tokens.filter((token) => filter(token));
 
-    const total = 0;
+    const total = ownedTokens.reduce<number>((total, token) => {
+        const balance = balances.get(token.id);
+        const price = tokenPrices.get(token.id);
+        if (balance === undefined || price === undefined) {
+            return total;
+        }
+        return total + balance * price;
+    }, 0);
 
     const onDeposit = () => {
         const contract = new Contract();
@@ -113,7 +135,7 @@ export default function Wallet() {
                                             <td>
                                                 {balances.get(token.id) ?? 0} {`${token.symbol.toUpperCase()} `}
                                                 <span className="text-sm opacity-50">
-                                                    ($0.0)
+                                                    (${((balances.get(token.id) ?? 0) * (tokenPrices.get(token.id) ?? 0)).toFixed(2)})
                                                 </span>
                                             </td>
                                             : <td className="w-10 h-10">
@@ -121,7 +143,7 @@ export default function Wallet() {
                                             </td>
                                     }
 
-                                    <td className="rounded-r-lg">$0.0</td>
+                                    <td className="rounded-r-lg">${(tokenPrices.get(token.id) ?? 0).toFixed(2)}</td>
                                 </tr>
                             ))
                         }
