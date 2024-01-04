@@ -1,8 +1,9 @@
 
-import { ChangeEvent, useEffect } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import ReactSelect, { OnChangeValue } from "react-select";
 import Spinner from "./spinner";
 import mocked_tokens from "@/mock";
+import Contract from "@/services/contract";
 
 interface TokenSelectorProps {
     token: Token;
@@ -11,16 +12,25 @@ interface TokenSelectorProps {
 }
 
 export default function TokenSelector({ token, amount, onChange }: TokenSelectorProps) {
-    const tokens = mocked_tokens();
+    const [tokens, setTokens] = useState<Token[]>([]);
 
     useEffect(() => {
-        if (token === undefined) {
+        if (tokens.length === 0) {
+            const contract = new Contract();
+            contract.allTokens().then((tokens) => {
+                setTokens(tokens);
+                if (tokens.length > 0 && token === undefined) {
+                    onChange(tokens[0], 0)
+                }
+            });
+            setTokens(tokens);
+        }
+        if (tokens.length > 0 && token === undefined) {
             onChange(tokens[0], 0)
         }
     }, [token]);
 
     if (token === undefined) {
-
         return <Spinner />
     }
 

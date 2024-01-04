@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TokenSelector from "./tokenSelector";
 import Ruler from "./ruler";
+import Contract from "@/services/contract";
+import GGXWallet from "@/services/ggx";
 
 type TokenData = {
     token: Token;
@@ -13,8 +15,19 @@ export default function Dex() {
     const [isMaker, setIsMaker] = useState<boolean>(false);
     const [sell, setSell] = useState<TokenData>({} as TokenData);
     const [buy, setBuy] = useState<TokenData>({} as TokenData);
+    const [availableBalance, setAvailableBalance] = useState<number>(0);
 
-    const [wallet, setWallet] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (sell.token !== undefined) {
+            const contract = new Contract();
+            contract.balanceOf(sell.token.id).then((balance) => {
+                setAvailableBalance(balance);
+            });
+        }
+    }, [sell]);
+
+    const wallet = new GGXWallet();
 
     const onClear = () => {
         setSell({} as TokenData);
@@ -23,14 +36,20 @@ export default function Dex() {
 
     const onLogin = () => {
         // Here we should connect wallet or use some api but for now we just set some data
-        setWallet(true);
     }
+    const isOk = sell.token && buy.token && sell.amount && buy.amount && wallet && sell.token.symbol !== buy.token.symbol && sell.amount > 0 && buy.amount > 0 && availableBalance >= sell.amount;
+
 
     const onSwap = () => {
-        console.log(sell, buy);
+        const pair = new Pair(sell.token.id, buy.token.id);
+        if (!isOk) {
+            return;
+        }
+
+        const contract = new Contract();
+        contract.makeOrder(pair, sell.amount, buy.amount);
     }
 
-    const isOk = sell.token && buy.token && sell.amount && buy.amount && wallet && sell.token.symbol !== buy.token.symbol && sell.amount > 0 && buy.amount > 0;
 
     return (
         <div className="text-slate-100 flex flex-col md:min-w-[50%] min-w-full p-10">
@@ -46,7 +65,13 @@ export default function Dex() {
             <Ruler />
 
             <div className="flex flex-col rounded-3xl secondary-gradient p-5 md:mx-[25px] mt-5">
-                <p className="text-sm">Sell</p>
+                <div className="flex justify-between text-sm">
+                    <p>Sell</p>
+                    <div className="flex">
+                        <p className="text-opacity-75 font-thin">Available for swaps:</p>
+                        <p className="font-normal mx-5">{availableBalance}</p>
+                    </div>
+                </div>
                 <TokenSelector token={sell.token} amount={sell.amount} onChange={(token: Token, amount: number) => { setSell({ token, amount }) }} />
 
                 <p className="text-sm mt-2">Buy</p>
