@@ -33,7 +33,7 @@ export default function TokenSelector({ token, amount, onChange }: TokenSelector
     if (token === undefined) {
         return (
             <div className="flex w-full justify-center">
-                <div className="md:w-10 md:h-10 w-6 h-6">
+                <div className="w-10 h-10">
                     <Spinner />
                 </div>
             </div>
@@ -93,14 +93,14 @@ export default function TokenSelector({ token, amount, onChange }: TokenSelector
                     formatOptionLabel={(token) => {
                         return (
                             <div className="flex items-center text-slate-100 w-full grow-on-hover border-white text-base sm:text-xs">
-                                <img src={`/svg/${token.symbol}.svg`} className="md:w-10 md:h-10 w-6 h-6 my-1 mr-2" alt={`${token.name} icon`} />
+                                <img src={`/svg/${token.symbol}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
                                 <p>{token.name}</p>
                                 <sup className="pl-1 ">{token.network}</sup>
                             </div>
                         );
                     }}
                 />
-                <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-0.5 md:p-1.5 pr-2 rounded-r-[1rem] flex flex-col md:text-base text-xs">
+                <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-2.5 md:p-1.5 pr-2 rounded-r-[1rem] flex flex-col md:text-base text-xs">
                     <input value={amount} step="2" className="w-full text-right" type="number" placeholder="0.00" onChange={handleAmountChange} />
                     <p className="text-xs whitespace-nowrap">~= {Math.round((amount || 0.0) * 10)}$</p>
                 </div>

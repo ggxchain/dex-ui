@@ -55,7 +55,7 @@ export default function Dex() {
 
   return (
     <div className="text-slate-100 flex flex-col w-full items-center">
-      <div className="flex flex-col w-full max-w-[1000px]">
+      <div className="flex flex-col w-full max-w-[700px]">
         <div className="flex text-md justify-between">
           <button onClick={() => setIsMaker(false)}>
             <p className={isMaker ? "text-slate-500" : ""}>Taker order</p>
