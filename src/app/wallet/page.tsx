@@ -101,7 +101,7 @@ export default function Wallet() {
                             filteredTokens.map((token, index) => (
                                 <tr key={index} className="text-center even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20 [&>td]:px-6 [&>td]:py-1">
                                     <td className="rounded-l-lg">
-                                        <div className="flex items-center w-full text-lg sm:text-base">
+                                        <div className="flex items-center w-full md:text-lg text-base">
                                             <img src={`/svg/${token.symbol}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
                                             <p className="font-bold">{token.name}</p>
                                             <sup className="pl-1 opacity-80">{token.network}</sup>
