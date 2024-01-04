@@ -2,13 +2,13 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import ReactSelect, { OnChangeValue } from "react-select";
 import Spinner from "./spinner";
-import mocked_tokens from "@/mock";
 import Contract from "@/services/contract";
+import { Token } from "@/types";
 
 interface TokenSelectorProps {
     token: Token;
     amount: number
-    onChange: (token_id: Token, amount: number) => void;
+    onChange: (tokenId: Token, amount: number) => void;
 }
 
 export default function TokenSelector({ token, amount, onChange }: TokenSelectorProps) {
@@ -31,7 +31,13 @@ export default function TokenSelector({ token, amount, onChange }: TokenSelector
     }, [token]);
 
     if (token === undefined) {
-        return <Spinner />
+        return (
+            <div className="flex w-full justify-center">
+                <div className="md:w-10 md:h-10 w-6 h-6">
+                    <Spinner />
+                </div>
+            </div>
+        )
     }
 
     const handleSelectChange = (e: OnChangeValue<Token, false>) => {
@@ -51,7 +57,7 @@ export default function TokenSelector({ token, amount, onChange }: TokenSelector
 
     return (
         <div>
-            <div className="flex items-center justify-between [&>*]:text-white">
+            <div className="flex items-center justify-between [&>*]:text-slate-100">
                 <ReactSelect
                     value={token}
                     onChange={handleSelectChange}
@@ -86,7 +92,7 @@ export default function TokenSelector({ token, amount, onChange }: TokenSelector
 
                     formatOptionLabel={(token) => {
                         return (
-                            <div className="flex items-center text-white w-full grow-on-hover border-white text-base sm:text-xs">
+                            <div className="flex items-center text-slate-100 w-full grow-on-hover border-white text-base sm:text-xs">
                                 <img src={`/svg/${token.symbol}.svg`} className="md:w-10 md:h-10 w-6 h-6 my-1 mr-2" alt={`${token.name} icon`} />
                                 <p>{token.name}</p>
                                 <sup className="pl-1 ">{token.network}</sup>

@@ -1,18 +1,17 @@
+export type TokenId = number
+export type Amount = number
+export type PubKey = string
+export type CounterId = number
+export type OrderType = "Buy" | "Sell"
 
-type TokenId = number
-type Amount = number
-type PubKey = string
-type CounterId = number
-type OrderType = "Buy" | "Sell"
-
-type Token = {
+export type Token = {
     id: TokenId;
     name: string;
     symbol: string;
     network: string;
 }
 
-class Pair {
+export class Pair {
     tokenId1: TokenId;
     tokenId2: TokenId;
     orderType: OrderType;
@@ -30,7 +29,7 @@ class Pair {
     }
 }
 
-type Order = {
+export type Order = {
     pubkey: PubKey;
     pair: Pair;
     counterId: CounterId;

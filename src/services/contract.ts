@@ -1,5 +1,6 @@
 import mocked_tokens from "@/mock";
 import GGXWallet from "./ggx";
+import { Token, TokenId, CounterId, Order, Amount, Pair, PubKey } from "@/types";
 
 
 export default class Contract {
@@ -27,7 +28,7 @@ export default class Contract {
         var i = 0;
         while (true) {
             const tokenId = this.contract.ownersTokenByIndex(this.wallet.pubkey(), i);
-            if (tokenId === null) {
+            if (tokenId === undefined) {
                 break;
             }
             tokens.push(this.mapTokenIdToToken(tokenId));
@@ -63,7 +64,7 @@ export default class Contract {
 }
 
 type TokenDepositMock = {
-    token_id: TokenId,
+    tokenId: TokenId,
     amount: Amount
 }
 
@@ -74,18 +75,24 @@ class ContractMock {
     ordersByPair: Map<Pair, CounterId[]> = new Map<Pair, CounterId[]>();
 
     constructor() {
-        const me = window.sessionStorage.getItem("contractMock");
-        if (me !== null) {
-            const mock = JSON.parse(me);
-            this.deposits = new Map(mock.deposits);
-            this.orders = mock.orders;
-            this.ordersByUser = new Map(mock.ordersByUser);
-            this.ordersByPair = new Map(mock.ordersByPair);
+        const deposits = window.sessionStorage.getItem("contractDepositsMock");
+        const orders = window.sessionStorage.getItem("contractOrdersMock");
+        const ordersByUser = window.sessionStorage.getItem("contractOrdersByUserMock");
+        const ordersByPair = window.sessionStorage.getItem("contractOrdersByPairMock");
+
+        if (deposits !== null && orders !== null && ordersByUser !== null && ordersByPair !== null) {
+            this.deposits = new Map(JSON.parse(deposits));
+            this.orders = JSON.parse(orders);
+            this.ordersByUser = new Map(JSON.parse(ordersByUser));
+            this.ordersByPair = new Map(JSON.parse(ordersByPair));
         }
     }
 
     save() {
-        window.sessionStorage.setItem("contractMock", JSON.stringify(this));
+        window.sessionStorage.setItem("contractDepositsMock", JSON.stringify(Array.from(this.deposits.entries())));
+        window.sessionStorage.setItem("contractOrdersMock", JSON.stringify(this.orders));
+        window.sessionStorage.setItem("contractOrdersByUserMock", JSON.stringify(Array.from(this.ordersByUser.entries())));
+        window.sessionStorage.setItem("contractOrdersByPairMock", JSON.stringify(Array.from(this.ordersByPair.entries())));
     }
 
     deposit(pubkey: PubKey, tokenId: TokenId, amount: Amount) {
@@ -97,11 +104,11 @@ class ContractMock {
             //Should not happen as we initialized it above
             return;
         }
-        const index = deposit.findIndex((value) => value.token_id === tokenId);
+        const index = deposit.findIndex((value) => value.tokenId === tokenId);
         if (index !== -1) {
             deposit[index].amount += amount;
         } else {
-            deposit.push({ token_id: tokenId, amount });
+            deposit.push({ tokenId: tokenId, amount });
         }
         this.save();
     }
@@ -111,7 +118,7 @@ class ContractMock {
         if (fromDeposit === undefined) {
             return;
         }
-        const fromIndex = fromDeposit.findIndex((value) => value.token_id === tokenId);
+        const fromIndex = fromDeposit.findIndex((value) => value.tokenId === tokenId);
         if (fromIndex !== -1) {
             fromDeposit[fromIndex].amount -= amount;
         } else {
@@ -122,11 +129,11 @@ class ContractMock {
         if (toDeposit === undefined) {
             return;
         }
-        const toIndex = toDeposit.findIndex((value) => value.token_id === tokenId);
+        const toIndex = toDeposit.findIndex((value) => value.tokenId === tokenId);
         if (toIndex !== -1) {
             toDeposit[toIndex].amount += amount;
         } else {
-            toDeposit.push({ token_id: tokenId, amount });
+            toDeposit.push({ tokenId: tokenId, amount });
         }
         this.save();
     }
@@ -136,7 +143,7 @@ class ContractMock {
         if (deposit === undefined) {
             return 0;
         }
-        const index = deposit.findIndex((value) => value.token_id === tokenId);
+        const index = deposit.findIndex((value) => value.tokenId === tokenId);
         if (index !== -1) {
             return deposit[index].amount;
         } else {
@@ -148,12 +155,12 @@ class ContractMock {
         return mocked_tokens().at(index)?.id;
     }
 
-    ownersTokenByIndex(pubkey: PubKey, index: number): TokenId | null {
+    ownersTokenByIndex(pubkey: PubKey, index: number): TokenId | undefined {
         const deposit = this.deposits.get(pubkey);
         if (deposit === undefined) {
-            return null;
+            return undefined;
         }
-        return deposit[index].token_id;
+        return deposit.at(index)?.tokenId;
     }
 
     withdraw(pubkey: PubKey, tokenId: number, amount: number) {
@@ -161,7 +168,7 @@ class ContractMock {
         if (deposit === undefined) {
             return;
         }
-        const index = deposit.findIndex((value) => value.token_id === tokenId);
+        const index = deposit.findIndex((value) => value.tokenId === tokenId);
         if (index !== -1) {
             deposit[index].amount -= amount;
         }
