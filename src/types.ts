@@ -27,6 +27,18 @@ export class Pair {
             this.orderType = "Sell";
         }
     }
+
+    get ownedToken(): TokenId {
+        return this.orderType === "Buy" ? this.tokenId2 : this.tokenId1;
+    }
+
+    get desiredToken(): TokenId {
+        return this.orderType === "Buy" ? this.tokenId1 : this.tokenId2;
+    }
+
+    get string(): string {
+        return `${this.tokenId1}-${this.tokenId2}`;
+    }
 }
 
 export type Order = {

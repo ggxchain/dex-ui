@@ -37,6 +37,26 @@ export default class Contract {
         return Promise.resolve(tokens);
     }
 
+    async allOrders(pair: Pair): Promise<Order[]> {
+        const orders = [];
+        var i = 0;
+        console.log(this);
+        while (true) {
+            const counterId = this.contract.pairOrderByIndex(pair, i);
+            if (counterId === undefined) {
+                break;
+            }
+            const order = this.contract.orderFor(counterId);
+            if (order === undefined) {
+                break;
+            }
+            orders.push(order);
+            i++;
+        }
+        return Promise.resolve(orders);
+    }
+
+
     // Probably, we would need to create a mapping for this on frontend.
     mapTokenIdToToken(tokenId: TokenId): Token {
         return mocked_tokens().find((value) => value.id === tokenId)!;
@@ -72,7 +92,7 @@ class ContractMock {
     deposits: Map<PubKey, TokenDepositMock[]> = new Map<PubKey, TokenDepositMock[]>();
     orders: Order[] = new Array<Order>();
     ordersByUser: Map<PubKey, CounterId[]> = new Map<PubKey, CounterId[]>();
-    ordersByPair: Map<Pair, CounterId[]> = new Map<Pair, CounterId[]>();
+    ordersByPair: Map<string, CounterId[]> = new Map<string, CounterId[]>();
 
     constructor() {
         const deposits = window.sessionStorage.getItem("contractDepositsMock");
@@ -109,31 +129,6 @@ class ContractMock {
             deposit[index].amount += amount;
         } else {
             deposit.push({ tokenId: tokenId, amount });
-        }
-        this.save();
-    }
-
-    transfer(from: PubKey, to: PubKey, tokenId: TokenId, amount: Amount) {
-        const fromDeposit = this.deposits.get(from);
-        if (fromDeposit === undefined) {
-            return;
-        }
-        const fromIndex = fromDeposit.findIndex((value) => value.tokenId === tokenId);
-        if (fromIndex !== -1) {
-            fromDeposit[fromIndex].amount -= amount;
-        } else {
-            return;
-        }
-
-        const toDeposit = this.deposits.get(to);
-        if (toDeposit === undefined) {
-            return;
-        }
-        const toIndex = toDeposit.findIndex((value) => value.tokenId === tokenId);
-        if (toIndex !== -1) {
-            toDeposit[toIndex].amount += amount;
-        } else {
-            toDeposit.push({ tokenId: tokenId, amount });
         }
         this.save();
     }
@@ -181,7 +176,7 @@ class ContractMock {
     }
 
     pairOrderByIndex(pair: Pair, index: number): CounterId | undefined {
-        const orders = this.ordersByPair.get(pair);
+        const orders = this.ordersByPair.get(pair.string);
         if (orders === undefined) {
             return undefined;
         }
@@ -208,18 +203,21 @@ class ContractMock {
             amountDesired
         };
         this.orders.push(order);
-        const orders_by_user = this.ordersByUser.get(pubkey);
-        if (orders_by_user === undefined) {
+        const ordersByUser = this.ordersByUser.get(pubkey);
+        if (ordersByUser === undefined) {
             this.ordersByUser.set(pubkey, [counterId]);
         } else {
-            orders_by_user.push(counterId);
+            ordersByUser.push(counterId);
         }
-        const orders_by_pair = this.ordersByPair.get(pair);
-        if (orders_by_pair === undefined) {
-            this.ordersByPair.set(pair, [counterId]);
+
+        const strPair = pair.string;
+        const ordersByPair = this.ordersByPair.get(strPair);
+        if (ordersByPair === undefined) {
+            this.ordersByPair.set(strPair, [counterId]);
         } else {
-            orders_by_pair.push(counterId);
+            ordersByPair.push(counterId);
         }
+        this.withdraw(pubkey, pair.ownedToken, amountOffered);
         this.matchOrders();
         this.save();
 
@@ -228,23 +226,28 @@ class ContractMock {
     }
 
     cancelOrder(pubkey: PubKey, counterId: CounterId) {
-        const order = this.orders.findIndex((value) => value.counterId === counterId);
-        if (order === -1 || this.orders[order].pubkey !== pubkey) {
+        const orderId = this.orders.findIndex((value) => value.counterId === counterId);
+        if (orderId === -1 || this.orders[orderId].pubkey !== pubkey) {
             return;
         }
-        this.orders.splice(order, 1);
+        const order = this.orders[orderId];
+        this.orders.splice(orderId, 1);
 
-        const orders_by_user = this.ordersByUser.get(pubkey);
-        const order_by_index = orders_by_user?.findIndex((value) => value === counterId);
+        const ordersByUser = this.ordersByUser.get(pubkey);
+        const order_by_index = ordersByUser?.findIndex((value) => value === counterId);
         if (order_by_index !== undefined && order_by_index !== -1) {
-            orders_by_user?.splice(order_by_index, 1);
+            ordersByUser?.splice(order_by_index, 1);
         }
 
-        const order_by_pair = this.ordersByPair.get(this.orders[order].pair);
-        const order_by_pair_index = order_by_pair?.findIndex((value) => value === counterId);
-        if (order_by_pair_index !== undefined && order_by_pair_index !== -1) {
-            order_by_pair?.splice(order_by_pair_index, 1);
+        const orderByPair = this.ordersByPair.get(order.pair.string);
+        const orderByPair_index = orderByPair?.findIndex((value) => value === counterId);
+        if (orderByPair_index !== undefined && orderByPair_index !== -1) {
+            orderByPair?.splice(orderByPair_index, 1);
         }
+
+        // Return tokens.
+        this.deposit(pubkey, order.pair.ownedToken, order.amountOffered);
+
         this.save();
 
     }
@@ -270,8 +273,8 @@ class ContractMock {
                 for (const sellOrder of sellOrders) {
                     if (simpleMatch(buyOrder, sellOrder)) {
                         // Transfer tokens
-                        this.transfer(sellOrder.pubkey, buyOrder.pubkey, buyOrder.pair.tokenId1, buyOrder.amountOffered);
-                        this.transfer(buyOrder.pubkey, sellOrder.pubkey, sellOrder.pair.tokenId2, sellOrder.amountOffered);
+                        this.deposit(buyOrder.pubkey, buyOrder.pair.desiredToken, buyOrder.amountDesired);
+                        this.deposit(sellOrder.pubkey, sellOrder.pair.desiredToken, sellOrder.amountDesired);
 
                         this.cancelOrder(buyOrder.pubkey, buyOrder.counterId);
                         this.cancelOrder(sellOrder.pubkey, sellOrder.counterId);
