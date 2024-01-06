@@ -142,7 +142,6 @@ export default function Dex() {
             <p className="text-sm mt-2">Buy</p>
             <TokenSelector token={buy?.token} lockedAmount={isTaker} amount={buyAmount} onChange={onBuyChange} />
 
-
             <Ruler />
 
             <div className="font-semibold mt-4">
