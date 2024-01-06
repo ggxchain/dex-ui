@@ -1,6 +1,7 @@
-import mocked_tokens from "@/mock";
+import mockedTokens from "@/mock";
 import GGXWallet from "./ggx";
-import { Token, TokenId, CounterId, Order, Amount, Pair, PubKey } from "@/types";
+import { Token, TokenId, CounterId, Order, Amount, PubKey } from "@/types";
+import Pair from "@/pair";
 
 
 export default class Contract {
@@ -9,11 +10,12 @@ export default class Contract {
 
     constructor() { }
 
-    async allTokens(): Promise<Token[]> {
+    async allTokens(page: number = 0, fetch: number = 50): Promise<Token[]> {
         const tokens = [];
         var i = 0;
-        while (true) {
-            const tokenId = this.contract.tokenByIndex(i);
+        const shift = page * fetch;
+        while (i < fetch) {
+            const tokenId = this.contract.tokenByIndex(shift + i);
             if (tokenId === undefined) {
                 break;
             }
@@ -23,11 +25,12 @@ export default class Contract {
         return Promise.resolve(tokens);
     }
 
-    async allTokensOfOwner(): Promise<Token[]> {
+    async allTokensOfOwner(page: number = 0, fetch: number = 50): Promise<Token[]> {
         const tokens = [];
         var i = 0;
+        const shift = page * fetch;
         while (true) {
-            const tokenId = this.contract.ownersTokenByIndex(this.wallet.pubkey(), i);
+            const tokenId = this.contract.ownersTokenByIndex(this.wallet.pubkey(), shift + i);
             if (tokenId === undefined) {
                 break;
             }
@@ -37,11 +40,12 @@ export default class Contract {
         return Promise.resolve(tokens);
     }
 
-    async allOrders(pair: Pair): Promise<Order[]> {
+    async allOrders(pair: Pair, page: number = 0, fetch: number = 50): Promise<Order[]> {
         const orders = [];
         var i = 0;
+        const shift = page * fetch;
         while (true) {
-            const counterId = this.contract.pairOrderByIndex(pair, i);
+            const counterId = this.contract.pairOrderByIndex(pair, shift + i);
             if (counterId === undefined) {
                 break;
             }
@@ -58,7 +62,7 @@ export default class Contract {
 
     // Probably, we would need to create a mapping for this on frontend.
     mapTokenIdToToken(tokenId: TokenId): Token {
-        return mocked_tokens().find((value) => value.id === tokenId)!;
+        return mockedTokens().find((value) => value.id === tokenId)!;
     }
 
     async balanceOf(tokenId: TokenId): Promise<Amount> {
@@ -121,6 +125,7 @@ class ContractMock {
         const deposit = this.deposits.get(pubkey);
         if (deposit === undefined) {
             //Should not happen as we initialized it above
+            console.error("Deposit is undefined, but it should not happen.")
             return;
         }
         const index = deposit.findIndex((value) => value.tokenId === tokenId);
@@ -146,7 +151,7 @@ class ContractMock {
     }
 
     tokenByIndex(index: number): TokenId | undefined {
-        return mocked_tokens().at(index)?.id;
+        return mockedTokens().at(index)?.id;
     }
 
     ownersTokenByIndex(pubkey: PubKey, index: number): TokenId | undefined {

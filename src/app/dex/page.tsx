@@ -6,7 +6,8 @@ import Contract from "@/services/contract";
 import GGXWallet from "@/services/ggx";
 import Ruler from "@/components/ruler";
 import TokenSelector from "@/components/tokenSelector";
-import { Order, Pair, Token } from "@/types";
+import { Order, Token } from "@/types";
+import Pair from "@/pair";
 
 type TokenData = {
   token: Token;
@@ -134,7 +135,7 @@ export default function Dex() {
               }
               {isTokenSame && !isAmountZero &&
                 < div className="flex text-xs items-center mt-1 justify-between">
-                  <p>Token for buy/sell can't be the same</p>
+                  <p>Token for buy/sell should not be the same</p>
                 </div>
               }
             </div>
