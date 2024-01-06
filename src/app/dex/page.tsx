@@ -188,7 +188,6 @@ interface OrderBookProps {
   onChange: (order: Order) => void;
 }
 
-
 function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookProps) {
   const [orders, setOrders] = useState<Order[]>([]);
 
@@ -198,15 +197,12 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookPr
     const contract = new Contract();
     contract.allOrders(tokenPair).then((orders) => {
       setOrders(orders);
+      if (orders.length > 0 && !selectedOrder) {
+        const sellOrders = orders.filter((order: Order) => order.orderType !== tokenPair.orderType).sort((a, b) => b.amountDesired / b.amountOffered - a.amountDesired / a.amountOffered);
+        onChange(sellOrders[0]);
+      }
     });
   }, [buyToken, sellToken]);
-
-  useEffect(() => {
-    if (orders.length > 0 && !selectedOrder) {
-      const sellOrders = orders.filter((order: Order) => order.orderType === tokenPair.orderType).sort((a, b) => b.amountDesired / b.amountOffered - a.amountDesired / a.amountOffered);
-      onChange(sellOrders[0]);
-    }
-  }, [orders]);
 
   const buyOrders = orders.filter((order: Order) => order.orderType === tokenPair.orderType).sort((a, b) => a.amountDesired / a.amountOffered - b.amountDesired / b.amountOffered);
   const sellOrders = orders.filter((order: Order) => order.orderType !== tokenPair.orderType).sort((a, b) => b.amountDesired / b.amountOffered - a.amountDesired / a.amountOffered);
@@ -237,7 +233,7 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookPr
             buyOrders.map((order) => {
               return (
                 <tr key={order.counterId} className="text-red-600 relative w-full">
-                  <td className="p-1 pl-4 text-left font-bold">{(order.amountDesired / order.amountOffered).toFixed(9)}</td>
+                  <td className="p-1 pl-4 text-left font-bold">{(order.amountOffered / order.amountDesired).toFixed(9)}</td>
                   <td className="p-1 text-right text-white font-bold">{order.amountOffered}</td>
                   <div style={{ width: `${Math.round(order.amountOffered * 100 / buyTotalVolume)}%` }} className="absolute bg-red-500/45 h-full right-0 top-0 bottom-0"></div>
                 </tr>
