@@ -132,17 +132,23 @@ export default function Dex() {
                   <button className="ml-2 p-1 rounded-2xl border grow-on-hover" onClick={() => setSell({ ...sell, amount: order.amountDesired })}>Set max</button>
                 </div>
               }
+              {isTokenSame && !isAmountZero &&
+                < div className="flex text-xs items-center mt-1 justify-between">
+                  <p>Token for buy/sell can't be the same</p>
+                </div>
+              }
             </div>
 
             <p className="text-sm mt-2">Buy</p>
             <TokenSelector token={buy?.token} lockedAmount={isTaker} amount={buyAmount} onChange={onBuyChange} />
+
 
             <Ruler />
 
             <div className="font-semibold mt-4">
               <div className="flex justify-between">
                 <p>Rate:</p>
-                {rate !== 0 && !isTokenNotSelected
+                {rate !== 0 && !isTokenNotSelected && !isTokenSame
                   ? <p>1 {sell.token.name} = {rate.toFixed(9)} {buy.token.name}</p>
                   : <p>0.00</p>
                 }

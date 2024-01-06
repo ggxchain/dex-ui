@@ -238,7 +238,6 @@ class ContractMock {
             ordersByUser?.splice(orderByIndex, 1);
         }
 
-        debugger
         const orderByPair = this.ordersByPair.get(Pair.string(order.pair));
         const orderByPairIndex = orderByPair?.findIndex((value) => value === counterId);
         if (orderByPairIndex !== undefined && orderByPairIndex !== -1) {
@@ -266,7 +265,6 @@ class ContractMock {
         if (matched !== undefined) {
             this.deposit(order.pubkey, Pair.desiredToken(order.pair), order.amountDesired);
             this.deposit(matched.pubkey, Pair.desiredToken(matched.pair), order.amountOffered);
-            debugger;
             this.cancelOrder(order.pubkey, order.counterId, false);
             this.cancelOrder(matched.pubkey, matched.counterId, false);
         }
