@@ -40,7 +40,6 @@ export default class Contract {
     async allOrders(pair: Pair): Promise<Order[]> {
         const orders = [];
         var i = 0;
-        console.log(this);
         while (true) {
             const counterId = this.contract.pairOrderByIndex(pair, i);
             if (counterId === undefined) {

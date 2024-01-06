@@ -18,7 +18,8 @@ export default function Dex() {
   const [sell, setSell] = useState<TokenData>({} as TokenData);
   const [buy, setBuy] = useState<TokenData>({} as TokenData);
   const [availableBalance, setAvailableBalance] = useState<number>(0);
-
+  const [rate, setRate] = useState<number>(0);
+  const [order, setOrder] = useState<Order>();
 
   useEffect(() => {
     if (sell.token !== undefined) {
@@ -34,6 +35,8 @@ export default function Dex() {
   const onClear = () => {
     setSell({} as TokenData);
     setBuy({} as TokenData);
+    setRate(0);
+    setOrder(undefined);
   }
 
   const onLogin = () => {
@@ -53,6 +56,33 @@ export default function Dex() {
     onClear();
   }
 
+  const onOrderChange = (order: Order) => {
+    setRate(order.amountDesired / order.amountOffered);
+    setBuy({ ...buy, amount: sell.amount * rate });
+
+    setOrder(order);
+  };
+
+  const onSellChange = (token: Token, amount: number) => {
+    setSell({ token, amount });
+
+    if (isMaker && sell.amount > 0) {
+      // We need to recalculate rate here
+      setRate(buy.amount / sell.amount);
+    } else {
+      // We need to recalculate buy amount here
+      setBuy({ ...buy, amount: amount * rate });
+    }
+  }
+
+  const onBuyChange = (token: Token, amount: number) => {
+    setBuy({ token, amount });
+
+    if (isMaker && sell.amount > 0) {
+      // We need to recalculate rate here
+      setRate(buy.amount / sell.amount);
+    }
+  }
 
   return (
     <div className="text-slate-100 flex flex-col w-full items-center">
@@ -77,17 +107,23 @@ export default function Dex() {
                 <p className="font-normal mx-5">{availableBalance}</p>
               </div>
             </div>
-            <TokenSelector token={sell.token} amount={sell.amount} onChange={(token: Token, amount: number) => { setSell({ token, amount }) }} />
+            <TokenSelector token={sell.token} amount={sell.amount} onChange={onSellChange} />
+            {!isMaker && order && sell.amount > order.amountOffered &&
+              <p className="text-xs text-orange-300">The chosen order is exhausted. Max available value for this order is: {order.amountOffered.toFixed(9)} {sell.token.name}</p>
+            }
 
             <p className="text-sm mt-2">Buy</p>
-            <TokenSelector token={buy.token} amount={buy.amount} onChange={(token: Token, amount: number) => { setBuy({ token, amount }) }} />
+            <TokenSelector token={buy.token} lockedAmount={!isMaker} amount={buy.amount} onChange={onBuyChange} />
 
             <Ruler />
 
             <div className="font-semibold mt-4">
               <div className="flex justify-between">
                 <p>Rate:</p>
-                <p>0.00</p>
+                {rate !== 0
+                  ? <p>1 {sell.token.name} = {rate.toFixed(9)} {buy.token.name}</p>
+                  : <p>0.00</p>
+                }
               </div>
 
               <div className="flex justify-between">
@@ -106,23 +142,25 @@ export default function Dex() {
             </div>
           </div>
         </div>
-        <div className="md:has-[table]:py-14 px-5 md:has-[table]:w-[30%] has-[table]:w-full">
-          {
-            buy.token && sell.token && buy.token.symbol !== sell.token.symbol && <OrderBook buyToken={buy?.token} sellToken={sell?.token} />
-          }
-        </div>
+        {
+          buy.token && sell.token && buy.token.symbol !== sell.token.symbol && !isMaker &&
+          <div className="md:has-[table]:py-14 py-5 px-5 md:has-[table]:w-[30%] has-[table]:w-full">
+            <OrderBook buyToken={buy?.token} sellToken={sell?.token} onChange={onOrderChange} />
+          </div>
+        }
       </div>
-    </div>
+    </div >
   )
 }
 
 interface OrderBookProps {
   buyToken: Token;
   sellToken: Token;
+  onChange: (order: Order) => void;
 }
 
 
-function OrderBook({ buyToken, sellToken }: OrderBookProps) {
+function OrderBook({ buyToken, sellToken, onChange }: OrderBookProps) {
   const [orders, setOrders] = useState<Order[]>([]);
 
   const tokenPair = new Pair(buyToken.id, sellToken.id);
@@ -130,14 +168,13 @@ function OrderBook({ buyToken, sellToken }: OrderBookProps) {
   useEffect(() => {
     const contract = new Contract();
     contract.allOrders(tokenPair).then((orders) => {
-      console.log(orders);
       setOrders(orders);
     });
   }, [buyToken, sellToken]);
 
 
   const buyOrders = orders.filter((order: Order) => order.orderType !== tokenPair.orderType).sort((a, b) => a.amountDesired / a.amountOffered - b.amountDesired / b.amountOffered);
-  const sellOrders = orders.filter((order: Order) => order.orderType === tokenPair.orderType).sort((a, b) => a.amountDesired / a.amountOffered - b.amountDesired / b.amountOffered);
+  const sellOrders = orders.filter((order: Order) => order.orderType === tokenPair.orderType).sort((a, b) => b.amountDesired / b.amountOffered - a.amountDesired / a.amountOffered);
   if (buyOrders.length === 0 && sellOrders.length === 0) {
     return (<div></div>);
   }
@@ -148,31 +185,34 @@ function OrderBook({ buyToken, sellToken }: OrderBookProps) {
   return (
     <div className="flex flex-col text-xs overflow-auto">
       <p>Order book</p>
-      <table className="table-auto mt-5">
+      <table className="table-auto mt-2 md:mt-5">
         <thead>
           <tr>
             <th className="text-left">Price <span className="italic font-semibold uppercase">{buyToken.symbol}</span></th>
             <th className="text-right">Volume <span className="italic font-semibold uppercase">{sellToken.symbol}</span></th>
           </tr>
         </thead>
+
         <tbody>
           {
             buyOrders.map((order) => {
               return (
-                <tr key={order.counterId} className={`text-red-600 to-red-600/60 relative rounded-xl w-full after:content-[ ] after:absolute after:bg-red-600/60 after:right-0 after:top-0 after:bottom-0 after:w-[${Math.round(order.amountOffered * 100 / buyTotalVolume)}%]`}>
-                  <td className="p-1 text-left">{order.amountDesired / order.amountOffered}</td>
-                  <td className="p-1 text-right">{order.amountOffered}</td>
+                <tr key={order.counterId} className="text-red-600 relative w-full">
+                  <td className="p-1 text-left font-bold">{(order.amountDesired / order.amountOffered).toFixed(9)}</td>
+                  <td className="p-1 text-right text-white font-bold">{order.amountOffered}</td>
+                  <div style={{ width: `${Math.round(order.amountOffered * 100 / buyTotalVolume)}%` }} className="absolute bg-red-500/45 h-full right-0 top-0 bottom-0"></div>
                 </tr>
+
               )
             })
           }
-          <tr></tr>
           {
             sellOrders.map((order) => {
               return (
-                <tr key={order.counterId} className="text-green-500">
-                  <td className="text-left">{order.amountDesired / order.amountOffered}</td>
-                  <td className="text-right">{order.amountOffered}</td>
+                <tr key={order.counterId} className="text-green-500 relative w-full cursor-pointer" onClick={() => onChange(order)}>
+                  <td className="p-1 text-left font-bold">{(order.amountDesired / order.amountOffered).toFixed(9)}</td>
+                  <td className="p-1 text-right text-white font-bold">{order.amountOffered}</td>
+                  <div style={{ width: `${Math.round(order.amountOffered * 100 / sellTotalVolume)}%` }} className="absolute bg-green-500/45 h-full right-0 top-0 bottom-0"></div>
                 </tr>
               )
             })

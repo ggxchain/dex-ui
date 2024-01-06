@@ -8,11 +8,12 @@ import CexService from "@/services/cex";
 
 interface TokenSelectorProps {
     token: Token;
-    amount: number
+    amount: number;
+    lockedAmount?: boolean;
     onChange: (tokenId: Token, amount: number) => void;
 }
 
-export default function TokenSelector({ token, amount, onChange }: TokenSelectorProps) {
+export default function TokenSelector({ token, amount, onChange, lockedAmount }: TokenSelectorProps) {
     const [tokens, setTokens] = useState<Token[]>([]);
     const [price, setTokenPrice] = useState<number>(0);
 
@@ -114,7 +115,7 @@ export default function TokenSelector({ token, amount, onChange }: TokenSelector
                     }}
                 />
                 <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-2.5 md:p-1.5 pr-2 rounded-r-[1rem] flex flex-col md:text-base text-xs">
-                    <input value={amount} step="2" className="w-full text-right" type="number" placeholder="0.00" onChange={handleAmountChange} />
+                    <input value={amount} step="2" className="w-full text-right" type="number" placeholder="0.00" disabled={lockedAmount} onChange={handleAmountChange} />
                     <p className="text-xs whitespace-nowrap">~= {((amount || 0.0) * price).toFixed(2)}$</p>
                 </div>
             </div>
