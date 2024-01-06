@@ -7,7 +7,7 @@ import { Token } from "@/types";
 import CexService from "@/services/cex";
 
 interface TokenSelectorProps {
-    token: Token;
+    token?: Token;
     amount: number;
     lockedAmount?: boolean;
     onChange: (tokenId: Token, amount: number) => void;

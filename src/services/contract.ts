@@ -175,7 +175,7 @@ class ContractMock {
     }
 
     pairOrderByIndex(pair: Pair, index: number): CounterId | undefined {
-        const orders = this.ordersByPair.get(pair.string);
+        const orders = this.ordersByPair.get(Pair.string(pair));
         if (orders === undefined) {
             return undefined;
         }
@@ -209,84 +209,90 @@ class ContractMock {
             ordersByUser.push(counterId);
         }
 
-        const strPair = pair.string;
+        const strPair = Pair.string(pair);
         const ordersByPair = this.ordersByPair.get(strPair);
         if (ordersByPair === undefined) {
             this.ordersByPair.set(strPair, [counterId]);
         } else {
             ordersByPair.push(counterId);
         }
-        this.withdraw(pubkey, pair.ownedToken, amountOffered);
-        this.matchOrders();
+        this.withdraw(pubkey, Pair.ownedToken(pair), amountOffered);
+        this.matchOrder(order);
         this.save();
 
         return counterId;
 
     }
 
-    cancelOrder(pubkey: PubKey, counterId: CounterId) {
+    cancelOrder(pubkey: PubKey, counterId: CounterId, returnTokens: boolean = true) {
         const orderId = this.orders.findIndex((value) => value.counterId === counterId);
         if (orderId === -1 || this.orders[orderId].pubkey !== pubkey) {
             return;
         }
-        const order = this.orders[orderId];
+        const order: Order = this.orders[orderId];
         this.orders.splice(orderId, 1);
 
         const ordersByUser = this.ordersByUser.get(pubkey);
-        const order_by_index = ordersByUser?.findIndex((value) => value === counterId);
-        if (order_by_index !== undefined && order_by_index !== -1) {
-            ordersByUser?.splice(order_by_index, 1);
+        const orderByIndex = ordersByUser?.findIndex((value) => value === counterId);
+        if (orderByIndex !== undefined && orderByIndex !== -1) {
+            ordersByUser?.splice(orderByIndex, 1);
         }
 
-        const orderByPair = this.ordersByPair.get(order.pair.string);
-        const orderByPair_index = orderByPair?.findIndex((value) => value === counterId);
-        if (orderByPair_index !== undefined && orderByPair_index !== -1) {
-            orderByPair?.splice(orderByPair_index, 1);
+        debugger
+        const orderByPair = this.ordersByPair.get(Pair.string(order.pair));
+        const orderByPairIndex = orderByPair?.findIndex((value) => value === counterId);
+        if (orderByPairIndex !== undefined && orderByPairIndex !== -1) {
+            orderByPair?.splice(orderByPairIndex, 1);
         }
 
         // Return tokens.
-        this.deposit(pubkey, order.pair.ownedToken, order.amountOffered);
+        if (returnTokens) {
+            this.deposit(pubkey, Pair.ownedToken(order.pair), order.amountOffered);
+        }
 
         this.save();
 
     }
 
-    matchOrders() {
-        this.ordersByPair.forEach((orders, _) => {
-            const buyOrders = [];
-            const sellOrders = [];
-
-            for (const order of orders) {
-                const order1 = this.orderFor(order);
-                if (order1 === undefined) {
-                    continue;
-                }
-                if (order1.orderType === "Buy") {
-                    buyOrders.push(order1);
-                } else {
-                    sellOrders.push(order1);
-                }
-            }
-
-            for (const buyOrder of buyOrders) {
-                for (const sellOrder of sellOrders) {
-                    if (simpleMatch(buyOrder, sellOrder)) {
-                        // Transfer tokens
-                        this.deposit(buyOrder.pubkey, buyOrder.pair.desiredToken, buyOrder.amountDesired);
-                        this.deposit(sellOrder.pubkey, sellOrder.pair.desiredToken, sellOrder.amountDesired);
-
-                        this.cancelOrder(buyOrder.pubkey, buyOrder.counterId);
-                        this.cancelOrder(sellOrder.pubkey, sellOrder.counterId);
-
-                        // We can break here because we know that there is only one possible match.
-                        break;
-                    }
-                }
-            }
-        });
+    // ideally, we should let the user to buy only part of the maker order, but for the mock we just match the whole order
+    matchOrder(order: Order) {
+        const ordersByPair = this.ordersByPair.get(Pair.string(order.pair));
+        if (ordersByPair === undefined) {
+            return;
+        }
+        const orders = ordersByPair.map((value: number) => this.orderFor(value));
+        const available = orders.filter((ord: Order | undefined) => ord && simpleMatch(ord, order));
+        const matched = available.at(0);
+        if (matched !== undefined) {
+            this.deposit(order.pubkey, Pair.desiredToken(order.pair), order.amountDesired);
+            this.deposit(matched.pubkey, Pair.desiredToken(matched.pair), order.amountOffered);
+            debugger;
+            this.cancelOrder(order.pubkey, order.counterId, false);
+            this.cancelOrder(matched.pubkey, matched.counterId, false);
+        }
     }
 }
 
+// We have order book with orders. We want to match orders that are simple equal to each other.
+// We check if the amount offered is equal to the amount desired and the other way around.
+// The values can be floating point numbers so we need to check if they are close enough.
+// We don't care about small Epsilon as it mock contract and on contract we would have proper precision.
 function simpleMatch(order1: Order, order2: Order): boolean {
-    return order1.amountOffered === order2.amountDesired && order1.amountDesired === order2.amountOffered && order1.orderType !== order2.orderType;
+    if (order1.orderType === order2.orderType) {
+        // We don't match orders of the same type.
+        return false;
+    }
+
+    const amountOffered1 = order1.amountOffered;
+    const amountOffered2 = order2.amountOffered;
+    const amountDesired1 = order1.amountDesired;
+    const amountDesired2 = order2.amountDesired;
+
+    const E = 0.0000001;
+
+    if (Math.abs(amountOffered1 - amountDesired2) < E && Math.abs(amountOffered2 - amountDesired1) < E) {
+        return true;
+    } else {
+        return false;
+    }
 }

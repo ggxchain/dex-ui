@@ -10,7 +10,7 @@
     margin: 0;
   }
 
-  :root {
+  body {
     @apply primary-gradient;
   }
 }
