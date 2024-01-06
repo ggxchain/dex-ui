@@ -82,7 +82,6 @@ export default function Wallet() {
         const contract = new Contract();
         for (let token of filteredTokens) {
             contract.deposit(token.id, 10).then(() => {
-                console.log("deposited");
             })
         }
 

@@ -37,6 +37,25 @@ export default class Contract {
         return Promise.resolve(tokens);
     }
 
+    async allOrders(pair: Pair): Promise<Order[]> {
+        const orders = [];
+        var i = 0;
+        while (true) {
+            const counterId = this.contract.pairOrderByIndex(pair, i);
+            if (counterId === undefined) {
+                break;
+            }
+            const order = this.contract.orderFor(counterId);
+            if (order === undefined) {
+                break;
+            }
+            orders.push(order);
+            i++;
+        }
+        return Promise.resolve(orders);
+    }
+
+
     // Probably, we would need to create a mapping for this on frontend.
     mapTokenIdToToken(tokenId: TokenId): Token {
         return mocked_tokens().find((value) => value.id === tokenId)!;
@@ -72,7 +91,7 @@ class ContractMock {
     deposits: Map<PubKey, TokenDepositMock[]> = new Map<PubKey, TokenDepositMock[]>();
     orders: Order[] = new Array<Order>();
     ordersByUser: Map<PubKey, CounterId[]> = new Map<PubKey, CounterId[]>();
-    ordersByPair: Map<Pair, CounterId[]> = new Map<Pair, CounterId[]>();
+    ordersByPair: Map<string, CounterId[]> = new Map<string, CounterId[]>();
 
     constructor() {
         const deposits = window.sessionStorage.getItem("contractDepositsMock");
@@ -109,31 +128,6 @@ class ContractMock {
             deposit[index].amount += amount;
         } else {
             deposit.push({ tokenId: tokenId, amount });
-        }
-        this.save();
-    }
-
-    transfer(from: PubKey, to: PubKey, tokenId: TokenId, amount: Amount) {
-        const fromDeposit = this.deposits.get(from);
-        if (fromDeposit === undefined) {
-            return;
-        }
-        const fromIndex = fromDeposit.findIndex((value) => value.tokenId === tokenId);
-        if (fromIndex !== -1) {
-            fromDeposit[fromIndex].amount -= amount;
-        } else {
-            return;
-        }
-
-        const toDeposit = this.deposits.get(to);
-        if (toDeposit === undefined) {
-            return;
-        }
-        const toIndex = toDeposit.findIndex((value) => value.tokenId === tokenId);
-        if (toIndex !== -1) {
-            toDeposit[toIndex].amount += amount;
-        } else {
-            toDeposit.push({ tokenId: tokenId, amount });
         }
         this.save();
     }
@@ -181,7 +175,7 @@ class ContractMock {
     }
 
     pairOrderByIndex(pair: Pair, index: number): CounterId | undefined {
-        const orders = this.ordersByPair.get(pair);
+        const orders = this.ordersByPair.get(Pair.string(pair));
         if (orders === undefined) {
             return undefined;
         }
@@ -208,83 +202,95 @@ class ContractMock {
             amountDesired
         };
         this.orders.push(order);
-        const orders_by_user = this.ordersByUser.get(pubkey);
-        if (orders_by_user === undefined) {
+        const ordersByUser = this.ordersByUser.get(pubkey);
+        if (ordersByUser === undefined) {
             this.ordersByUser.set(pubkey, [counterId]);
         } else {
-            orders_by_user.push(counterId);
+            ordersByUser.push(counterId);
         }
-        const orders_by_pair = this.ordersByPair.get(pair);
-        if (orders_by_pair === undefined) {
-            this.ordersByPair.set(pair, [counterId]);
+
+        const strPair = Pair.string(pair);
+        const ordersByPair = this.ordersByPair.get(strPair);
+        if (ordersByPair === undefined) {
+            this.ordersByPair.set(strPair, [counterId]);
         } else {
-            orders_by_pair.push(counterId);
+            ordersByPair.push(counterId);
         }
-        this.matchOrders();
+        this.withdraw(pubkey, Pair.ownedToken(pair), amountOffered);
+        this.matchOrder(order);
         this.save();
 
         return counterId;
 
     }
 
-    cancelOrder(pubkey: PubKey, counterId: CounterId) {
-        const order = this.orders.findIndex((value) => value.counterId === counterId);
-        if (order === -1 || this.orders[order].pubkey !== pubkey) {
+    cancelOrder(pubkey: PubKey, counterId: CounterId, returnTokens: boolean = true) {
+        const orderId = this.orders.findIndex((value) => value.counterId === counterId);
+        if (orderId === -1 || this.orders[orderId].pubkey !== pubkey) {
             return;
         }
-        this.orders.splice(order, 1);
+        const order: Order = this.orders[orderId];
+        this.orders.splice(orderId, 1);
 
-        const orders_by_user = this.ordersByUser.get(pubkey);
-        const order_by_index = orders_by_user?.findIndex((value) => value === counterId);
-        if (order_by_index !== undefined && order_by_index !== -1) {
-            orders_by_user?.splice(order_by_index, 1);
+        const ordersByUser = this.ordersByUser.get(pubkey);
+        const orderByIndex = ordersByUser?.findIndex((value) => value === counterId);
+        if (orderByIndex !== undefined && orderByIndex !== -1) {
+            ordersByUser?.splice(orderByIndex, 1);
         }
 
-        const order_by_pair = this.ordersByPair.get(this.orders[order].pair);
-        const order_by_pair_index = order_by_pair?.findIndex((value) => value === counterId);
-        if (order_by_pair_index !== undefined && order_by_pair_index !== -1) {
-            order_by_pair?.splice(order_by_pair_index, 1);
+        const orderByPair = this.ordersByPair.get(Pair.string(order.pair));
+        const orderByPairIndex = orderByPair?.findIndex((value) => value === counterId);
+        if (orderByPairIndex !== undefined && orderByPairIndex !== -1) {
+            orderByPair?.splice(orderByPairIndex, 1);
         }
+
+        // Return tokens.
+        if (returnTokens) {
+            this.deposit(pubkey, Pair.ownedToken(order.pair), order.amountOffered);
+        }
+
         this.save();
 
     }
 
-    matchOrders() {
-        this.ordersByPair.forEach((orders, _) => {
-            const buyOrders = [];
-            const sellOrders = [];
-
-            for (const order of orders) {
-                const order1 = this.orderFor(order);
-                if (order1 === undefined) {
-                    continue;
-                }
-                if (order1.orderType === "Buy") {
-                    buyOrders.push(order1);
-                } else {
-                    sellOrders.push(order1);
-                }
-            }
-
-            for (const buyOrder of buyOrders) {
-                for (const sellOrder of sellOrders) {
-                    if (simpleMatch(buyOrder, sellOrder)) {
-                        // Transfer tokens
-                        this.transfer(sellOrder.pubkey, buyOrder.pubkey, buyOrder.pair.tokenId1, buyOrder.amountOffered);
-                        this.transfer(buyOrder.pubkey, sellOrder.pubkey, sellOrder.pair.tokenId2, sellOrder.amountOffered);
-
-                        this.cancelOrder(buyOrder.pubkey, buyOrder.counterId);
-                        this.cancelOrder(sellOrder.pubkey, sellOrder.counterId);
-
-                        // We can break here because we know that there is only one possible match.
-                        break;
-                    }
-                }
-            }
-        });
+    // ideally, we should let the user to buy only part of the maker order, but for the mock we just match the whole order
+    matchOrder(order: Order) {
+        const ordersByPair = this.ordersByPair.get(Pair.string(order.pair));
+        if (ordersByPair === undefined) {
+            return;
+        }
+        const orders = ordersByPair.map((value: number) => this.orderFor(value));
+        const available = orders.filter((ord: Order | undefined) => ord && simpleMatch(ord, order));
+        const matched = available.at(0);
+        if (matched !== undefined) {
+            this.deposit(order.pubkey, Pair.desiredToken(order.pair), order.amountDesired);
+            this.deposit(matched.pubkey, Pair.desiredToken(matched.pair), order.amountOffered);
+            this.cancelOrder(order.pubkey, order.counterId, false);
+            this.cancelOrder(matched.pubkey, matched.counterId, false);
+        }
     }
 }
 
+// We have order book with orders. We want to match orders that are simple equal to each other.
+// We check if the amount offered is equal to the amount desired and the other way around.
+// The values can be floating point numbers so we need to check if they are close enough.
+// We don't care about small Epsilon as it mock contract and on contract we would have proper precision.
 function simpleMatch(order1: Order, order2: Order): boolean {
-    return order1.amountOffered === order2.amountDesired && order1.amountDesired === order2.amountOffered && order1.orderType !== order2.orderType;
+    if (order1.orderType === order2.orderType) {
+        // We don't match orders of the same type.
+        return false;
+    }
+
+    const amountOffered1 = order1.amountOffered;
+    const amountOffered2 = order2.amountOffered;
+    const amountDesired1 = order1.amountDesired;
+    const amountDesired2 = order2.amountDesired;
+
+    const E = 0.0000001;
+
+    if (Math.abs(amountOffered1 - amountDesired2) < E && Math.abs(amountOffered2 - amountDesired1) < E) {
+        return true;
+    } else {
+        return false;
+    }
 }
