@@ -27,7 +27,6 @@ export default class GGXWallet {
 
         await this.inject();
         this.accounts = await web3Accounts({ accountType: ["sr25519", "ed25519"] }).then((accounts) => accounts.map((info) => {
-            console.log(info);
             return {
                 address: info.address,
                 name: info.meta.name
