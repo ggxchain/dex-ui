@@ -160,10 +160,10 @@ export default function Dex() {
               </div>
 
               <div className="flex justify-around mt-5">
-                <button className="rounded-2xl border p-2 m-2 basis-1/4 grow-on-hover" onClick={onClear}>Clear</button>
+                <button className="rounded-2xl border p-2 m-2 basis-1/4 grow-on-hover glow-on-hover" onClick={onClear}>Clear</button>
                 {
                   wallet
-                    ? <button className="basis-3/4 rounded-2xl border p-2 m-2 enabled:grow-on-hover disabled:opacity-50" disabled={isFormHasErrors} onClick={onSwap}>Preview the transaction</button>
+                    ? <button className="basis-3/4 rounded-2xl border p-2 m-2 enabled:grow-on-hover enabled:glow-on-hover disabled:opacity-50" disabled={isFormHasErrors} onClick={onSwap}>Preview the transaction</button>
                     : <button className="basis-3/4 rounded-2xl border p-2 m-2 grow-on-hover" onClick={onLogin}>Connect wallet</button>
                 }
               </div>
@@ -207,10 +207,6 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookPr
   const buyOrders = orders.filter((order: Order) => order.orderType === tokenPair.orderType).sort((a, b) => a.amountDesired / a.amountOffered - b.amountDesired / b.amountOffered);
   const sellOrders = orders.filter((order: Order) => order.orderType !== tokenPair.orderType).sort((a, b) => b.amountDesired / b.amountOffered - a.amountDesired / a.amountOffered);
 
-  if ((buyOrders.length === 0 && sellOrders.length === 0)) {
-    return (<div></div>);
-  }
-
   const buyTotalVolume = buyOrders.reduce((acc, order) => acc + order.amountOffered, 0);
   const sellTotalVolume = sellOrders.reduce((acc, order) => acc + order.amountOffered, 0);
 
@@ -227,41 +223,50 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookPr
 
         <tbody>
           <tr>
-            <td className="font-bold">Ask</td>
+            <td className="font-bold">Asks</td>
           </tr>
           {
-            buyOrders.map((order) => {
-              return (
-                <tr key={order.counterId} className="text-red-600 relative w-full">
-                  <td className="p-1 pl-4 text-left font-bold">{(order.amountOffered / order.amountDesired).toFixed(9)}</td>
-                  <td className="p-1 text-right text-white font-bold">{order.amountOffered}</td>
-                  <div style={{ width: `${Math.round(order.amountOffered * 100 / buyTotalVolume)}%` }} className="absolute bg-red-500/45 h-full right-0 top-0 bottom-0"></div>
-                </tr>
-              )
-            })
+            buyOrders.length === 0
+              ? <tr><td className="text-red-600">No asks found</td></tr>
+              : buyOrders.map((order) => {
+                return (
+                  <tr key={order.counterId} className="relative w-full text-red-600">
+                    <td className="p-1 pl-4 text-left font-bold">{(order.amountOffered / order.amountDesired).toFixed(9)}</td>
+                    <td className="p-1 text-right text-white font-bold">
+                      {order.amountOffered}
+                      <div style={{ width: `${Math.round(order.amountOffered * 100 / buyTotalVolume)}%` }} className="absolute bg-red-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
+                    </td>
+                  </tr>
+                )
+              })
           }
           <tr>
-            <td className="font-bold">Bid</td>
+            <td className="font-bold mt-5">Bids</td>
           </tr>
           {
-            sellOrders.map((order) => {
-              const selected = order.counterId == selectedOrder?.counterId;
-              return (
-                <tr key={order.counterId} className={`text-green-500 relative w-full cursor-pointer ${selected}`} onClick={() => onChange(order)}>
-                  <td className="p-1 relative text-left font-bold">
-                    {selected && <p className="absolute h-full left-0">↠</p>}
-                    <p className="pl-3">
-                      {(order.amountOffered / order.amountDesired).toFixed(9)}
-                    </p>
-                  </td>
-                  <td className="p-1 text-right text-white font-bold">{order.amountDesired}</td>
-                  <div style={{ width: `${Math.round(order.amountOffered * 100 / sellTotalVolume)}%` }} className="absolute bg-green-500/45 h-full right-0 top-0 bottom-0"></div>
-                </tr>
-              )
-            })
+            sellOrders.length === 0
+              ? <tr><td className="text-green-500">No bids found</td></tr>
+              : sellOrders.map((order) => {
+                const selected = order.counterId == selectedOrder?.counterId;
+                return (
+                  <tr key={order.counterId} className={`relative w-full cursor-pointer glow-on-hover rounded-l-md text-green-500 ${selected} `} onClick={() => onChange(order)}>
+                    <td className="p-1 relative text-left font-bold">
+                      {selected && <p className="absolute h-full left-0">↠</p>}
+                      <p className="pl-3">
+                        {(order.amountOffered / order.amountDesired).toFixed(9)}
+                      </p>
+                    </td>
+                    <td className="p-1 text-right text-white font-bold">
+                      {order.amountDesired}
+                      <div style={{ width: `${Math.round(order.amountOffered * 100 / sellTotalVolume)}%` }} className="absolute bg-green-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
+                    </td>
+
+                  </tr>
+                )
+              })
           }
-        </tbody>
-      </table>
-    </div>
+        </tbody >
+      </table >
+    </div >
   );
 }

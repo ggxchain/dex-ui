@@ -27,4 +27,8 @@
   .primary-gradient {
     @apply from-bg-gr-1 to-bg-gr-2 bg-gradient-to-b;
   }
+
+  .glow-on-hover {
+    @apply hover:filter hover:backdrop-brightness-150
+  }
 }

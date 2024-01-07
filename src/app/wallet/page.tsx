@@ -97,8 +97,8 @@ export default function Wallet() {
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl ">${total.toFixed(2)}</h1>
                 <div className="flex">
-                    <button onClick={onDeposit} className="md:text-base text-sm p-2 md:p-4 m-1 md:w-32 w-24 bg-bg-gr-2/80 rounded-2xl grow-on-hover">Deposit</button>
-                    <button onClick={onWithdraw} className="md:text-base text-sm p-2 md:p-4 m-1 md:w-32 w-24 bg-bg-gr-2/80 rounded-2xl grow-on-hover">Withdraw</button>
+                    <button onClick={onDeposit} className="md:text-base text-sm p-2 md:p-4 m-1 md:w-32 w-24 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit</button>
+                    <button onClick={onWithdraw} className="md:text-base text-sm p-2 md:p-4 m-1 md:w-32 w-24 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw</button>
                 </div>
             </div>
 
