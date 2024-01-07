@@ -1,10 +1,10 @@
 
 import { ChangeEvent, useEffect, useState } from "react";
-import ReactSelect, { OnChangeValue } from "react-select";
 import Spinner from "./spinner";
 import Contract from "@/services/contract";
 import { Token } from "@/types";
 import CexService from "@/services/cex";
+import Select from "./select";
 
 interface TokenSelectorProps {
     token?: Token;
@@ -54,7 +54,7 @@ export default function TokenSelector({ token, amount, onChange, lockedAmount }:
         )
     }
 
-    const handleSelectChange = (e: OnChangeValue<Token, false>) => {
+    const handleSelectChange = (e: Token) => {
         if (e === null) {
             return;
         }
@@ -72,39 +72,12 @@ export default function TokenSelector({ token, amount, onChange, lockedAmount }:
     return (
         <div>
             <div className="flex items-center justify-between [&>*]:text-slate-100">
-                <ReactSelect
+                <Select<Token>
                     value={token}
                     onChange={handleSelectChange}
                     options={tokens}
-                    className="h-full w-full"
-                    theme={(theme) => ({
-                        ...theme,
-                        borderRadius: 16
-                    })}
-                    styles={{
-                        control: (baseStyles, state) => ({
-                            ...baseStyles,
-                            backgroundColor: 'transparent',
-                            borderRadius: '0px',
-                            borderTopLeftRadius: '1rem',
-                            borderBottomLeftRadius: '1rem'
-                        }),
-                        option: (baseStyles, state) => ({
-                            ...baseStyles,
-                            borderRadius: '16px',
-                            marginBottom: '1px',
-                        }),
-                        menu: (baseStyles, state) => ({
-                            ...baseStyles,
-                            backgroundColor: 'transparent',
-                            boxShadow: 'none',
-                        }),
-                        menuList: (baseStyles, state) => ({
-                            ...baseStyles,
-                        }),
-                    }}
-
-                    formatOptionLabel={(token) => {
+                    className="w-full h-full"
+                    childFormatter={(token: Token) => {
                         return (
                             <div className="flex items-center text-slate-100 w-full grow-on-hover border-white md:text-lg text-base ">
                                 <img src={`/svg/${token.symbol}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
