@@ -41,7 +41,7 @@ export default function Home() {
   // connect walllet
   const connectWallet = async () => {
     if (!window.keplr) {
-      alert("please install keplr extension");
+      console.error("please install keplr extension");
     }
 
     await window.keplr.experimentalSuggestChain(chain);
@@ -63,7 +63,6 @@ export default function Home() {
     if (client) {
       const _balances = await client.getAllBalances(address);
 
-      console.log("@@@ balance", _balances);
       setBalances(_balances);
     }
   };
@@ -78,10 +77,15 @@ export default function Home() {
 
   const sendIbcToken = async () => {
     if (!client || !ibcRecipent || !address) {
+      console.error(
+        "some input is undefine client, ibcRecipent, address",
+        client,
+        ibcRecipent,
+        address
+      );
       return;
     }
 
-    //const converAmount = (10*1e6).toString();
     const converAmount = 10;
     const amount = {
       denom: ibcTokenName,
@@ -113,7 +117,7 @@ export default function Home() {
       assertIsDeliverTxSuccess(result);
 
       if (result.code == 0) {
-        alert(
+        console.log(
           "transfer success, height:" +
             result.height +
             "hash: " +
