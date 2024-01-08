@@ -10,7 +10,7 @@ import {
 } from "@cosmjs/stargate";
 import Long from "long";
 
-export default function Home() {
+export default function Transfer() {
   const [chain, setChain] = useState<ChainInfo>(cosmos);
   const [client, setClient] = useState<any>();
   const [address, setAddress] = useState<any>();
