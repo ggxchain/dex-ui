@@ -8,6 +8,7 @@ import Ruler from "@/components/ruler";
 import TokenSelector from "@/components/tokenSelector";
 import { Order, Token } from "@/types";
 import Pair from "@/pair";
+import { useRouter } from "next/navigation";
 
 type TokenData = {
   token: Token;
@@ -20,6 +21,7 @@ export default function Dex() {
   const [buy, setBuy] = useState<TokenData>();
   const [availableBalance, setAvailableBalance] = useState<number>(0);
   const [order, setOrder] = useState<Order>();
+  const router = useRouter();
 
   useEffect(() => {
     if (sell !== undefined) {
@@ -39,13 +41,13 @@ export default function Dex() {
   }
 
   const onLogin = () => {
-    // Here we should connect wallet or use some api but for now we just set some data
+    router.push("/wallet");
   }
 
   const isTaker = !isMaker;
   const isTokenNotSelected = sell === undefined || buy === undefined;
   const isTokenSame = sell?.token.symbol === buy?.token.symbol;
-  const isWalletNotConnected = wallet === undefined; // TODO: proper check
+  const isWalletNotConnected = wallet.pubkey() === undefined;
   const isUserBalanceNotEnough = !isWalletNotConnected && availableBalance < (sell?.amount ?? 0);
   const isOrderNotChosen = order === undefined;
   const isOrderExhausted = !isOrderNotChosen && (sell?.amount ?? 0) > order?.amountDesired;
@@ -162,9 +164,9 @@ export default function Dex() {
               <div className="flex justify-around mt-5">
                 <button className="rounded-2xl border p-2 m-2 basis-1/4 grow-on-hover glow-on-hover" onClick={onClear}>Clear</button>
                 {
-                  wallet
-                    ? <button className="basis-3/4 rounded-2xl border p-2 m-2 enabled:grow-on-hover enabled:glow-on-hover disabled:opacity-50" disabled={isFormHasErrors} onClick={onSwap}>Preview the transaction</button>
-                    : <button className="basis-3/4 rounded-2xl border p-2 m-2 grow-on-hover" onClick={onLogin}>Connect wallet</button>
+                  isWalletNotConnected
+                    ? <button className="basis-3/4 rounded-2xl border p-2 m-2 grow-on-hover" onClick={onLogin}>Connect wallet</button>
+                    : <button className="basis-3/4 rounded-2xl border p-2 m-2 enabled:grow-on-hover enabled:glow-on-hover disabled:opacity-50" disabled={isFormHasErrors} onClick={onSwap}>Preview the transaction</button>
                 }
               </div>
             </div>

@@ -3,7 +3,6 @@ import GGXWallet from "./ggx";
 import { Token, TokenId, CounterId, Order, Amount, PubKey } from "@/types";
 import Pair from "@/pair";
 
-
 export default class Contract {
     contract: ContractMock = new ContractMock();
     wallet: GGXWallet = new GGXWallet();
@@ -29,8 +28,14 @@ export default class Contract {
         const tokens = [];
         var i = 0;
         const shift = page * fetch;
+        
+        const address = this.wallet.pubkey()?.address;
+        if (address === undefined) {
+            return Promise.resolve([]);
+        }
+
         while (i < fetch) {
-            const tokenId = this.contract.ownersTokenByIndex(this.wallet.pubkey(), shift + i);
+            const tokenId = this.contract.ownersTokenByIndex(address, shift + i);
             if (tokenId === undefined) {
                 break;
             }
@@ -66,23 +71,39 @@ export default class Contract {
     }
 
     async balanceOf(tokenId: TokenId): Promise<Amount> {
-        return Promise.resolve(this.contract.balanceOf(tokenId, this.wallet.pubkey()));
+        const address = this.wallet.pubkey()?.address;
+        if (address === undefined) {
+            return Promise.resolve(0);
+        }
+        return Promise.resolve(this.contract.balanceOf(tokenId, address));
     }
 
     async deposit(tokenId: TokenId, amount: Amount) {
-        this.contract.deposit(this.wallet.pubkey(), tokenId, amount);
+        if (this.wallet.pubkey() === undefined) {
+            return Promise.reject("Wallet is not initialized");
+        }
+        this.contract.deposit(this.wallet.pubkey()!.address, tokenId, amount);
     }
 
     async withdraw(tokenId: TokenId, amount: Amount) {
-        this.contract.withdraw(this.wallet.pubkey(), tokenId, amount);
+        if (this.wallet.pubkey() === undefined) {
+            return Promise.reject("Wallet is not initialized");
+        }
+        this.contract.withdraw(this.wallet.pubkey()!.address, tokenId, amount);
     }
 
     async cancelOrder(counterId: CounterId) {
-        this.contract.cancelOrder(this.wallet.pubkey(), counterId);
+        if (this.wallet.pubkey() === undefined) {
+            return Promise.reject("Wallet is not initialized");
+        }
+        this.contract.cancelOrder(this.wallet.pubkey()!.address, counterId);
     }
 
     async makeOrder(pair: Pair, amountOffered: Amount, amountDesired: Amount): Promise<CounterId> {
-        return Promise.resolve(this.contract.makeOrder(this.wallet.pubkey(), pair, amountOffered, amountDesired))
+        if (this.wallet.pubkey() === undefined) {
+            return Promise.reject("Wallet is not initialized");
+        }
+        return Promise.resolve(this.contract.makeOrder(this.wallet.pubkey()!.address, pair, amountOffered, amountDesired))
     }
 }
 
