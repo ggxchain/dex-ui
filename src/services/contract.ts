@@ -64,6 +64,30 @@ export default class Contract {
         return Promise.resolve(orders);
     }
 
+    async allUserOrders(page: number = 0, fetch: number = 50): Promise<Order[]> {
+        const orders = [];
+        var i = 0;
+        const shift = page * fetch;
+
+        const address = this.wallet.pubkey()?.address;
+        if (address === undefined) {
+            return Promise.resolve([]);
+        }
+
+        while (i < fetch) {
+            const counterId = this.contract.userOrderByIndex(address, shift + i);
+            if (counterId === undefined) {
+                break;
+            }
+            const order = this.contract.orderFor(counterId);
+            if (order === undefined) {
+                break;
+            }
+            orders.push(order);
+            i++;
+        }
+        return Promise.resolve(orders);
+    }
 
     // Probably, we would need to create a mapping for this on frontend.
     mapTokenIdToToken(tokenId: TokenId): Token {

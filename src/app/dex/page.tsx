@@ -198,9 +198,12 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookPr
   useEffect(() => {
     const contract = new Contract();
     contract.allOrders(tokenPair).then((orders) => {
-      setOrders(orders);
+      const wallet = new GGXWallet();
+      // Don't show him his own orders.
+      const filteredOrders = orders.filter((order: Order) => order.pubkey !== wallet.pubkey()?.address)
+      setOrders(filteredOrders);
       if (orders.length > 0 && !selectedOrder) {
-        const sellOrders = orders.filter((order: Order) => order.orderType !== tokenPair.orderType).sort((a, b) => b.amountDesired / b.amountOffered - a.amountDesired / a.amountOffered);
+        const sellOrders = filteredOrders.filter((order: Order) => order.orderType !== tokenPair.orderType).sort((a, b) => b.amountDesired / b.amountOffered - a.amountDesired / a.amountOffered);
         onChange(sellOrders[0]);
       }
     });
@@ -271,4 +274,12 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookPr
       </table >
     </div >
   );
+}
+
+function UserOrdersList() {
+
+
+  return <div>
+
+  </div>
 }
