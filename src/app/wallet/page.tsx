@@ -45,7 +45,7 @@ export default function Wallet() {
     useEffect(() => {
         const contract = new Contract();
         setBalance(new Map<TokenId, Amount>());
-        for (let token of ownedTokens) {
+        for (const token of ownedTokens) {
             contract.balanceOf(token.id).then((balance) => {
                 setBalance((balances) => {
                     balances.set(token.id, balance);
@@ -90,7 +90,7 @@ export default function Wallet() {
 
     const onDeposit = () => {
         const contract = new Contract();
-        for (let token of filteredTokens) {
+        for (const token of filteredTokens) {
             contract.deposit(token.id, 10).then(() => {
             })
         }
