@@ -30,13 +30,13 @@ export default function HeaderWithNavbar() {
                 </button>
 
                 <Link className="mx-auto" href="/">
-                    <h1 className="text-2xl text-white font-bold md:ml-8">
+                    <h1 className="text-2xl text-slate-100 font-bold md:ml-8">
                         RfQ by <span className="italic">GGx</span>
                     </h1>
                 </Link>
             </header>
 
-            <aside className="fixed top-0 left-0 z-40 w-64 h-screen pt-24 transition-transform transparent -translate-x-full peer-has-[button:focus]:translate-x-0 peer-has-[button:focus]:primary-gradient  md:translate-x-0 text-white">
+            <aside className="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform transparent -translate-x-full peer-has-[button:focus]:translate-x-0 peer-has-[button:focus]:primary-gradient  md:translate-x-0 text-slate-100">
                 <div className="px-3 py-10 overflow-y-auto h-full text-xl">
                     <ul className="space-y-10 font-medium flex flex-col items-center w-full">
                         {

@@ -1,11 +1,7 @@
 
-import Dex from '@/components/dex'
-
-export default function Home() {
+export default function Transfer() {
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-between">
-            "Transfer"
-        </main>
+        <p>Transfer</p>
     )
 }

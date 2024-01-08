@@ -1,5 +1,7 @@
+import { Token } from "./types";
+
 // Returns a list of tokens
-export default function mocked_tokens(): Token[] {
+export default function mockedTokens(): Token[] {
     return [
         {
             "id": 1,
