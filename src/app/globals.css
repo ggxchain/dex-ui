@@ -3,7 +3,6 @@
 @tailwind utilities;
 
 @layer base {
-
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -29,6 +28,6 @@
   }
 
   .glow-on-hover {
-    @apply hover:filter hover:backdrop-brightness-150
+    @apply hover:filter hover:backdrop-brightness-150;
   }
 }

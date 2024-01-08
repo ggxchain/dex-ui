@@ -22,3 +22,8 @@ export type Order = {
     amountOffered: Amount;
     amountDesired: Amount;
 }
+
+export type DetailedOrder = Order & {
+    token1: Token;
+    token2: Token;
+}

@@ -6,7 +6,7 @@ import Contract from "@/services/contract";
 import GGXWallet from "@/services/ggx";
 import Ruler from "@/components/ruler";
 import TokenSelector from "@/components/tokenSelector";
-import { Order, Token } from "@/types";
+import { DetailedOrder, Order, Token } from "@/types";
 import Pair from "@/pair";
 import { useRouter } from "next/navigation";
 
@@ -21,7 +21,12 @@ export default function Dex() {
   const [buy, setBuy] = useState<TokenData>();
   const [availableBalance, setAvailableBalance] = useState<number>(0);
   const [order, setOrder] = useState<Order>();
+  const [userOrders, updateUserOrders] = useUserOrders();
   const router = useRouter();
+
+  useEffect(() => {
+    updateUserOrders();
+  }, [])
 
   useEffect(() => {
     if (sell !== undefined) {
@@ -75,7 +80,7 @@ export default function Dex() {
     }
     const pair = new Pair(sell.token.id, buy.token.id);
     const contract = new Contract();
-    contract.makeOrder(pair, sell.amount, buyAmount);
+    contract.makeOrder(pair, sell.amount, buyAmount).then(() => updateUserOrders());
     onClear();
   }
 
@@ -171,15 +176,17 @@ export default function Dex() {
               </div>
             </div>
           </div>
+          <OrdersList orders={userOrders} cancelOrder={() => updateUserOrders()}/>
         </div>
         {
           isTaker && !isTokenNotSelected && !isTokenSame &&
-          <div className="md:has-[table]:py-14 py-5 px-5 md:has-[table]:w-[30%] has-[table]:w-full">
+          <div className="md:has-[table]:py-14 md:py-5 px-5 md:has-[table]:w-[30%] has-[table]:w-full">
             <OrderBook buyToken={buy?.token} sellToken={sell?.token} onChange={onOrderChange} selectedOrder={order} />
           </div>
         }
       </div>
-    </div >
+     
+    </div>
   )
 }
 
@@ -213,11 +220,11 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookPr
   const sellOrders = orders.filter((order: Order) => order.orderType !== tokenPair.orderType).sort((a, b) => b.amountDesired / b.amountOffered - a.amountDesired / a.amountOffered);
 
   const buyTotalVolume = buyOrders.reduce((acc, order) => acc + order.amountOffered, 0);
-  const sellTotalVolume = sellOrders.reduce((acc, order) => acc + order.amountOffered, 0);
+  const sellTotalVolume = sellOrders.reduce((acc, order) => acc + order.amountDesired, 0);
 
   return (
     <div className="flex flex-col text-xs">
-      <p>Order book</p>
+      <p className="text-base w-full text-center">Order book</p>
       <table className="table-auto mt-2 md:mt-5 overflow-auto">
         <thead>
           <tr>
@@ -263,7 +270,7 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookPr
                     </td>
                     <td className="p-1 text-right text-white font-bold">
                       {order.amountDesired}
-                      <div style={{ width: `${Math.round(order.amountOffered * 100 / sellTotalVolume)}%` }} className="absolute bg-green-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
+                      <div style={{ width: `${Math.round(order.amountDesired * 100 / sellTotalVolume)}%` }} className="absolute bg-green-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
                     </td>
 
                   </tr>
@@ -276,10 +283,70 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookPr
   );
 }
 
-function UserOrdersList() {
+const useUserOrders = () => {
+  const [orders, setUserOrders] = useState<DetailedOrder[]>([]);
 
+  const updateOrders = () => {
+    const contract = new Contract();
+    contract.allUserOrders().then((orders: DetailedOrder[]) => {
+      setUserOrders(orders);
+    });
+  }
 
-  return <div>
+  return [orders, updateOrders] as const;
+}
 
+interface UserOrderProps {
+  orders: DetailedOrder[];
+  cancelOrder: (order: DetailedOrder) => void;
+}
+
+function OrdersList({orders, cancelOrder}: UserOrderProps) {
+
+  const onCancel = (order: DetailedOrder) => {
+    const contract = new Contract();
+    contract.cancelOrder(order.counterId).then(() => {
+      cancelOrder(order);
+    });
+  }
+
+  return <div className="w-full h-full flex flex-col p-5 text-xs md:text-base">
+    <p className="md:text-xl text-base text-center w-full">My orders</p>
+    <table className="table-fixed mt-2 md:mt-5 border-separate md:border-spacing-y-2 border-spacing-y-1 [&>td]:px-6 [&>td]:py-20`">
+      <thead>
+        <tr className="bg-bg-gr-2/80 p-1">
+          <th className="text-center rounded-l-xl">Buy</th>
+          <th className="text-center">Price</th>
+          <th className="text-center">Sell</th>
+          <th className="text-center rounded-r-xl">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          orders.length === 0
+            ? <tr><td className="text-slate-100 opacity-50 text-center">No orders found</td></tr>
+            : orders.map((order) => {
+              const ownedToken = Pair.ownedToken(order.pair) == order.pair.tokenId1 ? order.token1 : order.token2;
+              const desiredToken = Pair.desiredToken(order.pair) == order.pair.tokenId1 ? order.token1 : order.token2;
+
+              return (
+                <tr key={order.counterId} className="h-full w-full even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20">
+              
+                  <td className="p-1 text-center rounded-l-xl">
+                    {order.amountDesired} {desiredToken.name}
+                  </td>
+                  <td className="p-1 text-center">{(order.amountDesired / order.amountOffered).toFixed(9)} {desiredToken.name}</td>
+                  <td className="p-1 text-center text-white">
+                    {order.amountOffered} {ownedToken.name}
+                  </td>
+                  <td className="rounded-r-xl">
+                    <button onClick={() => onCancel(order)} className="md:p-1 p-[0.125rem] w-full grow-on-hover glow-on-hover rounded-xl border">Cancel</button>
+                  </td>
+                </tr>
+              )
+            })
+        }
+      </tbody>
+      </table>
   </div>
 }

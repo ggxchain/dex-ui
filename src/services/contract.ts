@@ -1,6 +1,6 @@
 import mockedTokens from "@/mock";
 import GGXWallet from "./ggx";
-import { Token, TokenId, CounterId, Order, Amount, PubKey } from "@/types";
+import { Token, TokenId, CounterId, Order, Amount, PubKey, DetailedOrder } from "@/types";
 import Pair from "@/pair";
 
 export default class Contract {
@@ -64,7 +64,7 @@ export default class Contract {
         return Promise.resolve(orders);
     }
 
-    async allUserOrders(page: number = 0, fetch: number = 50): Promise<Order[]> {
+    async allUserOrders(page: number = 0, fetch: number = 50): Promise<DetailedOrder[]> {
         const orders = [];
         var i = 0;
         const shift = page * fetch;
@@ -83,7 +83,9 @@ export default class Contract {
             if (order === undefined) {
                 break;
             }
-            orders.push(order);
+            const token1 = this.mapTokenIdToToken(order.pair.tokenId1);
+            const token2 = this.mapTokenIdToToken(order.pair.tokenId2);
+            orders.push({...order, token1, token2});
             i++;
         }
         return Promise.resolve(orders);
