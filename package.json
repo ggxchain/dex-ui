@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@polkadot/extension-dapp": "^0.46.6",
     "cryptocurrency-icons": "^0.18.1",
     "next": "14.0.4",
     "react": "^18",
