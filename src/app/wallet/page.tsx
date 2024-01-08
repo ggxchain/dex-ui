@@ -37,11 +37,10 @@ export default function Wallet() {
 
         const ggx = new GGXWallet();
         ggx.getAccounts().then((accounts) => {
-            const ggx = new GGXWallet();
-            setSelectedAccount(ggx.pubkey());
             setGGXAccounts(accounts);
+            setSelectedAccount(ggx.pubkey());
         });
-    }, []);
+    }, []); 
 
     useEffect(() => {
         const contract = new Contract();
@@ -99,6 +98,14 @@ export default function Wallet() {
         refreshBalances();
     };
 
+    const connectWallet = () => {
+        const ggx = new GGXWallet();
+        ggx.getAccounts().then((accounts) => {
+            setGGXAccounts(accounts);
+            setSelectedAccount(ggx.pubkey());
+        });
+    }
+
     const onWithdraw = () => {
         // TODO
     };
@@ -118,7 +125,7 @@ export default function Wallet() {
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl ">${total.toFixed(2)}</h1>
                 <div className="flex">
-                    <button onClick={onDeposit} disabled={walletIsNotInitialized} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-32 w-24 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit</button>
+                    <button onClick={onDeposit} disabled={ggxAccounts.length === 0} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-32 w-24 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit</button>
                     <button onClick={onWithdraw} disabled={walletIsNotInitialized} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-32 w-24 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw</button>
                 </div>
             </div>
@@ -128,7 +135,7 @@ export default function Wallet() {
                 <div className="w-[45%] md:w-[30%] flex justify-end">
                     {
                         walletIsNotInitialized
-                            ? <Link href="https://polkadot.js.org/extension/" className="text-center text-slate-100 bg-bg-gr-2/80 rounded-2xl text-wrap md:max-w-64 max-w-48 w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Get the wallet</Link>
+                            ? <button onClick={connectWallet} className="text-center text-slate-100 secondary-gradient rounded-2xl text-wrap md:max-w-64 max-w-48 w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
                             : <Select<Account> onChange={handleSelectChange} options={ggxAccounts} value={selectedAccount} className="m-1 w-full h-full md:max-w-64 max-w-48"
                                 childFormatter={(account) => {
                                     return (<div className="w-full md:p-2 p-1 m-0 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
@@ -141,7 +148,7 @@ export default function Wallet() {
             </div>
             {
                 filteredTokens.length > 0 &&
-                <table className="table-auto rounded-xl w-full border-separate border-spacing-y-2 [&>td]:px-6 [&>td]:py-20">
+                <table className={`table-auto ${walletIsNotInitialized ? "opacity-50" : "opacity-100"} rounded-xl w-full border-separate border-spacing-y-2 [&>td]:px-6 [&>td]:py-20`}>
                     <thead>
                         <tr className="bg-bg-gr-2/80">
                             <th className="rounded-l-lg text-left pl-16">Asset</th>
