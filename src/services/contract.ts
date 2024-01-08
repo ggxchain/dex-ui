@@ -29,7 +29,7 @@ export default class Contract {
         const tokens = [];
         var i = 0;
         const shift = page * fetch;
-        while (true) {
+        while (i < fetch) {
             const tokenId = this.contract.ownersTokenByIndex(this.wallet.pubkey(), shift + i);
             if (tokenId === undefined) {
                 break;
@@ -44,7 +44,7 @@ export default class Contract {
         const orders = [];
         var i = 0;
         const shift = page * fetch;
-        while (true) {
+        while (i < fetch) {
             const counterId = this.contract.pairOrderByIndex(pair, shift + i);
             if (counterId === undefined) {
                 break;

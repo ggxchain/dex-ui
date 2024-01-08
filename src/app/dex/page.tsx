@@ -46,7 +46,7 @@ export default function Dex() {
   const isTokenNotSelected = sell === undefined || buy === undefined;
   const isTokenSame = sell?.token.symbol === buy?.token.symbol;
   const isWalletNotConnected = wallet === undefined; // TODO: proper check
-  const IsUserBalanceNotEnough = !isWalletNotConnected && availableBalance < (sell?.amount ?? 0);
+  const isUserBalanceNotEnough = !isWalletNotConnected && availableBalance < (sell?.amount ?? 0);
   const isOrderNotChosen = order === undefined;
   const isOrderExhausted = !isOrderNotChosen && (sell?.amount ?? 0) > order?.amountDesired;
   const isSellAmountZero = sell?.amount === 0;
@@ -65,7 +65,7 @@ export default function Dex() {
 
   const isAmountZero = isSellAmountZero || buyAmount === 0;
 
-  const isFormHasErrors = isTokenNotSelected || isTokenSame || isAmountZero || isWalletNotConnected || IsUserBalanceNotEnough || (isTaker && isOrderExhausted);
+  const isFormHasErrors = isTokenNotSelected || isTokenSame || isAmountZero || isWalletNotConnected || isUserBalanceNotEnough || (isTaker && isOrderExhausted);
 
   const onSwap = () => {
     if (isFormHasErrors) {
@@ -121,7 +121,7 @@ export default function Dex() {
             <TokenSelector token={sell?.token} amount={sell?.amount ?? 0} onChange={onSellChange} />
             <div className="flex flex-col text-xs text-orange-300">
               {
-                IsUserBalanceNotEnough && !isTokenNotSelected &&
+                isUserBalanceNotEnough && !isTokenNotSelected &&
                 <div className="flex text-xs items-center mt-1 justify-between">
                   <p className="w-4/5">The balance is not enough to make this swap</p>
                   <button className="ml-2 p-1 rounded-2xl border grow-on-hover" onClick={() => setSell({ ...sell, amount: availableBalance })}>Set max</button>
