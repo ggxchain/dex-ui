@@ -5,9 +5,9 @@ import CexService from "@/services/cex";
 import Contract from "@/services/contract";
 import GGXWallet, { Account } from "@/services/ggx";
 import { Token, TokenId, Amount } from "@/types";
-import Link from "next/link";
 import { ChangeEvent, useEffect, useState } from "react";
 import Select from "@/components/select";
+import TokenList from "@/components/tokenList";
 
 export default function Wallet() {
     const [tokens, setTokens] = useState<Token[]>([]);
@@ -40,7 +40,7 @@ export default function Wallet() {
             setGGXAccounts(accounts);
             setSelectedAccount(ggx.pubkey());
         });
-    }, []); 
+    }, []);
 
     useEffect(() => {
         const contract = new Contract();
@@ -120,6 +120,18 @@ export default function Wallet() {
         setSelectedAccount(e);
     };
 
+    const displayTokens = filteredTokens.map((token) => {
+        const balance = balances.get(token.id);
+        const price = tokenPrices.get(token.id);
+
+        return {
+            ...token,
+            balance: balance ?? 0,
+            estimatedPrice: price ?? 0,
+            url: `/svg/${token.symbol}.svg`
+        }
+    })
+
     return (
         <div className="w-full">
             <div className="flex justify-between items-center">
@@ -148,46 +160,7 @@ export default function Wallet() {
             </div>
             {
                 filteredTokens.length > 0 &&
-                <table className={`table-auto ${walletIsNotInitialized ? "opacity-50" : "opacity-100"} rounded-xl w-full border-separate border-spacing-y-2 [&>td]:px-6 [&>td]:py-20`}>
-                    <thead>
-                        <tr className="bg-bg-gr-2/80">
-                            <th className="rounded-l-lg text-left pl-16">Asset</th>
-                            <th>Balance</th>
-                            <th className="rounded-r-lg">Price</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-
-                        {
-                            filteredTokens.map((token, index) => (
-                                <tr key={index} className="text-center even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20 [&>td]:px-6 [&>td]:py-1">
-                                    <td className="rounded-l-lg">
-                                        <div className="flex items-center w-full md:text-lg text-base">
-                                            <img src={`/svg/${token.symbol}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
-                                            <p className="font-bold">{token.name}</p>
-                                            <sup className="pl-1 opacity-80">{token.network}</sup>
-                                        </div>
-                                    </td>
-                                    {
-                                        (balances.get(token.id) !== undefined || !ownedTokens.find((token1) => token.id === token1.id))
-                                            ?
-                                            <td>
-                                                {balances.get(token.id) ?? 0} {`${token.symbol.toUpperCase()} `}
-                                                <span className="text-sm opacity-50">
-                                                    (${((balances.get(token.id) ?? 0) * (tokenPrices.get(token.id) ?? 0)).toFixed(2)})
-                                                </span>
-                                            </td>
-                                            : <td className="w-10 h-10">
-                                                <Spinner />
-                                            </td>
-                                    }
-
-                                    <td className="rounded-r-lg">${(tokenPrices.get(token.id) ?? 0).toFixed(2)}</td>
-                                </tr>
-                            ))
-                        }
-                    </tbody>
-                </table>
+                <TokenList className={`${walletIsNotInitialized ? "opacity-50" : "opacity-100"} w-full`} tokens={displayTokens} />
             }
             {
                 tokens.length === 0 &&

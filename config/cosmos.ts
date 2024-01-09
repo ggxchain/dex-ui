@@ -1,51 +1,47 @@
-const cosmos ={
-  chainId: "earth-0",
-  chainName: "monkey",
-  rpc: "http://127.0.0.1:26657",
-  rest: "http://127.0.0.1:1317",
-  bip44: {
-    coinType: 118,
+const cosmos = {
+  "rpc": "https://rpc.sentry-01.theta-testnet.polypore.xyz",
+  "rest": "https://rest.sentry-01.theta-testnet.polypore.xyz",
+  "chainId": "theta-testnet-001",
+  "chainName": "Cosmos Hub Testnet",
+  "chainSymbolImageUrl": "https://raw.githubusercontent.com/chainapsis/keplr-chain-registry/main/images/cosmoshub/chain.png",
+  "bip44": {
+    "coinType": 118
   },
-  bech32Config: {
-    bech32PrefixAccAddr: "cosmos",
-    bech32PrefixAccPub: "cosmos" + "pub",
-    bech32PrefixValAddr: "cosmos" + "valoper",
-    bech32PrefixValPub: "cosmos" + "valoperpub",
-    bech32PrefixConsAddr: "cosmos" + "valcons",
-    bech32PrefixConsPub: "cosmos" + "valconspub",
+  "bech32Config": {
+    "bech32PrefixAccAddr": "cosmos",
+    "bech32PrefixAccPub": "cosmospub",
+    "bech32PrefixConsAddr": "cosmosvalcons",
+    "bech32PrefixConsPub": "cosmosvalconspub",
+    "bech32PrefixValAddr": "cosmosvaloper",
+    "bech32PrefixValPub": "cosmosvaloperpub"
   },
-  currencies: [
+  "stakeCurrency": {
+    "coinDecimals": 6,
+    "coinDenom": "ATOM",
+    "coinMinimalDenom": "uatom",
+    "coinImageUrl": "https://raw.githubusercontent.com/chainapsis/keplr-chain-registry/main/images/cosmoshub/uatom.png"
+  },
+  "currencies": [
     {
-      coinDenom: "stake",
-      coinMinimalDenom: "stake",
-      coinDecimals: 6,
-      coinGeckoId: "cosmos",
-    },
-    {
-      coinDenom: "ERT",
-      coinMinimalDenom: "ert",
-      coinDecimals: 0,
-    },
+      "coinDecimals": 6,
+      "coinDenom": "ATOM",
+      "coinMinimalDenom": "uatom",
+      "coinImageUrl": "https://raw.githubusercontent.com/chainapsis/keplr-chain-registry/main/images/cosmoshub/uatom.png"
+    }
   ],
-  feeCurrencies: [
+  "feeCurrencies": [
     {
-      coinDenom: "stake",
-      coinMinimalDenom: "stake",
-      coinDecimals: 6,
-      coinGeckoId: "cosmos",
-      gasPriceStep: {
-        low: 1,
-        average: 1,
-        high: 1,
-      },
-    },
+      "coinDecimals": 6,
+      "coinDenom": "ATOM",
+      "coinMinimalDenom": "uatom",
+      "coinImageUrl": "https://raw.githubusercontent.com/chainapsis/keplr-chain-registry/main/images/cosmoshub/uatom.png",
+      "gasPriceStep": {
+        "average": 0.025,
+        "high": 0.03,
+        "low": 0.01
+      }
+    }
   ],
-  stakeCurrency: {
-    coinDenom: "stake",
-    coinMinimalDenom: "stake",
-    coinDecimals: 6,
-    coinGeckoId: "cosmos",
-  },
   features: ["stargate", "ibc-transfer", "no-legacy-stdTx"],
 }
 

@@ -1,42 +1,53 @@
 "use client";
 
-import Dex from "@/components/dex";
-import type { ChainInfo } from "@keplr-wallet/types";
+import type { AccountData, ChainInfo } from "@keplr-wallet/types";
 import React, { useEffect, useState } from "react";
-import cosmos from "../../../config/cosmos";
+import axelar from "../../../config/axelar";
 import {
   assertIsDeliverTxSuccess,
+  Coin,
+  IndexedTx,
   SigningStargateClient,
 } from "@cosmjs/stargate";
-import Long from "long";
+import Select from "@/components/select";
+import TokenList, { ListElement } from "@/components/tokenList";
+import GGXWallet, { Account } from "@/services/ggx";
+import cosmos from "../../../config/cosmos";
 
 export default function Transfer() {
   const [chain, setChain] = useState<ChainInfo>(cosmos);
-  const [client, setClient] = useState<any>();
-  const [address, setAddress] = useState<any>();
-
-  const [balances, setBalances] = useState<any>();
-
-  const [ibcRecipent, setIbcRecipent] = useState<any>(
-    "qHUgFDj9cU9hcGZpyPDVaLVHhf2ojJ5z9VW255XL3gWLqYYCd"
-  );
-  const [ibcTokenName, setIbcTokenName] = useState<any>("ERT");
-  const [sourcePort, setSourcePort] = useState<any>("transfer");
-  const [sourceChannel, setSourceChannel] = useState<any>("channel-0");
-  const [tx, setTx] = useState<any>();
-  const [sendHash, setSendHash] = useState<any>();
-  const [txRes, setTxRes] = useState<any>();
+  const [client, setClient] = useState<SigningStargateClient>();
+  const [account, setAccount] = useState<AccountData>();
+  const [accounts, setAccounts] = useState<readonly AccountData[]>([]);
+  const [balances, setBalances] = useState<readonly Coin[]>();
+  const [selectedToken, setSelectedToken] = useState<ListElement>();
+  const [GGxAccounts, setGGxAccounts] = useState<Account[]>([]);
+  const [selectedGGxAccount, setSelectedGGxAccount] = useState<Account>();
+  const [sourcePort, setSourcePort] = useState<string>("transfer");
+  const [sourceChannel, setSourceChannel] = useState<string>("channel-0");
+  const [tx, setTx] = useState<string>();
+  const [txRes, setTxRes] = useState<IndexedTx>();
 
   // init chain
   useEffect(() => {
     connectWallet();
+    connectGGxWallet();
   }, [chain]);
+
+  const connectGGxWallet = () => {
+    const ggx = new GGXWallet();
+    ggx.getAccounts().then((accounts) => {
+      setGGxAccounts(accounts);
+      const ggx = new GGXWallet();
+      setSelectedGGxAccount(ggx.pubkey());
+    });
+  }
 
   // get balances
   useEffect(() => {
-    if (!address && !client) return;
+    if (!account?.address && !client) return;
     getBalances();
-  }, [address, client, sendHash]);
+  }, [account, client]);
 
   // connect walllet
   const connectWallet = async () => {
@@ -49,54 +60,74 @@ export default function Transfer() {
 
     const offlineSigner = window.keplr.getOfflineSigner(chain.chainId);
 
+    // Actually, it returns only one account :C Buy in the future, it will return all accounts.
     const accounts = await offlineSigner.getAccounts();
+    const key = await window.keplr.getKey(chain.chainId);
     const client = await SigningStargateClient.connectWithSigner(
       chain.rpc,
       offlineSigner
     );
 
-    setAddress(accounts[0].address);
+    setAccounts(accounts);
+    setAccount(accounts[0]);
     setClient(client);
   };
 
-  const getBalances = async () => {
-    if (client) {
-      const _balances = await client.getAllBalances(address);
+  const mapToken = (balance: Coin, index: number) => {
+    const token = chain.currencies.find((currency) => currency.coinMinimalDenom === balance.denom);
+    const url = token?.coinImageUrl ?? `/svg/${token?.coinDenom}.svg`;
+    return {
+      name: token?.coinDenom ?? balance.denom,
+      balance: Number.parseInt(balance.amount) / (10 ** (token?.coinDecimals ?? 6)),
+      symbol: token?.coinDenom ?? balance.denom,
+      estimatedPrice: 1,
+      id: index,
+      url,
+      network: "",
+    };
+  }
 
-      setBalances(_balances);
+  const getBalances = async () => {
+    if (client && account?.address) {
+      const balances = await client.getAllBalances(account.address);
+
+      setBalances(balances);
+      if (balances.length > 0) {
+        setSelectedToken(mapToken(balances[0], 0));
+      }
     }
   };
 
   // get tx by hash
   const getTx = async () => {
-    if (!tx) return;
+    if (!tx || !client) return;
     const result = await client.getTx(tx);
 
-    setTxRes(result);
+    setTxRes(result ?? undefined);
   };
 
   const sendIbcToken = async () => {
-    if (!client || !ibcRecipent || !address) {
+    if (!client || !selectedGGxAccount || !account?.address) {
       console.error(
         "some input is undefine client, ibcRecipent, address",
         client,
-        ibcRecipent,
-        address
+        selectedGGxAccount?.address,
+        account?.address
       );
       return;
     }
 
     const converAmount = 10;
     const amount = {
-      denom: ibcTokenName,
+      denom: selectedToken?.symbol ?? "ert",
       amount: converAmount.toString(),
     };
 
     const fee = {
       amount: [
         {
-          denom: chain.stakeCurrency.coinMinimalDenom,
-          amount: 0.025,
+          denom: chain.stakeCurrency?.coinMinimalDenom ?? "ert",
+          amount: "0.025",
         },
       ],
       gas: "2000000",
@@ -104,8 +135,8 @@ export default function Transfer() {
 
     try {
       const result = await client.sendIbcTokens(
-        address,
-        ibcRecipent,
+        account.address,
+        selectedGGxAccount.address,
         amount,
         sourcePort,
         sourceChannel,
@@ -119,73 +150,67 @@ export default function Transfer() {
       if (result.code == 0) {
         console.log(
           "transfer success, height:" +
-            result.height +
-            "hash: " +
-            result.transactionHash
+          result.height +
+          "hash: " +
+          result.transactionHash
         );
 
         setTx(result.transactionHash);
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   };
 
+  const ggxOnSelect = (account: Account) => {
+    setSelectedGGxAccount(account);
+    const ggx = new GGXWallet();
+    ggx.selectAccount(account);
+  }
+
+  const tokens = balances?.map((balance, index) => mapToken(balance, index)) ?? [];
+
+  const walletIsNotInitialized = !account?.address || !client;
+  const isGGxWalletNotConnected = selectedGGxAccount === undefined;
+  const total = 0;
+
   return (
-    <div className="text-slate-100 flex flex-col md:min-w-[50%] min-w-full p-10 pl-40">
-      <button
-        className="rounded-2xl border p-2 m-2 basis-1/4 grow-on-hover pr-0"
-        onClick={connectWallet}
-      >
-        {address ? "wallet connected" : " connect keplr"}
-      </button>
-
-      <div className="weight">address: {address}</div>
-      <div className="weight">
-        <span style={{ whiteSpace: "nowrap" }}>balances list: &nbsp;</span>
-        <div className="flex flex-col rounded-3xl secondary-gradient p-5 md:mx-[25px] mt-5">
-          {balances &&
-            balances.map((balance: any, _index: any) => (
-              <>
-                <div className="flex text-md justify-between">
-                  <div className="pl-0">
-                    {parseFloat(
-                      String(Number(balance?.amount) / Math.pow(10, 6))
-                    ).toFixed(2)}
-                  </div>
-
-                  <div className="pr-0">{balance?.denom}</div>
-                </div>
-              </>
-            ))}
+    <div className="text-slate-100 flex flex-col w-full items-center h-full">
+      <div className="flex mt-1 justify-between w-full">
+        <h1 className="text-3xl">${total}</h1>
+        <div className="flex flex-col">
+          <p>Ibc address</p>
+          {
+            walletIsNotInitialized
+              ? <button onClick={connectWallet} className="text-center text-slate-100 secondary-gradient rounded-2xl text-wrap md:max-w-64 max-w-48 w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
+              : <Select<AccountData> onChange={(account) => (setAccount(account))} options={accounts} value={account} className="m-1 w-full h-full md:max-w-128 max-w-64"
+                childFormatter={(account) => {
+                  return (<div className="w-full md:p-2 p-1 m-0 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                    <span className="text-base truncate">{account.address}</span>
+                  </div>)
+                }}
+              />
+          }
+          <p className="mt-2">GGx chain address</p>
+          {isGGxWalletNotConnected
+            ? <button onClick={connectGGxWallet} className="text-center text-slate-100 secondary-gradient rounded-2xl text-wrap md:max-w-64 max-w-48 w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect GGx wallet</button>
+            : <Select<Account> onChange={ggxOnSelect} options={GGxAccounts} value={selectedGGxAccount} className="m-1 w-full h-full md:max-w-128 max-w-64"
+              childFormatter={(account) => {
+                return (<div className="w-full md:p-2 p-1 m-0 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                  <span className="text-base">{account.name ? account.name : `Account ${GGxAccounts.findIndex((acc) => acc.address == account.address)}`}</span>
+                </div>)
+              }}
+            />
+          }
         </div>
       </div>
 
+      <TokenList selected={selectedToken} onClick={setSelectedToken} className={`w-full mt-10 ${walletIsNotInitialized ? "opacity-50" : "opacity-100"}`} tokens={tokens} />
       <br />
       <div>
         <label>Tranfer ICS-20 Token to GGX Chain</label>
 
         <div className="text-black">
-          <div>
-            <input
-              type="text"
-              value={ibcRecipent}
-              placeholder="recipent"
-              style={{ width: "350px" }}
-              onChange={(e) => setIbcRecipent(e.target.value)}
-            />
-          </div>
-          <br />
-          <div>
-            <input
-              type="text"
-              value={ibcTokenName}
-              placeholder="ibc token name"
-              style={{ width: "350px" }}
-              onChange={(e) => setIbcTokenName(e.target.value)}
-            />
-          </div>
-          <br />
           <div>
             <input
               type="text"
@@ -218,6 +243,6 @@ export default function Transfer() {
           <hr />
         </div>
       </div>
-    </div>
+    </div >
   );
 }
