@@ -11,7 +11,7 @@ export default class Contract {
 
     async allTokens(page: number = 0, fetch: number = 50): Promise<Token[]> {
         const tokens = [];
-        var i = 0;
+        let i = 0;
         const shift = page * fetch;
         while (i < fetch) {
             const tokenId = this.contract.tokenByIndex(shift + i);
@@ -26,9 +26,9 @@ export default class Contract {
 
     async allTokensOfOwner(page: number = 0, fetch: number = 50): Promise<Token[]> {
         const tokens = [];
-        var i = 0;
+        let i = 0;
         const shift = page * fetch;
-        
+
         const address = this.wallet.pubkey()?.address;
         if (address === undefined) {
             return Promise.resolve([]);
@@ -47,7 +47,7 @@ export default class Contract {
 
     async allOrders(pair: Pair, page: number = 0, fetch: number = 50): Promise<Order[]> {
         const orders = [];
-        var i = 0;
+        let i = 0;
         const shift = page * fetch;
         while (i < fetch) {
             const counterId = this.contract.pairOrderByIndex(pair, shift + i);
@@ -66,7 +66,7 @@ export default class Contract {
 
     async allUserOrders(page: number = 0, fetch: number = 50): Promise<DetailedOrder[]> {
         const orders = [];
-        var i = 0;
+        let i = 0;
         const shift = page * fetch;
 
         const address = this.wallet.pubkey()?.address;
@@ -85,7 +85,7 @@ export default class Contract {
             }
             const token1 = this.mapTokenIdToToken(order.pair.tokenId1);
             const token2 = this.mapTokenIdToToken(order.pair.tokenId2);
-            orders.push({...order, token1, token2});
+            orders.push({ ...order, token1, token2 });
             i++;
         }
         return Promise.resolve(orders);
