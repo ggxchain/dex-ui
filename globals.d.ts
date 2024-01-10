@@ -1,4 +1,8 @@
-interface Window {
-  keplr: any;
-  getOfflineSigner: any;
+import { Keplr, OfflineDirectSigner } from "@keplr-wallet/types";
+
+declare global {
+  interface Window {
+    keplr: Keplr;
+    getOfflineSigner: OfflineDirectSigner;
+  }
 }

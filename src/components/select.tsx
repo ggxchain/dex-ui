@@ -5,7 +5,7 @@ import ReactSelect, { SingleValue } from "react-select";
 interface SelectProps<Type> {
     value?: Type;
     onChange: (value: Type) => void;
-    options: Type[];
+    options: readonly Type[];
     childFormatter: (value: Type) => ReactNode;
     className?: string;
 }
