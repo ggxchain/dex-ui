@@ -5,13 +5,12 @@ import { useEffect, useState } from "react";
 import Contract from "@/services/contract";
 import GGXWallet from "@/services/ggx";
 import Ruler from "@/components/ruler";
-import TokenSelector from "@/components/tokenSelector";
 import { DetailedOrder, Order, Token } from "@/types";
+import TokenSelector, { TokenWithPrice, useTokens } from "@/components/tokenSelector";
 import Pair from "@/pair";
 import { useRouter } from "next/navigation";
 
-type TokenData = {
-  token: Token;
+type TokenData = TokenWithPrice & {
   amount: number;
 }
 
@@ -21,17 +20,20 @@ export default function Dex() {
   const [buy, setBuy] = useState<TokenData>();
   const [availableBalance, setAvailableBalance] = useState<number>(0);
   const [order, setOrder] = useState<Order>();
+  const [tokens, loadTokens] = useTokens();
   const [userOrders, updateUserOrders] = useUserOrders();
+
   const router = useRouter();
 
   useEffect(() => {
     updateUserOrders();
+    loadTokens();
   }, [])
 
   useEffect(() => {
     if (sell !== undefined) {
       const contract = new Contract();
-      contract.balanceOf(sell.token.id).then((balance) => {
+      contract.balanceOf(sell.id).then((balance) => {
         setAvailableBalance(balance);
       });
     }
@@ -51,7 +53,7 @@ export default function Dex() {
 
   const isTaker = !isMaker;
   const isTokenNotSelected = sell === undefined || buy === undefined;
-  const isTokenSame = sell?.token.symbol === buy?.token.symbol;
+  const isTokenSame = sell?.symbol === buy?.symbol;
   const isWalletNotConnected = wallet.pubkey() === undefined;
   const isUserBalanceNotEnough = !isWalletNotConnected && availableBalance < (sell?.amount ?? 0);
   const isOrderNotChosen = order === undefined;
@@ -60,13 +62,13 @@ export default function Dex() {
 
   const rate = isMaker && !isSellAmountZero && !isTokenNotSelected
     ? buy.amount / sell.amount
-    : order
+    : order !== undefined
       ? order.amountOffered / order.amountDesired
       : 0;
 
   const buyAmount = isMaker && !isTokenNotSelected
     ? buy.amount
-    : order && !isTokenNotSelected
+    : order !== undefined && !isTokenNotSelected
       ? sell.amount * rate
       : 0;
 
@@ -78,7 +80,7 @@ export default function Dex() {
     if (isFormHasErrors) {
       return;
     }
-    const pair = new Pair(sell.token.id, buy.token.id);
+    const pair = new Pair(sell.id, buy.id);
     const contract = new Contract();
     contract.makeOrder(pair, sell.amount, buyAmount).then(() => updateUserOrders());
     onClear();
@@ -88,19 +90,27 @@ export default function Dex() {
     setOrder(order);
   };
 
-  const onSellChange = (token: Token, amount: number) => {
-    if (token.id != sell?.token.id) {
+  const onSellChange = (token: TokenWithPrice, amount: number) => {
+    if (token.id != sell?.id) {
       setOrder(undefined);
     }
-    setSell({ token, amount });
+    setSell({ ...token, amount });
   }
 
-  const onBuyChange = (token: Token, amount: number) => {
-    if (token.id != buy?.token.id) {
+  const onBuyChange = (token: TokenWithPrice, amount: number) => {
+    if (token.id != buy?.id) {
       setOrder(undefined);
     }
-    setBuy({ token, amount });
+    setBuy({ ...token, amount });
   }
+
+  const buyPriceRate = (buy?.price ?? 0) * rate;
+  const sellPriceRate = rate > 0 ? (sell?.price ?? 0) * (1 / rate) : 0;
+
+  const buyPrice = (buyAmount ?? 0) * sellPriceRate;
+  const sellPrice = buyPriceRate * (sell?.amount ?? 0);
+
+  const comparedToMarket: number = !isTokenNotSelected && !isAmountZero ? ((sellPrice - buyPrice) / buyPrice) * 100 : 0;
 
   return (
     <div className="text-slate-100 flex flex-col w-full items-center">
@@ -125,7 +135,7 @@ export default function Dex() {
                 <p className="font-normal mx-5">{availableBalance}</p>
               </div>
             </div>
-            <TokenSelector token={sell?.token} amount={sell?.amount ?? 0} onChange={onSellChange} />
+            <TokenSelector token={sell} tokens={tokens} amount={sell?.amount ?? 0} onChange={onSellChange} />
             <div className="flex flex-col text-xs text-orange-300">
               {
                 isUserBalanceNotEnough && !isTokenNotSelected &&
@@ -136,7 +146,7 @@ export default function Dex() {
               }
               {isTaker && isOrderExhausted && !isTokenNotSelected &&
                 <div className="flex text-xs items-center mt-1 justify-between">
-                  <p className="w-4/5">Max available value for this order is: {order.amountDesired.toFixed(9)} {sell.token.name}</p>
+                  <p className="w-4/5">Max available value for this order is: {order.amountDesired.toFixed(9)} {sell.name}</p>
                   <button className="ml-2 p-1 rounded-2xl border grow-on-hover" onClick={() => setSell({ ...sell, amount: order.amountDesired })}>Set max</button>
                 </div>
               }
@@ -148,21 +158,33 @@ export default function Dex() {
             </div>
 
             <p className="text-sm mt-2">Buy</p>
-            <TokenSelector token={buy?.token} lockedAmount={isTaker} amount={buyAmount} onChange={onBuyChange} />
+            <TokenSelector token={buy} tokens={tokens} lockedAmount={isTaker} amount={buyAmount} onChange={onBuyChange} />
 
             <Ruler />
 
-            <div className="font-semibold mt-4">
-              <div className="flex justify-between">
-                <p>Rate:</p>
+            <div className="mt-4">
+              <div className="flex justify-between items-center">
+                <p className="font-semibold">Rate:</p>
                 {rate !== 0 && !isTokenNotSelected && !isTokenSame
-                  ? <p>1 {sell.token.name} = {rate.toFixed(9)} {buy.token.name}</p>
+                  ? <div className="flex flex-col">
+                    <p className="font-semibold">
+                      1 {sell.name} = {rate.toFixed(9)} {buy.name} ≈ ${buyPriceRate.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-right opacity-75">
+                      1 {buy.name} = {(1 / rate).toFixed(9)} {sell.name} ≈ ${sellPriceRate.toFixed(2)}
+                    </p>
+                  </div>
                   : <p>0.00</p>
                 }
               </div>
 
+              <div className="flex justify-between ">
+                <p className="font-semibold">Compared to CEx:</p>
+                <p className={`${comparedToMarket < 0 ? "text-red-500" : comparedToMarket > 0 ? "text-green-500" : ""}`}>{Math.abs(comparedToMarket).toFixed(2)}%</p>
+              </div>
+
               <div className="flex justify-between">
-                <p>Total fee:</p>
+                <p className="font-semibold">Total fee:</p>
                 <p>0.00</p>
               </div>
 
@@ -176,16 +198,16 @@ export default function Dex() {
               </div>
             </div>
           </div>
-          <OrdersList orders={userOrders} cancelOrder={() => updateUserOrders()}/>
+          <OrdersList orders={userOrders} cancelOrder={() => updateUserOrders()} />
         </div>
         {
           isTaker && !isTokenNotSelected && !isTokenSame &&
           <div className="md:has-[table]:py-14 md:py-5 px-5 md:has-[table]:w-[30%] has-[table]:w-full">
-            <OrderBook buyToken={buy?.token} sellToken={sell?.token} onChange={onOrderChange} selectedOrder={order} />
+            <OrderBook buyToken={buy} sellToken={sell} onChange={onOrderChange} selectedOrder={order} />
           </div>
         }
       </div>
-     
+
     </div>
   )
 }
@@ -301,7 +323,7 @@ interface UserOrderProps {
   cancelOrder: (order: DetailedOrder) => void;
 }
 
-function OrdersList({orders, cancelOrder}: UserOrderProps) {
+function OrdersList({ orders, cancelOrder }: UserOrderProps) {
 
   const onCancel = (order: DetailedOrder) => {
     const contract = new Contract();
@@ -331,7 +353,7 @@ function OrdersList({orders, cancelOrder}: UserOrderProps) {
 
               return (
                 <tr key={order.counterId} className="h-full w-full even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20">
-              
+
                   <td className="p-1 text-center rounded-l-xl">
                     {order.amountDesired} {desiredToken.name}
                   </td>
@@ -347,6 +369,6 @@ function OrdersList({orders, cancelOrder}: UserOrderProps) {
             })
         }
       </tbody>
-      </table>
+    </table>
   </div>
 }

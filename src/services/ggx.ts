@@ -10,7 +10,7 @@ export default class GGXWallet {
     selectedAccount: Account | undefined = undefined;
 
     constructor() {
-        if (typeof window === 'undefined') {
+        if (typeof window === "undefined") {
             return;
         }
 
