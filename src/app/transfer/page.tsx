@@ -2,7 +2,6 @@
 
 import type { AccountData, ChainInfo } from "@keplr-wallet/types";
 import React, { useEffect, useState } from "react";
-import axelar from "../../../config/axelar";
 import {
   assertIsDeliverTxSuccess,
   Coin,
@@ -12,18 +11,19 @@ import {
 import Select from "@/components/select";
 import TokenList, { ListElement } from "@/components/tokenList";
 import GGXWallet, { Account } from "@/services/ggx";
-import cosmos from "../../../config/cosmos";
+import ibcChains from "@/config/chains";
 
 export default function Transfer() {
-  const [chain, setChain] = useState<ChainInfo>(cosmos);
+  const chains = ibcChains;
+  const [chain, setChain] = useState<ChainInfo>(ibcChains[0]);
   const [client, setClient] = useState<SigningStargateClient>();
   const [account, setAccount] = useState<AccountData>();
+  const [amount, setAmount] = useState<number>(0);
   const [accounts, setAccounts] = useState<readonly AccountData[]>([]);
   const [balances, setBalances] = useState<readonly Coin[]>();
   const [selectedToken, setSelectedToken] = useState<ListElement>();
   const [GGxAccounts, setGGxAccounts] = useState<Account[]>([]);
   const [selectedGGxAccount, setSelectedGGxAccount] = useState<Account>();
-  const [sourcePort, setSourcePort] = useState<string>("transfer");
   const [sourceChannel, setSourceChannel] = useState<string>("channel-0");
   const [tx, setTx] = useState<string>();
   const [txRes, setTxRes] = useState<IndexedTx>();
@@ -49,8 +49,16 @@ export default function Transfer() {
     getBalances();
   }, [account, client]);
 
+  const reset = () => {
+    setAccount(undefined);
+    setAccounts([]);
+    setBalances([]);
+    setClient(undefined);
+  }
+
   // connect walllet
   const connectWallet = async () => {
+    reset();
     if (!window.keplr) {
       console.error("please install keplr extension");
     }
@@ -117,10 +125,9 @@ export default function Transfer() {
       return;
     }
 
-    const converAmount = 10;
-    const amount = {
+    const sendAmount = {
       denom: selectedToken?.symbol ?? "ert",
-      amount: converAmount.toString(),
+      amount: amount.toString(),
     };
 
     const fee = {
@@ -137,8 +144,8 @@ export default function Transfer() {
       const result = await client.sendIbcTokens(
         account.address,
         selectedGGxAccount.address,
-        amount,
-        sourcePort,
+        sendAmount,
+        "transfer",
         sourceChannel,
         undefined,
         Math.floor(Date.now() / 1000) + 300,
@@ -179,70 +186,72 @@ export default function Transfer() {
       <div className="flex mt-1 justify-between w-full">
         <h1 className="text-3xl">${total}</h1>
         <div className="flex flex-col">
-          <p>Ibc address</p>
-          {
-            walletIsNotInitialized
-              ? <button onClick={connectWallet} className="text-center text-slate-100 secondary-gradient rounded-2xl text-wrap md:max-w-64 max-w-48 w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
-              : <Select<AccountData> onChange={(account) => (setAccount(account))} options={accounts} value={account} className="m-1 w-full h-full md:max-w-128 max-w-64"
-                childFormatter={(account) => {
-                  return (<div className="w-full md:p-2 p-1 m-0 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
-                    <span className="text-base truncate">{account.address}</span>
-                  </div>)
-                }}
-              />
-          }
-          <p className="mt-2">GGx chain address</p>
-          {isGGxWalletNotConnected
-            ? <button onClick={connectGGxWallet} className="text-center text-slate-100 secondary-gradient rounded-2xl text-wrap md:max-w-64 max-w-48 w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect GGx wallet</button>
-            : <Select<Account> onChange={ggxOnSelect} options={GGxAccounts} value={selectedGGxAccount} className="m-1 w-full h-full md:max-w-128 max-w-64"
+          <Select<ChainInfo> onChange={(chain) => setChain(chain)} options={chains} value={chain} className="m-1 w-full h-full md:max-w-128 max-w-64" childFormatter={(chain) => {
+            return (<div className="w-full md:p-2 p-1 m-0 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+              <span className="text-base truncate">{chain.chainName}</span>
+            </div>)
+          }}
+          />
+        </div>
+      </div>
+
+      <div className="flex w-full flex-col mt-5 items-center md:max-w-128 max-w-64">
+        <p>Transfer from</p>
+        {
+          walletIsNotInitialized
+            ? <button onClick={connectWallet} className="text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
+            : <Select<AccountData> onChange={(account) => (setAccount(account))} options={accounts} value={account} className="m-1 w-full h-full"
               childFormatter={(account) => {
-                return (<div className="w-full md:p-2 p-1 m-0 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
-                  <span className="text-base">{account.name ? account.name : `Account ${GGxAccounts.findIndex((acc) => acc.address == account.address)}`}</span>
+                return (<div className="w-full md:p-2 p-1 m-0 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                  <span className="text-base truncate">{account.address}</span>
                 </div>)
               }}
             />
-          }
+        }
+        <p className="mt-2">Transfet to (GGx)</p>
+        {isGGxWalletNotConnected
+          ? <button onClick={connectGGxWallet} className="text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect GGx wallet</button>
+          : <Select<Account> onChange={ggxOnSelect} options={GGxAccounts} value={selectedGGxAccount} className="m-1 w-full h-full"
+            childFormatter={(account) => {
+              return (<div className="w-full md:p-2 p-1 m-0 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                <span className="text-base">{account.name ? account.name : `Account ${GGxAccounts.findIndex((acc) => acc.address == account.address)}`}</span>
+              </div>)
+            }}
+          />
+        }
+
+        <p className="mt-2">Channel</p>
+        <input className="mt-1 rounded-2xl border md:p-2 p-1 pl-5 basis-1/4 bg-transparent w-full"
+          type="text"
+          value={sourceChannel}
+          placeholder="sourceChannel"
+          onChange={(e) => setSourceChannel(e.target.value)}
+        />
+
+        <p className="mt-2">Amount in {selectedToken?.symbol}</p>
+        <div className="relative w-full">
+          <input className="mt-1 rounded-2xl border md:p-2 p-1 pl-5 basis-1/4 bg-transparent w-full"
+            type="number"
+            value={amount}
+            placeholder="amount"
+            onChange={(e) => setAmount(Number(e.target.value))}
+          />
+          <p className="absolute top-2 md:top-3 opacity-50 right-5">{selectedToken?.symbol}{amount >= 2 ? "s" : ""}</p>
         </div>
+
+        <button
+          className="rounded-2xl border p-2 m-2 basis-1/4 grow-on-hover"
+          onClick={sendIbcToken}
+        >
+          IBC Transfer
+        </button>
+
       </div>
+
+
 
       <TokenList selected={selectedToken} onClick={setSelectedToken} className={`w-full mt-10 ${walletIsNotInitialized ? "opacity-50" : "opacity-100"}`} tokens={tokens} />
-      <br />
-      <div>
-        <label>Tranfer ICS-20 Token to GGX Chain</label>
 
-        <div className="text-black">
-          <div>
-            <input
-              type="text"
-              value={sourcePort}
-              placeholder="sourcePort"
-              style={{ width: "350px" }}
-              onChange={(e) => setSourcePort(e.target.value)}
-            />
-          </div>
-          <br />
-          <div>
-            <input
-              type="text"
-              value={sourceChannel}
-              placeholder="sourceChannel"
-              style={{ width: "350px" }}
-              onChange={(e) => setSourceChannel(e.target.value)}
-            />
-          </div>
-          <br />
-          <div>
-            <button
-              className="rounded-2xl border p-2 m-2 basis-1/4 grow-on-hover"
-              onClick={sendIbcToken}
-            >
-              <p>IBC Transfer</p>
-            </button>
-          </div>
-
-          <hr />
-        </div>
-      </div>
     </div >
   );
 }
