@@ -32,6 +32,17 @@ export default function Wallet() {
         const contract = new Contract();
         contract.allTokens().then((tokens) => {
             setTokens(tokens);
+            const cex = new CexService();
+            cex.tokenPrices(tokens.map((token) => token.symbol)).then((prices) => {
+                const map = new Map<TokenId, Amount>();
+                prices.forEach((value, key) => {
+                    const token = tokens.find((token) => token.symbol === key);
+                    if (token !== undefined) {
+                        map.set(token.id, value);
+                    }
+                });
+                setTokenPrices(map);
+            });
         });
         refreshBalances();
 
@@ -54,18 +65,6 @@ export default function Wallet() {
                 setUpdate(!update);
             })
         }
-
-        const cex = new CexService();
-        cex.tokenPrices(ownedTokens.map((token) => token.symbol)).then((prices) => {
-            const map = new Map<TokenId, Amount>();
-            prices.forEach((value, key) => {
-                const token = ownedTokens.find((token) => token.symbol === key);
-                if (token !== undefined) {
-                    map.set(token.id, value);
-                }
-            });
-            setTokenPrices(map);
-        });
     }, [ownedTokens, selectedAccount]);
 
     const onSearch = (e: ChangeEvent<HTMLInputElement>) => {
