@@ -8,13 +8,13 @@ const cryptoCompareFetcher = async (tokens: string[]): Promise<Prices> => {
     const json = await fetch(`https://min-api.cryptocompare.com/data/pricemulti?fsyms=${tokenString}&tsyms=USD`)
         .then(res => res.json())
     const prices: Prices = new Map();
-    for (const i of tokens) {
-        const token = i.toUpperCase();
-        if (json[token] === undefined || json[token]["USD"] === undefined) {
+    for (const token of tokens) {
+        const key = token.toUpperCase();
+        if (json[key] === undefined || json[key]["USD"] === undefined) {
             console.error(`Failed to fetch price of ${token}`);
             continue;
         }
-        prices.set(token, json[token.toUpperCase()]["USD"]);
+        prices.set(token, json[key]["USD"]);
     }
     return prices;
 }
