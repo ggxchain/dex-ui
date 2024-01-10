@@ -70,6 +70,7 @@ export default function Transfer() {
     reset();
     if (!window.keplr) {
       console.error("please install keplr extension");
+      return
     }
 
     await window.keplr.experimentalSuggestChain(chain);
