@@ -38,8 +38,8 @@ export default function TokenSelector({ token, amount, onChange, lockedAmount }:
             return;
         }
         const cex = new CexService();
-        cex.tokenPrice(token.symbol).then((price) => {
-            setTokenPrice(price);
+        cex.tokenPrices([token.symbol]).then((prices) => {
+            setTokenPrice(prices.get(token.symbol) ?? 0);
         });
 
     }, [token]);

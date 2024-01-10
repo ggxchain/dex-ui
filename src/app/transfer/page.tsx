@@ -197,7 +197,7 @@ export default function Transfer() {
   return (
     <div className="text-slate-100 flex flex-col w-full items-center h-full">
       <div className="flex mt-1 justify-between w-full">
-        <h1 className="text-3xl">${total}</h1>
+        <h1 className="text-3xl">${total.toFixed(2)}</h1>
         <div className="flex flex-col">
           <Select<ChainInfo> onChange={(chain) => setChain(chain)} options={chains} value={chain} className="m-1 w-full h-full md:max-w-128 max-w-64" childFormatter={(chain) => {
             return (<div className="w-full md:p-2 p-1 m-0 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
