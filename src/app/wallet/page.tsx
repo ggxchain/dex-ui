@@ -36,7 +36,7 @@ export default function Wallet() {
             cex.tokenPrices(tokens.map((token) => token.symbol)).then((prices) => {
                 const map = new Map<TokenId, Amount>();
                 prices.forEach((value, key) => {
-                    const token = tokens.find((token) => token.symbol === key);
+                    const token = tokens.find((token) => token.symbol.toUpperCase() === key.toUpperCase());
                     if (token !== undefined) {
                         map.set(token.id, value);
                     }
