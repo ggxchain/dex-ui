@@ -32,11 +32,11 @@ export default function TokenList({ tokens, onClick, className, selected }: Toke
             <tbody>
 
                 {
-                    tokens.map((token, index) => {
+                    tokens.map((token) => {
                         const isSelected = token.id === selected?.id;
 
                         return (
-                            <tr key={index} onClick={() => handleClick(token)} className={`text-center even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20 [&>td]:px-6 [&>td]:py-1 rounded-xl ${isSelected ? "filter backdrop-brightness-125" : ""} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}>
+                            <tr key={token.symbol} onClick={() => handleClick(token)} className={`text-center even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20 [&>td]:px-6 [&>td]:py-1 rounded-xl ${isSelected ? "filter backdrop-brightness-125" : ""} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}>
                                 <td className="rounded-l-lg">
                                     <div className="flex items-center w-full md:text-lg text-base">
                                         <img src={token.url} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />

@@ -12,6 +12,7 @@ import Select from "@/components/select";
 import TokenList, { ListElement } from "@/components/tokenList";
 import GGXWallet, { Account } from "@/services/ggx";
 import ibcChains from "@/config/chains";
+import CexService from "@/services/cex";
 
 export default function Transfer() {
   const chains = ibcChains;
@@ -21,6 +22,7 @@ export default function Transfer() {
   const [amount, setAmount] = useState<number>(0);
   const [accounts, setAccounts] = useState<readonly AccountData[]>([]);
   const [balances, setBalances] = useState<readonly Coin[]>();
+  const [prices, setPrices] = useState<Map<string, number>>(new Map());
   const [selectedToken, setSelectedToken] = useState<ListElement>();
   const [GGxAccounts, setGGxAccounts] = useState<Account[]>([]);
   const [selectedGGxAccount, setSelectedGGxAccount] = useState<Account>();
@@ -43,10 +45,17 @@ export default function Transfer() {
     });
   }
 
+  const refreshEstimatePrice = (balances: readonly Coin[]) => {
+    const cex = new CexService();
+    cex.tokenPrices(balances.map((balance) => mapToken(balance, 0).symbol)).then((prices) => {
+      setPrices(prices);
+    });
+  }
+
   // get balances
   useEffect(() => {
     if (!account?.address && !client) return;
-    getBalances();
+    getBalances()
   }, [account, client]);
 
   const reset = () => {
@@ -84,11 +93,12 @@ export default function Transfer() {
   const mapToken = (balance: Coin, index: number) => {
     const token = chain.currencies.find((currency) => currency.coinMinimalDenom === balance.denom);
     const url = token?.coinImageUrl ?? `/svg/${token?.coinDenom}.svg`;
+    const symbol = token?.coinDenom ?? balance.denom;
     return {
       name: token?.coinDenom ?? balance.denom,
       balance: Number.parseInt(balance.amount) / (10 ** (token?.coinDecimals ?? 6)),
-      symbol: token?.coinDenom ?? balance.denom,
-      estimatedPrice: 1,
+      symbol,
+      estimatedPrice: prices.get(symbol) ?? NaN,
       id: index,
       url,
       network: "",
@@ -102,6 +112,7 @@ export default function Transfer() {
       setBalances(balances);
       if (balances.length > 0) {
         setSelectedToken(mapToken(balances[0], 0));
+        refreshEstimatePrice(balances);
       }
     }
   };
@@ -179,7 +190,9 @@ export default function Transfer() {
 
   const walletIsNotInitialized = !account?.address || !client;
   const isGGxWalletNotConnected = selectedGGxAccount === undefined;
-  const total = 0;
+  const total = tokens.reduce((acc, token) => acc + token.balance * token.estimatedPrice, 0);
+  const amountPrice = amount * (selectedToken ? prices.get(selectedToken.symbol) ?? 0 : 0);
+
 
   return (
     <div className="text-slate-100 flex flex-col w-full items-center h-full">
@@ -199,7 +212,7 @@ export default function Transfer() {
         <p>Transfer from</p>
         {
           walletIsNotInitialized
-            ? <button onClick={connectWallet} className="text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
+            ? <button onClick={connectWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
             : <Select<AccountData> onChange={(account) => (setAccount(account))} options={accounts} value={account} className="m-1 w-full h-full"
               childFormatter={(account) => {
                 return (<div className="w-full md:p-2 p-1 m-0 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
@@ -210,7 +223,7 @@ export default function Transfer() {
         }
         <p className="mt-2">Transfet to (GGx)</p>
         {isGGxWalletNotConnected
-          ? <button onClick={connectGGxWallet} className="text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect GGx wallet</button>
+          ? <button onClick={connectGGxWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect GGx wallet</button>
           : <Select<Account> onChange={ggxOnSelect} options={GGxAccounts} value={selectedGGxAccount} className="m-1 w-full h-full"
             childFormatter={(account) => {
               return (<div className="w-full md:p-2 p-1 m-0 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
@@ -221,22 +234,22 @@ export default function Transfer() {
         }
 
         <p className="mt-2">Channel</p>
-        <input className="mt-1 rounded-2xl border md:p-2 p-1 pl-5 basis-1/4 bg-transparent w-full"
+        <input className="mt-1 rounded-2xl border pl-5 md:pl-5 md:p-2 p-1 basis-1/4 bg-transparent w-full"
           type="text"
           value={sourceChannel}
           placeholder="sourceChannel"
           onChange={(e) => setSourceChannel(e.target.value)}
         />
 
-        <p className="mt-2">Amount in {selectedToken?.symbol}</p>
+        <p className="mt-2">Amount</p>
         <div className="relative w-full">
-          <input className="mt-1 rounded-2xl border md:p-2 p-1 pl-5 basis-1/4 bg-transparent w-full"
+          <input className="mt-1 rounded-2xl border pl-5 md:pl-5 md:p-2 p-1 basis-1/4 bg-transparent w-full"
             type="number"
             value={amount}
             placeholder="amount"
             onChange={(e) => setAmount(Number(e.target.value))}
           />
-          <p className="absolute top-2 md:top-3 opacity-50 right-5">{selectedToken?.symbol}{amount >= 2 ? "s" : ""}</p>
+          <p className="absolute bottom-0 py-auto my-auto opacity-50 right-2 top-1/2 -translate-y-1/2">{selectedToken?.symbol}{amount >= 2 ? "s" : ""} <span className="text-sm">(${amountPrice.toFixed(2)})</span></p>
         </div>
 
         <button
