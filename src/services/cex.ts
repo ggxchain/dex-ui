@@ -1,3 +1,5 @@
+import { EXCHANGE_PRICE_TTL } from "@/consts";
+
 type Prices = Map<string, number>;
 
 const cryptoCompareFetcher = async (tokens: string[]): Promise<Prices> => {
@@ -16,8 +18,6 @@ const cryptoCompareFetcher = async (tokens: string[]): Promise<Prices> => {
     }
     return prices;
 }
-
-const TTL = 5 * 60 * 1000; // 5 minutes
 
 export default class CexService {
     lastUpdated: number = 0;
@@ -42,7 +42,7 @@ export default class CexService {
 
     async tokenPrices(tokens: string[]): Promise<Prices> {
         const now = new Date().getTime();
-        if (tokens.every((o) => this.cache.has(o)) && now - this.lastUpdated < TTL) {
+        if (tokens.every((o) => this.cache.has(o)) && now - this.lastUpdated < EXCHANGE_PRICE_TTL) {
             return this.cache;
         } else {
             // We need combine the tokens that we already fetched and the new tokens to avoid spamming.
