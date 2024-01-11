@@ -22,6 +22,7 @@ export default function Select<Type>({ value, onChange, options, childFormatter,
 
     return (
         <ReactSelect
+            instanceId={`react-select`}
             value={value}
             onChange={onChangeValue}
             options={options}
