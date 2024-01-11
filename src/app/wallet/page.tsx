@@ -12,7 +12,7 @@ import TokenList from "@/components/tokenList";
 export default function Wallet() {
     const [tokens, setTokens] = useState<Token[]>([]);
     const [ownedTokens, setOwnedTokens] = useState<Token[]>([]);
-    const [balances, setBalance] = useState<Map<TokenId, Amount>>(new Map<TokenId, Amount>());
+    const [balances, setBalances] = useState<Map<TokenId, Amount>>(new Map<TokenId, Amount>());
     const [search, setSearch] = useState<string>("");
     const [tokenPrices, setTokenPrices] = useState<Map<TokenId, Amount>>(new Map<TokenId, Amount>());
     const [ggxAccounts, setGGXAccounts] = useState<Account[]>([]);
@@ -55,10 +55,10 @@ export default function Wallet() {
 
     useEffect(() => {
         const contract = new Contract();
-        setBalance(new Map<TokenId, Amount>());
+        setBalances(new Map<TokenId, Amount>());
         for (const token of ownedTokens) {
             contract.balanceOf(token.id).then((balance) => {
-                setBalance((balances) => {
+                setBalances((balances) => {
                     balances.set(token.id, balance);
                     return balances;
                 })

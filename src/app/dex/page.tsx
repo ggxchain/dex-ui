@@ -60,17 +60,19 @@ export default function Dex() {
   const isOrderExhausted = !isOrderNotChosen && (sell?.amount ?? 0) > order?.amountDesired;
   const isSellAmountZero = sell?.amount === 0;
 
+  const orderRate = order !== undefined
+    ? order.amountOffered / order.amountDesired
+    : 0; 
   const rate = isMaker && !isSellAmountZero && !isTokenNotSelected
     ? buy.amount / sell.amount
-    : order !== undefined
-      ? order.amountOffered / order.amountDesired
-      : 0;
+    : orderRate;
 
+  const orderAmount = order !== undefined && !isTokenNotSelected
+    ? sell.amount * rate
+    : 0;
   const buyAmount = isMaker && !isTokenNotSelected
     ? buy.amount
-    : order !== undefined && !isTokenNotSelected
-      ? sell.amount * rate
-      : 0;
+    : orderAmount;
 
   const isAmountZero = isSellAmountZero || buyAmount === 0;
 
@@ -219,7 +221,7 @@ interface OrderBookProps {
   onChange: (order: Order) => void;
 }
 
-function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookProps) {
+function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<OrderBookProps>) {
   const [orders, setOrders] = useState<Order[]>([]);
 
   const tokenPair = new Pair(sellToken.id, buyToken.id);
@@ -306,12 +308,12 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookPr
 }
 
 const useUserOrders = () => {
-  const [orders, setUserOrders] = useState<DetailedOrder[]>([]);
+  const [orders, setOrders] = useState<DetailedOrder[]>([]);
 
   const updateOrders = () => {
     const contract = new Contract();
     contract.allUserOrders().then((orders: DetailedOrder[]) => {
-      setUserOrders(orders);
+      setOrders(orders);
     });
   }
 
@@ -323,7 +325,7 @@ interface UserOrderProps {
   cancelOrder: (order: DetailedOrder) => void;
 }
 
-function OrdersList({ orders, cancelOrder }: UserOrderProps) {
+function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
 
   const onCancel = (order: DetailedOrder) => {
     const contract = new Contract();

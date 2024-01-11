@@ -80,7 +80,6 @@ export default function Transfer() {
 
     // Actually, it returns only one account :C Buy in the future, it will return all accounts.
     const accounts = await offlineSigner.getAccounts();
-    const key = await window.keplr.getKey(chain.chainId);
     const client = await SigningStargateClient.connectWithSigner(
       chain.rpc,
       offlineSigner
