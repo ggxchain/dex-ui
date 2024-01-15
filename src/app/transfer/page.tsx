@@ -111,6 +111,8 @@ export default function Transfer() {
       const filtered = balances.reduce<Coin[]>((acc, value) => {
         if (value.denom.includes("ibc/")) {
           const info = ibcHashToDenom(chain.chainName, value.denom);
+          if (!info) return acc;
+          console.log(info);
           acc.push({
             denom: info.base,
             amount: value.amount,
@@ -121,10 +123,10 @@ export default function Transfer() {
         return acc
       }, []);
 
-      setBalances(balances);
-      if (balances.length > 0) {
-        setSelectedToken(mapToken(balances[0], 0));
-        refreshEstimatePrice(balances);
+      setBalances(filtered);
+      if (filtered.length > 0) {
+        setSelectedToken(mapToken(filtered[0], 0));
+        refreshEstimatePrice(filtered);
       }
     }
   };
