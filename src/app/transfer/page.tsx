@@ -13,6 +13,7 @@ import TokenList, { ListElement } from "@/components/tokenList";
 import GGXWallet, { Account } from "@/services/ggx";
 import ibcChains from "@/config/chains";
 import CexService from "@/services/cex";
+import { ibcHashToDenom } from "@/services/keplr";
 
 export default function Transfer() {
   const chains = ibcChains;
@@ -75,7 +76,6 @@ export default function Transfer() {
 
     await window.keplr.experimentalSuggestChain(chain);
     await window.keplr.enable(chain.chainId);
-
     const offlineSigner = window.keplr.getOfflineSigner(chain.chainId);
 
     // Actually, it returns only one account :C Buy in the future, it will return all accounts.
@@ -108,6 +108,18 @@ export default function Transfer() {
   const getBalances = async () => {
     if (client && account?.address) {
       const balances = await client.getAllBalances(account.address);
+      const filtered = balances.reduce<Coin[]>((acc, value) => {
+        if (value.denom.includes("ibc/")) {
+          const info = ibcHashToDenom(chain.chainName, value.denom);
+          acc.push({
+            denom: info.base,
+            amount: value.amount,
+          });
+        } else {
+          acc.push(value);
+        }
+        return acc
+      }, []);
 
       setBalances(balances);
       if (balances.length > 0) {
