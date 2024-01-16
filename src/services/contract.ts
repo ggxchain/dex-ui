@@ -2,6 +2,15 @@ import mockedTokens from "@/mock";
 import GGXWallet from "./ggx";
 import { Token, TokenId, CounterId, Order, Amount, PubKey, DetailedOrder } from "@/types";
 import Pair from "@/pair";
+import { GGX_CONTRACT_ADDRESS, GGX_WSS_URL, WASM_GAS_LIMIT, WASM_PROOF_LIMIT } from "@/consts";
+import GGxContractMetadata from "@/config/contractMetadata";
+
+import { ApiPromise, WsProvider } from '@polkadot/api';
+import { ContractPromise } from '@polkadot/api-contract';
+import { Signer } from '@polkadot/api/types';
+import type { WeightV2, } from '@polkadot/types/interfaces';
+import { ISubmittableResult } from "@polkadot/types/types";
+import { decodeAddress } from '@polkadot/util-crypto';
 
 export default class Contract {
     contract: ContractMock = new ContractMock();
@@ -13,6 +22,8 @@ export default class Contract {
         const tokens = [];
         let i = 0;
         const shift = page * fetch;
+        console.log(await new GGxContract().tokens());
+
         while (i < fetch) {
             const tokenId = this.contract.tokenByIndex(shift + i);
             if (tokenId === undefined) {
@@ -101,6 +112,8 @@ export default class Contract {
         if (address === undefined) {
             return Promise.resolve(0);
         }
+        console.log(await new GGxContract().balanceOf(tokenId, address));
+
         return Promise.resolve(this.contract.balanceOf(tokenId, address));
     }
 
@@ -108,6 +121,8 @@ export default class Contract {
         if (this.wallet.pubkey() === undefined) {
             return Promise.reject("Wallet is not initialized");
         }
+        new GGxContract().deposit(tokenId, amount, (result) => { });
+
         this.contract.deposit(this.wallet.pubkey()!.address, tokenId, amount);
     }
 
@@ -132,6 +147,110 @@ export default class Contract {
         return Promise.resolve(this.contract.makeOrder(this.wallet.pubkey()!.address, pair, amountOffered, amountDesired))
     }
 }
+
+type TransactionCallback = (result: ISubmittableResult) => void;
+
+type OkWrapper<T> = {
+    ok: T
+}
+
+class GGxContract {
+    constructor() { }
+
+    async deposit(tokenId: TokenId, amount: Amount, callback: TransactionCallback) {
+        const contract = await this.contract();
+        const initialGasLimit = this.initialGasLimit(contract);
+        const [sender, senderSigner] = await this.accountSigner();
+
+        const { gasRequired } = await contract.query.deposit(sender, { gasLimit: initialGasLimit }, tokenId, amount);
+        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
+
+        await contract.tx.deposit({ gasLimit }, tokenId, amount).signAndSend(sender, { signer: senderSigner }, callback);
+    }
+
+    async balanceOf(tokenId: TokenId, address: string): Promise<Amount> {
+        const contract = await this.contract();
+        const addressParam = this.createAddress(address);
+        const initialGasLimit = this.initialGasLimit(contract);
+        const { gasRequired } = await contract.query.balanceOf(address, { gasLimit: initialGasLimit }, addressParam, tokenId);
+        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
+        const { result, output } = await contract.query.balanceOf(address, { gasLimit }, addressParam, tokenId);
+        if (result.isOk && output !== null) {
+            return Promise.resolve(this.decodeAmount(output.toHex()));
+        }
+        return Promise.reject(result.asErr);
+    }
+
+    async withdraw(tokenId: TokenId, amount: Amount, callback: TransactionCallback) {
+        const contract = await this.contract();
+        const initialGasLimit = this.initialGasLimit(contract);
+        const [sender, senderSigner] = await this.accountSigner();
+
+        const { gasRequired } = await contract.query.withdraw(sender, { gasLimit: initialGasLimit }, tokenId, amount);
+        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
+
+        await contract.tx.withdraw({ gasLimit }, tokenId, amount).signAndSend(sender, { signer: senderSigner }, callback);
+    }
+
+    async tokens(): Promise<TokenId[]> {
+        const contract = await this.contract();
+        const initialGasLimit = this.initialGasLimit(contract);
+        const [sender] = await this.accountSigner();
+
+        const { gasRequired } = await contract.query.tokens(sender, { gasLimit: initialGasLimit });
+        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
+        const { result, output } = await contract.query.tokens(sender, { gasLimit });
+        if (result.isOk && output !== null) {
+            return Promise.resolve((output.toJSON() as unknown as OkWrapper<TokenId[]>).ok);
+        }
+        return Promise.reject(result.asErr);
+
+    }
+
+    async owners_tokens(address: string): Promise<TokenId[]> {
+        const contract = await this.contract();
+        const addressParam = this.createAddress(address);
+        const initialGasLimit = this.initialGasLimit(contract);
+        const { gasRequired } = await contract.query.owners_tokens(address, { gasLimit: initialGasLimit }, addressParam);
+        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
+        const { result, output } = await contract.query.owners_tokens(address, { gasLimit }, addressParam);
+        if (result.isOk && output !== null) {
+            return Promise.resolve((output.toJSON() as unknown as OkWrapper<TokenId[]>).ok);
+        }
+        return Promise.reject(result.asErr);
+    }
+
+    async contract() {
+        const wsProvider = new WsProvider(GGX_WSS_URL);
+        const api = await ApiPromise.create({ provider: wsProvider });
+        return new ContractPromise(api, GGxContractMetadata, GGX_CONTRACT_ADDRESS);
+    }
+
+    async accountSigner(): Promise<[string, Signer]> {
+        const wallet = new GGXWallet();
+        const account = wallet.pubkey();
+        if (account === undefined) {
+            return Promise.reject("Wallet is not initialized");
+        }
+        return [account.address, await wallet.signerFor(account.address)];
+    }
+
+    initialGasLimit(contract: ContractPromise): WeightV2 {
+        return contract.registry.createType('WeightV2', {
+            proofSize: WASM_PROOF_LIMIT,
+            refTime: WASM_GAS_LIMIT,
+        });
+    }
+
+    createAddress(address: string): Uint8Array {
+        return decodeAddress(address);
+    }
+
+    decodeAmount(amount: string): Amount {
+        return Number(amount)
+    }
+}
+
 
 type TokenDepositMock = {
     tokenId: TokenId,
@@ -184,7 +303,7 @@ class ContractMock {
         this.save();
     }
 
-    balanceOf(tokenId: number, account: string): number {
+    balanceOf(tokenId: TokenId, account: string): Amount {
         const deposit = this.deposits.get(account);
         if (deposit === undefined) {
             return 0;
@@ -209,7 +328,7 @@ class ContractMock {
         return deposit.at(index)?.tokenId;
     }
 
-    withdraw(pubkey: PubKey, tokenId: number, amount: number) {
+    withdraw(pubkey: PubKey, tokenId: TokenId, amount: Amount) {
         const deposit = this.deposits.get(pubkey);
         if (deposit === undefined) {
             return;

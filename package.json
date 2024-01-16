@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "cp -r ./node_modules/cryptocurrency-icons/svg/color ./public/svg && next build",
+    "build": "cp -r ./node_modules/cryptocurrency-icons/svg/color ./public/svg && npm run generate:defs && npm run generate:meta && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
@@ -14,6 +14,8 @@
     "@chain-registry/keplr": "^1.30.0",
     "@cosmjs/stargate": "^0.32.2",
     "@keplr-wallet/types": "^0.12.58",
+    "@polkadot/api": "^10.11.2",
+    "@polkadot/api-contract": "^10.11.2",
     "@polkadot/extension-dapp": "^0.46.6",
     "chain-registry": "^1.25.0",
     "cryptocurrency-icons": "^0.18.1",

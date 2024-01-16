@@ -1,5 +1,7 @@
 import { PubKey } from "@/types";
 
+import { Signer } from "@polkadot/api/types";
+
 export type Account = {
     address: PubKey;
     name?: string;
@@ -54,6 +56,12 @@ export default class GGXWallet {
     async inject(): Promise<void> {
         const { web3Enable } = await import("@polkadot/extension-dapp");
         await web3Enable("RfQ by GGx");
+    }
+
+    async signerFor(address: PubKey): Promise<Signer> {
+        const { web3FromAddress } = await import("@polkadot/extension-dapp");
+        await this.inject();
+        return (await web3FromAddress(address)).signer;
     }
 
     pubkey(): Account | undefined {

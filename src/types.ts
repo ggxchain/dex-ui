@@ -1,6 +1,12 @@
 import Pair from "./pair"
 
-export type TokenId = number
+export type TokenId = {
+    U8?: number;
+    U16?: number;
+    U32?: number;
+    U64?: number;
+    U128?: bigint;
+}
 export type Amount = number
 export type PubKey = string
 export type CounterId = number

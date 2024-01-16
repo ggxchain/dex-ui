@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Contract from "@/services/contract";
 import GGXWallet from "@/services/ggx";
 import Ruler from "@/components/ruler";
-import { DetailedOrder, Order, Token } from "@/types";
+import { Amount, DetailedOrder, Order, Token } from "@/types";
 import TokenSelector, { TokenWithPrice, useTokens } from "@/components/tokenSelector";
 import Pair from "@/pair";
 import { useRouter } from "next/navigation";
@@ -18,7 +18,7 @@ export default function Dex() {
   const [isMaker, setIsMaker] = useState<boolean>(false);
   const [sell, setSell] = useState<TokenData>();
   const [buy, setBuy] = useState<TokenData>();
-  const [availableBalance, setAvailableBalance] = useState<number>(0);
+  const [availableBalance, setAvailableBalance] = useState<Amount>(0);
   const [order, setOrder] = useState<Order>();
   const [tokens, loadTokens] = useTokens();
   const [userOrders, updateUserOrders] = useUserOrders();
@@ -66,7 +66,7 @@ export default function Dex() {
 
   const orderRate = order !== undefined
     ? order.amountOffered / order.amountDesired
-    : 0; 
+    : 0;
   const rate = isMaker && !isSellAmountZero && !isTokenNotSelected
     ? buy.amount / sell.amount
     : orderRate;
