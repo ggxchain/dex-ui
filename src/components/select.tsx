@@ -1,3 +1,5 @@
+"use client"
+
 import { ReactNode } from "react";
 
 import ReactSelect, { SingleValue } from "react-select";
@@ -10,7 +12,7 @@ interface SelectProps<Type> {
     className?: string;
 }
 
-export default function Select<Type>({ value, onChange, options, childFormatter, className }: SelectProps<Type>) {
+export default function Select<Type>({ value, onChange, options, childFormatter, className }: Readonly<SelectProps<Type>>) {
     const onChangeValue = (e: SingleValue<Type>) => {
         if (e === null) {
             return;
@@ -20,6 +22,7 @@ export default function Select<Type>({ value, onChange, options, childFormatter,
 
     return (
         <ReactSelect
+            instanceId={`react-select`}
             value={value}
             onChange={onChangeValue}
             options={options}

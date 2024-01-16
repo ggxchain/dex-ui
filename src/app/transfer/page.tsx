@@ -13,6 +13,7 @@ import TokenList, { ListElement } from "@/components/tokenList";
 import GGXWallet, { Account } from "@/services/ggx";
 import ibcChains from "@/config/chains";
 import CexService from "@/services/cex";
+import { ibcHashToDenom } from "@/services/keplr";
 
 export default function Transfer() {
   const chains = ibcChains;
@@ -75,12 +76,10 @@ export default function Transfer() {
 
     await window.keplr.experimentalSuggestChain(chain);
     await window.keplr.enable(chain.chainId);
-
     const offlineSigner = window.keplr.getOfflineSigner(chain.chainId);
 
     // Actually, it returns only one account :C Buy in the future, it will return all accounts.
     const accounts = await offlineSigner.getAccounts();
-    const key = await window.keplr.getKey(chain.chainId);
     const client = await SigningStargateClient.connectWithSigner(
       chain.rpc,
       offlineSigner
@@ -109,11 +108,25 @@ export default function Transfer() {
   const getBalances = async () => {
     if (client && account?.address) {
       const balances = await client.getAllBalances(account.address);
+      const filtered = balances.reduce<Coin[]>((acc, value) => {
+        if (value.denom.includes("ibc/")) {
+          const info = ibcHashToDenom(chain.chainName, value.denom);
+          if (!info) return acc;
+          console.log(info);
+          acc.push({
+            denom: info.base,
+            amount: value.amount,
+          });
+        } else {
+          acc.push(value);
+        }
+        return acc
+      }, []);
 
-      setBalances(balances);
-      if (balances.length > 0) {
-        setSelectedToken(mapToken(balances[0], 0));
-        refreshEstimatePrice(balances);
+      setBalances(filtered);
+      if (filtered.length > 0) {
+        setSelectedToken(mapToken(filtered[0], 0));
+        refreshEstimatePrice(filtered);
       }
     }
   };

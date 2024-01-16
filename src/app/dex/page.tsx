@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Contract from "@/services/contract";
 import GGXWallet from "@/services/ggx";
 import Ruler from "@/components/ruler";
@@ -22,13 +22,19 @@ export default function Dex() {
   const [order, setOrder] = useState<Order>();
   const [tokens, loadTokens] = useTokens();
   const [userOrders, updateUserOrders] = useUserOrders();
+  const isConnected = useRef<boolean>();
 
   const router = useRouter();
 
   useEffect(() => {
+    const wallet = new GGXWallet();
+    isConnected.current = wallet.pubkey() !== undefined;
+  })
+
+  useEffect(() => {
     updateUserOrders();
     loadTokens();
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (sell !== undefined) {
@@ -38,8 +44,6 @@ export default function Dex() {
       });
     }
   }, [sell]);
-
-  const wallet = new GGXWallet();
 
   const onClear = () => {
     setSell(undefined);
@@ -54,23 +58,25 @@ export default function Dex() {
   const isTaker = !isMaker;
   const isTokenNotSelected = sell === undefined || buy === undefined;
   const isTokenSame = sell?.symbol === buy?.symbol;
-  const isWalletNotConnected = wallet.pubkey() === undefined;
+  const isWalletNotConnected = !isConnected.current;
   const isUserBalanceNotEnough = !isWalletNotConnected && availableBalance < (sell?.amount ?? 0);
   const isOrderNotChosen = order === undefined;
   const isOrderExhausted = !isOrderNotChosen && (sell?.amount ?? 0) > order?.amountDesired;
   const isSellAmountZero = sell?.amount === 0;
 
+  const orderRate = order !== undefined
+    ? order.amountOffered / order.amountDesired
+    : 0; 
   const rate = isMaker && !isSellAmountZero && !isTokenNotSelected
     ? buy.amount / sell.amount
-    : order !== undefined
-      ? order.amountOffered / order.amountDesired
-      : 0;
+    : orderRate;
 
+  const orderAmount = order !== undefined && !isTokenNotSelected
+    ? sell.amount * rate
+    : 0;
   const buyAmount = isMaker && !isTokenNotSelected
     ? buy.amount
-    : order !== undefined && !isTokenNotSelected
-      ? sell.amount * rate
-      : 0;
+    : orderAmount;
 
   const isAmountZero = isSellAmountZero || buyAmount === 0;
 
@@ -219,7 +225,7 @@ interface OrderBookProps {
   onChange: (order: Order) => void;
 }
 
-function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookProps) {
+function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<OrderBookProps>) {
   const [orders, setOrders] = useState<Order[]>([]);
 
   const tokenPair = new Pair(sellToken.id, buyToken.id);
@@ -306,12 +312,12 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: OrderBookPr
 }
 
 const useUserOrders = () => {
-  const [orders, setUserOrders] = useState<DetailedOrder[]>([]);
+  const [orders, setOrders] = useState<DetailedOrder[]>([]);
 
   const updateOrders = () => {
     const contract = new Contract();
     contract.allUserOrders().then((orders: DetailedOrder[]) => {
-      setUserOrders(orders);
+      setOrders(orders);
     });
   }
 
@@ -323,7 +329,7 @@ interface UserOrderProps {
   cancelOrder: (order: DetailedOrder) => void;
 }
 
-function OrdersList({ orders, cancelOrder }: UserOrderProps) {
+function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
 
   const onCancel = (order: DetailedOrder) => {
     const contract = new Contract();

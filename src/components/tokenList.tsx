@@ -13,7 +13,7 @@ interface TokenListProperties {
     selected?: ListElement;
 }
 
-export default function TokenList({ tokens, onClick, className, selected }: TokenListProperties) {
+export default function TokenList({ tokens, onClick, className, selected }: Readonly<TokenListProperties>) {
     const handleClick = (token: ListElement) => {
         if (onClick !== undefined) {
             onClick(token);
@@ -30,6 +30,12 @@ export default function TokenList({ tokens, onClick, className, selected }: Toke
                 </tr>
             </thead>
             <tbody>
+                {
+                    tokens.length === 0 &&
+                        <tr>
+                            <td className="text-center w-=">No tokens found</td>
+                        </tr>
+                }
 
                 {
                     tokens.map((token) => {
