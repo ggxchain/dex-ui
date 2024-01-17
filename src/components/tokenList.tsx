@@ -32,9 +32,9 @@ export default function TokenList({ tokens, onClick, className, selected }: Read
             <tbody>
                 {
                     tokens.length === 0 &&
-                        <tr>
-                            <td className="text-center w-=">No tokens found</td>
-                        </tr>
+                    <tr>
+                        <td className="text-center w-=">No tokens found</td>
+                    </tr>
                 }
 
                 {

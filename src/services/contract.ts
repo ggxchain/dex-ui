@@ -44,7 +44,7 @@ export default class Contract {
         if (address === undefined) {
             return Promise.resolve([]);
         }
-
+        console.log(await new GGxContract().ownersTokens(address));
         while (i < fetch) {
             const tokenId = this.contract.ownersTokenByIndex(address, shift + i);
             if (tokenId === undefined) {
@@ -60,11 +60,13 @@ export default class Contract {
         const orders = [];
         let i = 0;
         const shift = page * fetch;
+        console.log(await new GGxContract().pairOrders(pair));
         while (i < fetch) {
             const counterId = this.contract.pairOrderByIndex(pair, shift + i);
             if (counterId === undefined) {
                 break;
             }
+
             const order = this.contract.orderFor(counterId);
             if (order === undefined) {
                 break;
@@ -81,9 +83,12 @@ export default class Contract {
         const shift = page * fetch;
 
         const address = this.wallet.pubkey()?.address;
+        console.log(await new GGxContract().orderFor(0));
+
         if (address === undefined) {
             return Promise.resolve([]);
         }
+        console.log(await new GGxContract().userOrders(address));
 
         while (i < fetch) {
             const counterId = this.contract.userOrderByIndex(address, shift + i);
@@ -207,15 +212,54 @@ class GGxContract {
 
     }
 
-    async owners_tokens(address: string): Promise<TokenId[]> {
+    async ownersTokens(address: string): Promise<TokenId[]> {
         const contract = await this.contract();
         const addressParam = this.createAddress(address);
         const initialGasLimit = this.initialGasLimit(contract);
-        const { gasRequired } = await contract.query.owners_tokens(address, { gasLimit: initialGasLimit }, addressParam);
+        const { gasRequired } = await contract.query.ownersTokens(address, { gasLimit: initialGasLimit }, addressParam);
         const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-        const { result, output } = await contract.query.owners_tokens(address, { gasLimit }, addressParam);
+        const { result, output } = await contract.query.ownersTokens(address, { gasLimit }, addressParam);
         if (result.isOk && output !== null) {
             return Promise.resolve((output.toJSON() as unknown as OkWrapper<TokenId[]>).ok);
+        }
+        return Promise.reject(result.asErr);
+    }
+
+    async orderFor(counterId: CounterId): Promise<Order> {
+        const contract = await this.contract();
+        const initialGasLimit = this.initialGasLimit(contract)
+        const [sender] = await this.accountSigner();
+        const { gasRequired } = await contract.query.orderFor(sender, { gasLimit: initialGasLimit }, counterId);
+        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
+        const { result, output } = await contract.query.orderFor(sender, { gasLimit }, counterId);
+        if (result.isOk && output !== null) {
+            return Promise.resolve((output.toJSON() as unknown as OkWrapper<Order>).ok);
+        }
+        return Promise.reject(result.asErr);
+    }
+
+    async pairOrders(pair: Pair): Promise<Order[]> {
+        const contract = await this.contract();
+        const initialGasLimit = this.initialGasLimit(contract)
+        const [sender] = await this.accountSigner();
+        const { gasRequired } = await contract.query.pairOrders(sender, { gasLimit: initialGasLimit }, pair.tokenId1, pair.tokenId2);
+        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
+        const { result, output } = await contract.query.pairOrders(sender, { gasLimit }, pair.tokenId1, pair.tokenId2);
+        if (result.isOk && output !== null) {
+            return Promise.resolve((output.toJSON() as unknown as OkWrapper<Order[]>).ok);
+        }
+        return Promise.reject(result.asErr);
+    }
+
+    async userOrders(address: string): Promise<Order[]> {
+        const contract = await this.contract();
+        const addressParam = this.createAddress(address);
+        const initialGasLimit = this.initialGasLimit(contract);
+        const { gasRequired } = await contract.query.getUserOrders(address, { gasLimit: initialGasLimit }, addressParam);
+        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
+        const { result, output } = await contract.query.getUserOrders(address, { gasLimit }, addressParam);
+        if (result.isOk && output !== null) {
+            return Promise.resolve((output.toJSON() as unknown as OkWrapper<Order[]>).ok);
         }
         return Promise.reject(result.asErr);
     }
