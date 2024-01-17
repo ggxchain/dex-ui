@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "cp -r ./node_modules/cryptocurrency-icons/svg/color ./public/svg && npm run generate:defs && npm run generate:meta && next build",
+    "build": "cp -r ./node_modules/cryptocurrency-icons/svg/color ./public/svg && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
