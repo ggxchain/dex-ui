@@ -12,9 +12,9 @@ import TokenList from "@/components/tokenList";
 export default function Wallet() {
     const [tokens, setTokens] = useState<Token[]>([]);
     const [ownedTokens, setOwnedTokens] = useState<Token[]>([]);
-    const [balances, setBalances] = useState<Map<TokenId, Amount>>(new Map<TokenId, Amount>());
+    const [balances, setBalances] = useState<Map<string, Amount>>(new Map<string, Amount>());
     const [search, setSearch] = useState<string>("");
-    const [tokenPrices, setTokenPrices] = useState<Map<TokenId, Amount>>(new Map<TokenId, Amount>());
+    const [tokenPrices, setTokenPrices] = useState<Map<string, Amount>>(new Map<string, Amount>());
     const [ggxAccounts, setGGXAccounts] = useState<Account[]>([]);
     const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(undefined);
 
@@ -34,11 +34,11 @@ export default function Wallet() {
             setTokens(tokens);
             const cex = new CexService();
             cex.tokenPrices(tokens.map((token) => token.symbol)).then((prices) => {
-                const map = new Map<TokenId, Amount>();
+                const map = new Map<string, Amount>();
                 prices.forEach((value, key) => {
                     const token = tokens.find((token) => token.symbol === key);
                     if (token !== undefined) {
-                        map.set(token.id, value);
+                        map.set(JSON.stringify(token.id), value);
                     }
                 });
                 setTokenPrices(map);
@@ -55,14 +55,13 @@ export default function Wallet() {
 
     useEffect(() => {
         const contract = new Contract();
-        setBalances(new Map<TokenId, Amount>());
+        setBalances(new Map<string, Amount>());
         for (const token of ownedTokens) {
             contract.balanceOf(token.id).then((balance) => {
                 setBalances((balances) => {
-                    balances.set(token.id, balance);
+                    balances.set(JSON.stringify(token.id), balance);
                     return balances;
                 })
-                setUpdate(!update);
             })
         }
     }, [ownedTokens, selectedAccount]);
@@ -79,8 +78,9 @@ export default function Wallet() {
     const filteredTokens = tokens.filter((token) => filter(token));
 
     const total = ownedTokens.reduce<number>((total, token) => {
-        const balance = balances.get(token.id);
-        const price = tokenPrices.get(token.id);
+        const token_id_str = JSON.stringify(token.id);
+        const balance = balances.get(token_id_str);
+        const price = tokenPrices.get(token_id_str);
         if (balance === undefined || price === undefined) {
             return total;
         }
@@ -89,12 +89,13 @@ export default function Wallet() {
 
     const onDeposit = () => {
         const contract = new Contract();
+        // TODO: proper deposit. Probably modal with token and amount
         for (const token of filteredTokens) {
-            contract.deposit(token.id, 10).then(() => {
+            contract.deposit(token.id, 10, () => {
+                refreshBalances();
             })
         }
 
-        refreshBalances();
     };
 
     const connectWallet = () => {
@@ -120,8 +121,9 @@ export default function Wallet() {
     };
 
     const displayTokens = filteredTokens.map((token) => {
-        const balance = balances.get(token.id);
-        const price = tokenPrices.get(token.id);
+        const token_id_str = JSON.stringify(token.id);
+        const balance = balances.get(token_id_str);
+        const price = tokenPrices.get(token_id_str);
 
         return {
             ...token,

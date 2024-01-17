@@ -1,16 +1,17 @@
 import Pair from "./pair"
 
-export type TokenId = {
-    U8?: number;
-    U16?: number;
-    U32?: number;
-    U64?: number;
-    U128?: bigint;
-}
+type U8 = { u8: number };
+type U16 = { u16: number };
+type U32 = { u32: number };
+type U64 = { u64: number };
+type U128 = { u128: bigint };
+
+export type TokenId = U8 | U16 | U32 | U64 | U128;
+
 export type Amount = number
 export type PubKey = string
 export type CounterId = number
-export type OrderType = "Buy" | "Sell"
+export type OrderType = "BUY" | "SELL"
 
 export type Token = {
     id: TokenId;
@@ -26,7 +27,7 @@ export type Order = {
     timestamp: number;
     orderType: OrderType
     amountOffered: Amount;
-    amountDesired: Amount;
+    amoutRequested: Amount;
 }
 
 export type DetailedOrder = Order & {

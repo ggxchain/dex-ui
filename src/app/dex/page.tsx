@@ -7,7 +7,7 @@ import GGXWallet from "@/services/ggx";
 import Ruler from "@/components/ruler";
 import { Amount, DetailedOrder, Order, Token } from "@/types";
 import TokenSelector, { TokenWithPrice, useTokens } from "@/components/tokenSelector";
-import Pair from "@/pair";
+import Pair, { PairUtils } from "@/pair";
 import { useRouter } from "next/navigation";
 
 type TokenData = TokenWithPrice & {
@@ -61,11 +61,11 @@ export default function Dex() {
   const isWalletNotConnected = !isConnected.current;
   const isUserBalanceNotEnough = !isWalletNotConnected && availableBalance < (sell?.amount ?? 0);
   const isOrderNotChosen = order === undefined;
-  const isOrderExhausted = !isOrderNotChosen && (sell?.amount ?? 0) > order?.amountDesired;
+  const isOrderExhausted = !isOrderNotChosen && (sell?.amount ?? 0) > order?.amoutRequested;
   const isSellAmountZero = sell?.amount === 0;
 
   const orderRate = order !== undefined
-    ? order.amountOffered / order.amountDesired
+    ? order.amountOffered / order.amoutRequested
     : 0;
   const rate = isMaker && !isSellAmountZero && !isTokenNotSelected
     ? buy.amount / sell.amount
@@ -86,9 +86,11 @@ export default function Dex() {
     if (isFormHasErrors) {
       return;
     }
-    const pair = new Pair(sell.id, buy.id);
+    const pair = [sell.id, buy.id] as Pair;
     const contract = new Contract();
-    contract.makeOrder(pair, sell.amount, buyAmount).then(() => updateUserOrders());
+    contract.makeOrder(pair, sell.amount, buyAmount, () => {
+      updateUserOrders();
+    });
     onClear();
   }
 
@@ -152,8 +154,8 @@ export default function Dex() {
               }
               {isTaker && isOrderExhausted && !isTokenNotSelected &&
                 <div className="flex text-xs items-center mt-1 justify-between">
-                  <p className="w-4/5">Max available value for this order is: {order.amountDesired.toFixed(9)} {sell.name}</p>
-                  <button className="ml-2 p-1 rounded-2xl border grow-on-hover" onClick={() => setSell({ ...sell, amount: order.amountDesired })}>Set max</button>
+                  <p className="w-4/5">Max available value for this order is: {order.amoutRequested.toFixed(9)} {sell.name}</p>
+                  <button className="ml-2 p-1 rounded-2xl border grow-on-hover" onClick={() => setSell({ ...sell, amount: order.amoutRequested })}>Set max</button>
                 </div>
               }
               {isTokenSame && !isAmountZero &&
@@ -228,7 +230,7 @@ interface OrderBookProps {
 function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<OrderBookProps>) {
   const [orders, setOrders] = useState<Order[]>([]);
 
-  const tokenPair = new Pair(sellToken.id, buyToken.id);
+  const tokenPair = [sellToken.id, buyToken.id] as Pair;
 
   useEffect(() => {
     const contract = new Contract();
@@ -238,17 +240,17 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
       const filteredOrders = orders.filter((order: Order) => order.pubkey !== wallet.pubkey()?.address)
       setOrders(filteredOrders);
       if (orders.length > 0 && !selectedOrder) {
-        const sellOrders = filteredOrders.filter((order: Order) => order.orderType !== tokenPair.orderType).sort((a, b) => b.amountDesired / b.amountOffered - a.amountDesired / a.amountOffered);
+        const sellOrders = filteredOrders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => b.amoutRequested / b.amountOffered - a.amoutRequested / a.amountOffered);
         onChange(sellOrders[0]);
       }
     });
   }, [buyToken, sellToken]);
 
-  const buyOrders = orders.filter((order: Order) => order.orderType === tokenPair.orderType).sort((a, b) => a.amountDesired / a.amountOffered - b.amountDesired / b.amountOffered);
-  const sellOrders = orders.filter((order: Order) => order.orderType !== tokenPair.orderType).sort((a, b) => b.amountDesired / b.amountOffered - a.amountDesired / a.amountOffered);
+  const buyOrders = orders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => a.amoutRequested / a.amountOffered - b.amoutRequested / b.amountOffered);
+  const sellOrders = orders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => b.amoutRequested / b.amountOffered - a.amoutRequested / a.amountOffered);
 
   const buyTotalVolume = buyOrders.reduce((acc, order) => acc + order.amountOffered, 0);
-  const sellTotalVolume = sellOrders.reduce((acc, order) => acc + order.amountDesired, 0);
+  const sellTotalVolume = sellOrders.reduce((acc, order) => acc + order.amoutRequested, 0);
 
   return (
     <div className="flex flex-col text-xs">
@@ -271,7 +273,7 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
               : buyOrders.map((order) => {
                 return (
                   <tr key={order.counterId} className="relative w-full text-red-600">
-                    <td className="p-1 pl-4 text-left font-bold">{(order.amountOffered / order.amountDesired).toFixed(9)}</td>
+                    <td className="p-1 pl-4 text-left font-bold">{(order.amountOffered / order.amoutRequested).toFixed(9)}</td>
                     <td className="p-1 text-right text-white font-bold">
                       {order.amountOffered}
                       <div style={{ width: `${Math.round(order.amountOffered * 100 / buyTotalVolume)}%` }} className="absolute bg-red-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
@@ -293,12 +295,12 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
                     <td className="p-1 relative text-left font-bold">
                       {selected && <p className="absolute h-full left-0">↠</p>}
                       <p className="pl-3">
-                        {(order.amountOffered / order.amountDesired).toFixed(9)}
+                        {(order.amountOffered / order.amoutRequested).toFixed(9)}
                       </p>
                     </td>
                     <td className="p-1 text-right text-white font-bold">
-                      {order.amountDesired}
-                      <div style={{ width: `${Math.round(order.amountDesired * 100 / sellTotalVolume)}%` }} className="absolute bg-green-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
+                      {order.amoutRequested}
+                      <div style={{ width: `${Math.round(order.amoutRequested * 100 / sellTotalVolume)}%` }} className="absolute bg-green-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
                     </td>
 
                   </tr>
@@ -333,7 +335,7 @@ function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
 
   const onCancel = (order: DetailedOrder) => {
     const contract = new Contract();
-    contract.cancelOrder(order.counterId).then(() => {
+    contract.cancelOrder(order.counterId, () => {
       cancelOrder(order);
     });
   }
@@ -354,16 +356,19 @@ function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
           orders.length === 0
             ? <tr><td className="text-slate-100 opacity-50 text-center">No orders found</td></tr>
             : orders.map((order) => {
-              const ownedToken = Pair.ownedToken(order.pair) == order.pair.tokenId1 ? order.token1 : order.token2;
-              const desiredToken = Pair.desiredToken(order.pair) == order.pair.tokenId1 ? order.token1 : order.token2;
+              const ownedToken = PairUtils.ownedToken(order.pair, order.orderType) == order.pair[0] ? order.token1 : order.token2;
+              const desiredToken = PairUtils.desiredToken(order.pair, order.orderType) == order.pair[0] ? order.token1 : order.token2;
 
               return (
                 <tr key={order.counterId} className="h-full w-full even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20">
 
+                  {/*Buy*/}
                   <td className="p-1 text-center rounded-l-xl">
-                    {order.amountDesired} {desiredToken.name}
+                    {order.amoutRequested} {desiredToken.name}
                   </td>
-                  <td className="p-1 text-center">{(order.amountDesired / order.amountOffered).toFixed(9)} {desiredToken.name}</td>
+                  {/*Price*/}
+                  <td className="p-1 text-center">{(order.amoutRequested / order.amountOffered).toFixed(9)} {desiredToken.name}</td>
+
                   <td className="p-1 text-center text-white">
                     {order.amountOffered} {ownedToken.name}
                   </td>

@@ -99,7 +99,7 @@ export default function Transfer() {
       balance: Number.parseInt(balance.amount) / (10 ** (token?.coinDecimals ?? 6)),
       symbol,
       estimatedPrice: prices.get(symbol) ?? NaN,
-      id: { U32: index },
+      id: { u64: index },
       url,
       network: "",
     };
@@ -112,7 +112,6 @@ export default function Transfer() {
         if (value.denom.includes("ibc/")) {
           const info = ibcHashToDenom(chain.chainName, value.denom);
           if (!info) return acc;
-          console.log(info);
           acc.push({
             denom: info.base,
             amount: value.amount,
