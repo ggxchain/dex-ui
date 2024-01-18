@@ -10,7 +10,7 @@ export default function mockedTokens(): Token[] {
             "network": "ERC20",
         },
         {
-            "id": { u64: 2 },
+            "id": { u128: 2 },
             "name": "BTC",
             "symbol": "btc",
             "network": "Bitcoin",
@@ -22,7 +22,7 @@ export default function mockedTokens(): Token[] {
             "network": "ERC20",
         },
         {
-            "id": { u64: 9 },
+            "id": { u16: 9 },
             "name": "ATOM",
             "symbol": "atom",
             "network": "Cosmos",

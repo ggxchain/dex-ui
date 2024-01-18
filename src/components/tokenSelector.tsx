@@ -88,7 +88,7 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
                     }}
                 />
                 <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-2.5 md:p-1.5 pr-2 rounded-r-[1rem] flex flex-col md:text-base text-xs">
-                    <input value={amount} step="2" className="w-full text-right" type="number" placeholder="0.00" disabled={lockedAmount} onChange={handleAmountChange} />
+                    <input value={amount} step="2" className="w-full text-right disabled:text-gray-400 disabled:cursor-not-allowed" type="number" placeholder="0.00" disabled={lockedAmount} onChange={handleAmountChange} />
                     <p className="text-xs whitespace-nowrap">~= {((amount || 0.0) * token.price).toFixed(2)}$</p>
                 </div>
             </div>

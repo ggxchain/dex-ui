@@ -1,7 +1,7 @@
 import mockedTokens from "@/mock";
 import GGXWallet from "./ggx";
 import { Token, TokenId, CounterId, Order, Amount, PubKey, DetailedOrder, OrderType } from "@/types";
-import Pair from "@/pair";
+import Pair, { PairUtils } from "@/pair";
 
 import GGxContract from "./contract/ggx";
 import ContractMock from "./contract/mock"
@@ -53,6 +53,8 @@ export default class Contract {
     }
 
     async allTokens(): Promise<Token[]> {
+        console.log(await this.contract.tokens());
+
         return (await this.contract.tokens()).map((tokenId) => this.mapTokenIdToToken(tokenId));
     }
 
@@ -65,7 +67,22 @@ export default class Contract {
     }
 
     async allOrders(pair: Pair): Promise<Order[]> {
-        return await this.contract.pairOrders(pair);
+        const orders = await this.contract.pairOrders(pair);
+        // TODO: We need to double check this logic after contract will be ready.
+        // Currently we fetch both side tiker orders and then filter out duplicates.
+        // But it's posible that we will need to fetch only one side of ticker orders.
+        const reverseOrders = (await this.contract.pairOrders(PairUtils.reverse(pair))).reduce<Order[]>((acc, order) => {
+            if (orders.findIndex((value) => value.counter === order.counter) === -1) {
+                acc.push({
+                    ...order,
+                    orderType: order.orderType === "BUY" ? "SELL" : "BUY",
+                    pair
+                });
+            }
+            return acc;
+        }, []);
+
+        return [...orders, ...reverseOrders];
     }
 
     async allUserOrders(): Promise<DetailedOrder[]> {
@@ -76,7 +93,8 @@ export default class Contract {
         const orders = await this.contract.userOrders(address);
         return orders.map((value) => {
             return {
-                ...value, token1: this.mapTokenIdToToken(value.pair[0]),
+                ...value,
+                token1: this.mapTokenIdToToken(value.pair[0]),
                 token2: this.mapTokenIdToToken(value.pair[1])
             }
         });
@@ -88,6 +106,7 @@ export default class Contract {
             JSON.stringify(value.id) === JSON.stringify(tokenId)
         );
         if (token === undefined) {
+            console.log(tokenId);
             throw new Error("Token not found");
         }
         return token as Token;
@@ -124,10 +143,17 @@ export default class Contract {
         this.contract.cancelOrder(counterId, callback);
     }
 
-    async makeOrder(pair: Pair, amountOffered: Amount, amoutRequested: Amount, callback: onFinalize) {
+    async makeOrder(pair: Pair, amountOffered: Amount, amoutRequested: Amount, orderType: OrderType, callback: onFinalize) {
         if (this.wallet.pubkey() === undefined) {
             return Promise.reject("Wallet is not initialized");
         }
-        return this.contract.makeOrder(pair, "BUY", amountOffered, amoutRequested, callback);
+        return this.contract.makeOrder(pair, orderType, amountOffered, amoutRequested, callback);
+    }
+
+    async takeOrder(counterId: CounterId, callback: onFinalize) {
+        if (this.wallet.pubkey() === undefined) {
+            return Promise.reject("Wallet is not initialized");
+        }
+        return this.contract.takeOrder(counterId, callback);
     }
 }

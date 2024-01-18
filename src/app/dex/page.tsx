@@ -59,10 +59,14 @@ export default function Dex() {
   const isTokenNotSelected = sell === undefined || buy === undefined;
   const isTokenSame = sell?.symbol === buy?.symbol;
   const isWalletNotConnected = !isConnected.current;
-  const isUserBalanceNotEnough = !isWalletNotConnected && availableBalance < (sell?.amount ?? 0);
   const isOrderNotChosen = order === undefined;
-  const isOrderExhausted = !isOrderNotChosen && (sell?.amount ?? 0) > order?.amoutRequested;
-  const isSellAmountZero = sell?.amount === 0;
+
+  const sellAmount = isMaker && !isTokenNotSelected ?
+    sell.amount
+    : order?.amoutRequested ?? 0;
+  const isSellAmountZero = sellAmount === 0;
+  const isUserBalanceNotEnough = !isWalletNotConnected && availableBalance < sellAmount;
+
 
   const orderRate = order !== undefined
     ? order.amountOffered / order.amoutRequested
@@ -71,16 +75,14 @@ export default function Dex() {
     ? buy.amount / sell.amount
     : orderRate;
 
-  const orderAmount = order !== undefined && !isTokenNotSelected
-    ? sell.amount * rate
-    : 0;
   const buyAmount = isMaker && !isTokenNotSelected
     ? buy.amount
-    : orderAmount;
+    : order?.amountOffered ?? 0;
+
 
   const isAmountZero = isSellAmountZero || buyAmount === 0;
 
-  const isFormHasErrors = isTokenNotSelected || isTokenSame || isAmountZero || isWalletNotConnected || isUserBalanceNotEnough || (isTaker && isOrderExhausted);
+  const isFormHasErrors = isTokenNotSelected || isTokenSame || isAmountZero || isWalletNotConnected || isUserBalanceNotEnough || (isTaker && isOrderNotChosen);
 
   const onSwap = () => {
     if (isFormHasErrors) {
@@ -88,10 +90,17 @@ export default function Dex() {
     }
     const pair = [sell.id, buy.id] as Pair;
     const contract = new Contract();
-    contract.makeOrder(pair, sell.amount, buyAmount, () => {
+    const callback = () => {
       updateUserOrders();
-    });
-    onClear();
+      onClear();
+    };
+
+    if (isMaker) {
+      // Buy or sell is related to the first token in the pair. So, in our case it's sell.
+      contract.makeOrder(pair, sellAmount, buyAmount, "SELL", callback);
+    } else if (!isOrderNotChosen) {
+      contract.takeOrder(order.counter, callback);
+    }
   }
 
   const onOrderChange = (order: Order) => {
@@ -115,8 +124,8 @@ export default function Dex() {
   const buyPriceRate = (buy?.price ?? 0) * rate;
   const sellPriceRate = rate > 0 ? (sell?.price ?? 0) * (1 / rate) : 0;
 
-  const buyPrice = (buyAmount ?? 0) * sellPriceRate;
-  const sellPrice = buyPriceRate * (sell?.amount ?? 0);
+  const buyPrice = buyAmount * sellPriceRate;
+  const sellPrice = sellAmount * buyPriceRate;
 
   const comparedToMarket: number = !isTokenNotSelected && !isAmountZero ? ((sellPrice - buyPrice) / buyPrice) * 100 : 0;
 
@@ -143,19 +152,16 @@ export default function Dex() {
                 <p className="font-normal mx-5">{availableBalance}</p>
               </div>
             </div>
-            <TokenSelector token={sell} tokens={tokens} amount={sell?.amount ?? 0} onChange={onSellChange} />
+            <TokenSelector token={sell} tokens={tokens} lockedAmount={isTaker} amount={sellAmount} onChange={onSellChange} />
             <div className="flex flex-col text-xs text-orange-300">
               {
                 isUserBalanceNotEnough && !isTokenNotSelected &&
                 <div className="flex text-xs items-center mt-1 justify-between">
                   <p className="w-4/5">The balance is not enough to make this swap</p>
-                  <button className="ml-2 p-1 rounded-2xl border grow-on-hover" onClick={() => setSell({ ...sell, amount: availableBalance })}>Set max</button>
-                </div>
-              }
-              {isTaker && isOrderExhausted && !isTokenNotSelected &&
-                <div className="flex text-xs items-center mt-1 justify-between">
-                  <p className="w-4/5">Max available value for this order is: {order.amoutRequested.toFixed(9)} {sell.name}</p>
-                  <button className="ml-2 p-1 rounded-2xl border grow-on-hover" onClick={() => setSell({ ...sell, amount: order.amoutRequested })}>Set max</button>
+                  {
+                    isMaker && // Taker can't regulate the amount of the order.
+                    <button className="ml-2 p-1 rounded-2xl border grow-on-hover" onClick={() => setSell({ ...sell, amount: availableBalance })}>Set max</button>
+                  }
                 </div>
               }
               {isTokenSame && !isAmountZero &&
@@ -201,7 +207,7 @@ export default function Dex() {
                 {
                   isWalletNotConnected
                     ? <button className="basis-3/4 rounded-2xl border p-2 m-2 grow-on-hover" onClick={onLogin}>Connect wallet</button>
-                    : <button className="basis-3/4 rounded-2xl border p-2 m-2 enabled:grow-on-hover enabled:glow-on-hover disabled:opacity-50" disabled={isFormHasErrors} onClick={onSwap}>Preview the transaction</button>
+                    : <button className="basis-3/4 rounded-2xl border p-2 m-2 enabled:grow-on-hover enabled:glow-on-hover disabled:opacity-50" disabled={isFormHasErrors} onClick={onSwap}>{isTaker ? "Take order" : "Make order"}</button>
                 }
               </div>
             </div>
@@ -240,8 +246,8 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
       const filteredOrders = orders.filter((order: Order) => order.pubkey !== wallet.pubkey()?.address)
       setOrders(filteredOrders);
       if (orders.length > 0 && !selectedOrder) {
-        const sellOrders = filteredOrders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => b.amoutRequested / b.amountOffered - a.amoutRequested / a.amountOffered);
-        onChange(sellOrders[0]);
+        const orders = filteredOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => b.amoutRequested / b.amountOffered - a.amoutRequested / a.amountOffered);
+        onChange(orders[0]);
       }
     });
   }, [buyToken, sellToken]);
@@ -249,8 +255,8 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
   const buyOrders = orders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => a.amoutRequested / a.amountOffered - b.amoutRequested / b.amountOffered);
   const sellOrders = orders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => b.amoutRequested / b.amountOffered - a.amoutRequested / a.amountOffered);
 
-  const buyTotalVolume = buyOrders.reduce((acc, order) => acc + order.amountOffered, 0);
-  const sellTotalVolume = sellOrders.reduce((acc, order) => acc + order.amoutRequested, 0);
+  const buyTotalVolume = buyOrders.reduce((acc, order) => acc + order.amoutRequested, 0);
+  const sellTotalVolume = sellOrders.reduce((acc, order) => acc + order.amountOffered, 0);
 
   return (
     <div className="flex flex-col text-xs">
@@ -268,15 +274,15 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
             <td className="font-bold">Asks</td>
           </tr>
           {
-            buyOrders.length === 0
+            sellOrders.length === 0
               ? <tr><td className="text-red-600">No asks found</td></tr>
-              : buyOrders.map((order) => {
+              : sellOrders.map((order) => {
                 return (
-                  <tr key={order.counterId} className="relative w-full text-red-600">
-                    <td className="p-1 pl-4 text-left font-bold">{(order.amountOffered / order.amoutRequested).toFixed(9)}</td>
+                  <tr key={order.counter} className="relative w-full text-red-600">
+                    <td className="p-1 pl-4 text-left font-bold">{(order.amoutRequested / order.amountOffered).toFixed(9)}</td>
                     <td className="p-1 text-right text-white font-bold">
                       {order.amountOffered}
-                      <div style={{ width: `${Math.round(order.amountOffered * 100 / buyTotalVolume)}%` }} className="absolute bg-red-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
+                      <div style={{ width: `${Math.round(order.amountOffered * 100 / sellTotalVolume)}%` }} className="absolute bg-red-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
                     </td>
                   </tr>
                 )
@@ -286,12 +292,12 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
             <td className="font-bold mt-5">Bids</td>
           </tr>
           {
-            sellOrders.length === 0
+            buyOrders.length === 0
               ? <tr><td className="text-green-500">No bids found</td></tr>
-              : sellOrders.map((order) => {
-                const selected = order.counterId == selectedOrder?.counterId;
+              : buyOrders.map((order) => {
+                const selected = order.counter == selectedOrder?.counter;
                 return (
-                  <tr key={order.counterId} className={`relative w-full cursor-pointer glow-on-hover rounded-l-md text-green-500 ${selected} `} onClick={() => onChange(order)}>
+                  <tr key={order.counter} className={`relative w-full cursor-pointer glow-on-hover rounded-l-md text-green-500 ${selected} `} onClick={() => onChange(order)}>
                     <td className="p-1 relative text-left font-bold">
                       {selected && <p className="absolute h-full left-0">↠</p>}
                       <p className="pl-3">
@@ -300,7 +306,7 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
                     </td>
                     <td className="p-1 text-right text-white font-bold">
                       {order.amoutRequested}
-                      <div style={{ width: `${Math.round(order.amoutRequested * 100 / sellTotalVolume)}%` }} className="absolute bg-green-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
+                      <div style={{ width: `${Math.round(order.amoutRequested * 100 / buyTotalVolume)}%` }} className="absolute bg-green-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
                     </td>
 
                   </tr>
@@ -319,6 +325,7 @@ const useUserOrders = () => {
   const updateOrders = () => {
     const contract = new Contract();
     contract.allUserOrders().then((orders: DetailedOrder[]) => {
+      console.log(orders);
       setOrders(orders);
     });
   }
@@ -335,7 +342,7 @@ function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
 
   const onCancel = (order: DetailedOrder) => {
     const contract = new Contract();
-    contract.cancelOrder(order.counterId, () => {
+    contract.cancelOrder(order.counter, () => {
       cancelOrder(order);
     });
   }
@@ -360,7 +367,7 @@ function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
               const desiredToken = PairUtils.desiredToken(order.pair, order.orderType) == order.pair[0] ? order.token1 : order.token2;
 
               return (
-                <tr key={order.counterId} className="h-full w-full even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20">
+                <tr key={order.counter} className="h-full w-full even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20">
 
                   {/*Buy*/}
                   <td className="p-1 text-center rounded-l-xl">

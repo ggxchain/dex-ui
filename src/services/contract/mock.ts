@@ -111,7 +111,7 @@ export default class ContractMock implements ContractInterface {
     }
 
     orderFor(counterId: CounterId): Order | undefined {
-        return this.orders.find((value) => value.counterId === counterId);
+        return this.orders.find((value) => value.counter === counterId);
     }
 
     pairOrders(pair: Pair): Promise<Order[]> {
@@ -159,11 +159,11 @@ export default class ContractMock implements ContractInterface {
     }
 
     makeOrder(pair: Pair, orderType: OrderType, amountOffered: number, amoutRequested: number, callback: onFinalize): Promise<void> {
-        const counterId = (this.orders.at(-1)?.counterId ?? 0) + 1;
+        const counterId = (this.orders.at(-1)?.counter ?? 0) + 1;
         const order: Order = {
             pubkey: new GGXWallet().pubkey()?.address ?? "",
             pair,
-            counterId: counterId,
+            counter: counterId,
             timestamp: Date.now(),
             orderType: orderType,
             amountOffered,
@@ -190,16 +190,16 @@ export default class ContractMock implements ContractInterface {
         return Promise.resolve();
     }
 
-    cancelOrder(counterId: CounterId, callback: onFinalize, returnFunds: boolean = true): Promise<void> {
+    cancelOrder(counterId: CounterId, callback: onFinalize, resolved: boolean = false): Promise<void> {
         const pubkey = new GGXWallet().pubkey()?.address ?? "";
-        const orderId = this.orders.findIndex((value) => value.counterId === counterId);
-        if (orderId === -1 || this.orders[orderId].pubkey !== pubkey) {
+        const orderId = this.orders.findIndex((value) => value.counter === counterId);
+        if (orderId === -1 || (this.orders[orderId].pubkey !== pubkey && !resolved)) {
             return Promise.reject("Order not found.");
         }
         const order: Order = this.orders[orderId];
         this.orders.splice(orderId, 1);
 
-        const ordersByUser = this.ordersByUser.get(pubkey);
+        const ordersByUser = this.ordersByUser.get(order.pubkey);
         const orderByIndex = ordersByUser?.findIndex((value) => value === counterId);
         if (orderByIndex !== undefined && orderByIndex !== -1) {
             ordersByUser?.splice(orderByIndex, 1);
@@ -211,7 +211,8 @@ export default class ContractMock implements ContractInterface {
             orderByPair?.splice(orderByPairIndex, 1);
         }
 
-        if (returnFunds) {
+        // Don't return funds if order is resolved.
+        if (!resolved) {
             this.deposit(PairUtils.ownedToken(order.pair, order.orderType), order.amountOffered, () => { });
         }
 
@@ -235,7 +236,8 @@ export default class ContractMock implements ContractInterface {
             this.withdraw(orderWant, order.amoutRequested, () => { });
             this.deposit(PairUtils.ownedToken(order.pair, order.orderType), order.amountOffered, () => { }, pubkey);
             this.deposit(PairUtils.desiredToken(order.pair, order.orderType), order.amoutRequested, () => { }, order.pubkey);
-            this.cancelOrder(counterId, () => { }, false);
+            // 
+            this.cancelOrder(counterId, () => { }, true);
 
         }
         callback();

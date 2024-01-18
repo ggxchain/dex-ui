@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x43c113f0f52717aede7acb34972692f39a6784fccb66bcdb3a9214c206a43efa",
+    "hash": "0x25a4212a1480e81490ffba19cdbba8bef07d8adc877f3a60cd4eb2c4c9ab548f",
     "language": "ink! 4.3.0",
     "compiler": "rustc 1.73.0-nightly",
     "build_info": {
@@ -107,7 +107,159 @@
         "type": 8
       }
     },
-    "events": [],
+    "events": [
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "asset_id",
+            "type": {
+              "displayName": [
+                "Id"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "amount",
+            "type": {
+              "displayName": [
+                "u128"
+              ],
+              "type": 9
+            }
+          }
+        ],
+        "docs": [],
+        "label": "Deposit"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "asset_id",
+            "type": {
+              "displayName": [
+                "Id"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "amount",
+            "type": {
+              "displayName": [
+                "u128"
+              ],
+              "type": 9
+            }
+          }
+        ],
+        "docs": [],
+        "label": "Withdraw"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "asset_id_1",
+            "type": {
+              "displayName": [
+                "Id"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "asset_id_2",
+            "type": {
+              "displayName": [
+                "Id"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "offered_amount",
+            "type": {
+              "displayName": [
+                "u128"
+              ],
+              "type": 9
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "requested_amount",
+            "type": {
+              "displayName": [
+                "u128"
+              ],
+              "type": 9
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "order_type",
+            "type": {
+              "displayName": [
+                "OrderType"
+              ],
+              "type": 23
+            }
+          }
+        ],
+        "docs": [],
+        "label": "OrderCreated"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "counter",
+            "type": {
+              "displayName": [
+                "u128"
+              ],
+              "type": 9
+            }
+          }
+        ],
+        "docs": [],
+        "label": "OrderCanceled"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "counter",
+            "type": {
+              "displayName": [
+                "u128"
+              ],
+              "type": 9
+            }
+          }
+        ],
+        "docs": [],
+        "label": "OrderTaken"
+      }
+    ],
     "lang_error": {
       "displayName": [
         "ink",
