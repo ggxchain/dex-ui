@@ -324,7 +324,6 @@ const useUserOrders = () => {
   const updateOrders = () => {
     const contract = new Contract();
     contract.allUserOrders().then((orders: DetailedOrder[]) => {
-      console.log(orders);
       setOrders(orders);
     });
   }
