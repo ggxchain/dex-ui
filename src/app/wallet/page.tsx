@@ -1,6 +1,5 @@
 "use client"
 
-import Spinner from "@/components/spinner";
 import CexService from "@/services/cex";
 import Contract from "@/services/contract";
 import GGXWallet, { Account } from "@/services/ggx";
