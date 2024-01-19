@@ -34,7 +34,7 @@ export default function Dex() {
   useEffect(() => {
     updateUserOrders();
     loadTokens();
-  }, []);
+  }, [loadTokens, updateUserOrders]);
 
   useEffect(() => {
     if (sell !== undefined) {
@@ -236,10 +236,9 @@ interface OrderBookProps {
 function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<OrderBookProps>) {
   const [orders, setOrders] = useState<Order[]>([]);
 
-  const tokenPair = [sellToken.id, buyToken.id] as Pair;
-
   useEffect(() => {
     const contract = new Contract();
+    const tokenPair = [sellToken.id, buyToken.id] as Pair;
     contract.allOrders(tokenPair).then((orders) => {
       const wallet = new GGXWallet();
       // Don't show him his own orders.
@@ -250,7 +249,7 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
         onChange(orders[0]);
       }
     });
-  }, [buyToken, sellToken]);
+  }, [buyToken, sellToken, onChange, selectedOrder]);
 
   const buyOrders = orders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => a.amoutRequested / a.amountOffered - b.amoutRequested / b.amountOffered);
   const sellOrders = orders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => b.amoutRequested / b.amountOffered - a.amoutRequested / a.amountOffered);
