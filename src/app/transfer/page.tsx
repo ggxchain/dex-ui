@@ -258,7 +258,7 @@ export default function Transfer() {
         <div className="relative w-full">
           <input className="mt-1 rounded-2xl border pl-5 md:pl-5 md:p-2 p-1 basis-1/4 bg-transparent w-full"
             type="number"
-            value={amount}
+            value={amount.toString()}
             placeholder="amount"
             onChange={(e) => setAmount(Number(e.target.value))}
           />
