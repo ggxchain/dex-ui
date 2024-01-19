@@ -4,10 +4,14 @@ import Spinner from "@/components/spinner";
 import CexService from "@/services/cex";
 import Contract from "@/services/contract";
 import GGXWallet, { Account } from "@/services/ggx";
-import { Token, TokenId, Amount } from "@/types";
-import { ChangeEvent, useEffect, useState } from "react";
+import { Token, Amount } from "@/types";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Select from "@/components/select";
 import TokenList from "@/components/tokenList";
+import Modal from "@/components/modal";
+import LoadingButton from "@/components/loadButton";
+
+type InteractType = "Deposit" | "Withdraw";
 
 export default function Wallet() {
     const [tokens, setTokens] = useState<Token[]>([]);
@@ -19,14 +23,26 @@ export default function Wallet() {
     const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(undefined);
     const [selectedToken, setSelectedToken] = useState<Token | undefined>(undefined);
 
-    // A hack to force a re-render
-    const [update, setUpdate] = useState<boolean>(false);
+    // Modal related states
+    const [modal, setModal] = useState<boolean>(false);
+    const [modalAmount, setModalAmount] = useState<Amount>(0);
+    const modalTitle = useRef<InteractType>("Deposit");
+    const [modalLoading, setModalLoading] = useState<boolean>(false);
 
-    const refreshBalances = () => {
+    const refreshBalances = async () => {
         const contract = new Contract();
-        contract.allTokensOfOwner().then((tokens) => {
-            setOwnedTokens(tokens);
+        const tokens = await contract.allTokensOfOwner();
+        setBalances(new Map<string, Amount>());
+        setOwnedTokens(tokens);
+        const balancesPromises = tokens.map((token) => {
+            return contract.balanceOf(token.id);
         });
+        const balancesResults = await Promise.all(balancesPromises);
+        const balances = new Map<string, Amount>();
+        balancesResults.forEach((balance, index) => {
+            balances.set(JSON.stringify(tokens[index].id), balance);
+        });
+        setBalances(balances);
     }
 
     useEffect(() => {
@@ -45,7 +61,6 @@ export default function Wallet() {
                 setTokenPrices(map);
             });
         });
-        refreshBalances();
 
         const ggx = new GGXWallet();
         ggx.getAccounts().then((accounts) => {
@@ -55,17 +70,8 @@ export default function Wallet() {
     }, []);
 
     useEffect(() => {
-        const contract = new Contract();
-        setBalances(new Map<string, Amount>());
-        for (const token of ownedTokens) {
-            contract.balanceOf(token.id).then((balance) => {
-                setBalances((balances) => {
-                    balances.set(JSON.stringify(token.id), balance);
-                    return balances;
-                })
-            })
-        }
-    }, [ownedTokens, selectedAccount]);
+        refreshBalances()
+    }, [selectedAccount])
 
     const onSearch = (e: ChangeEvent<HTMLInputElement>) => {
         setSearch(e.target.value);
@@ -89,16 +95,34 @@ export default function Wallet() {
         return total + balance * price;
     }, 0);
 
-    const onDeposit = () => {
-        if (isTokenNotSelected) {
+    const omModalSubmit = () => {
+        if (isTokenNotSelected || modalAmount === 0) {
             return;
         }
         const contract = new Contract();
-        // TODO: probably we need modal here with amount input
-        contract.deposit(selectedToken.id, 10, () => {
+
+        let method = modalTitle.current === "Deposit" ? contract.deposit : contract.withdraw;
+        setModalLoading(true);
+
+        method.call(contract, selectedToken.id, modalAmount, () => {
             refreshBalances();
-        })
-    };
+            onModalClose();
+        });
+    }
+
+    const onModalOpen = (type: InteractType) => {
+        if (isTokenNotSelected) {
+            return;
+        }
+        modalTitle.current = type;
+        setModal(true);
+    }
+
+    const onModalClose = () => {
+        setModalLoading(false);
+        setModalAmount(0);
+        setModal(false);
+    }
 
     const connectWallet = () => {
         const ggx = new GGXWallet();
@@ -107,17 +131,6 @@ export default function Wallet() {
             setSelectedAccount(ggx.pubkey());
         });
     }
-
-    const onWithdraw = () => {
-        if (isTokenNotSelected) {
-            return;
-        }
-        const contract = new Contract();
-        // TODO: probably we need modal here with amount input
-        contract.withdraw(selectedToken.id, 10, () => {
-            refreshBalances();
-        });
-    };
 
     const walletIsNotInitialized = ggxAccounts.length === 0;
     const handleSelectChange = (e: Account) => {
@@ -151,8 +164,8 @@ export default function Wallet() {
             <div className="flex w-full justify-between items-center">
                 <h1 className="text-2xl md:text-3xl">${total.toFixed(2)}</h1>
                 <div className="flex md:flex-row flex-col">
-                    <button onClick={onDeposit} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
-                    <button onClick={onWithdraw} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
+                    <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
+                    <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
                 </div>
             </div>
 
@@ -184,6 +197,20 @@ export default function Wallet() {
                     </div>
                 </div>
             }
+
+            <Modal modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`} isOpen={modal} onClose={onModalClose}>
+                <div className="flex flex-col justify-center items-center w-full">
+                    <div className="md:w-1/2 w-3/4">
+                        <p>{modalTitle.current} amount</p>
+                        <div className="w-full relative pt-1">
+                            <input type="number" value={modalAmount.toString()} onChange={(e) => setModalAmount(+Number(e.target.value))} className="h-10 pl-3 rounded-xl w-full bg-bg-gr-2/50 text-slate-100" placeholder="0.0" />
+                        </div>
+                    </div>
+                    <LoadingButton loading={modalLoading} disabled={modalAmount === 0} className="disabled:opacity-50 text-lg md:w-1/2 mt-5 w-3/4 p-3 grow-on-hover glow-on-hover border border-white rounded-xl" onClick={omModalSubmit}>
+                        <p>{modalTitle.current}</p>
+                    </LoadingButton>
+                </div>
+            </Modal>
         </div >
     )
 }
