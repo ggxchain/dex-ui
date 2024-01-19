@@ -31,7 +31,7 @@ export default function Transfer() {
   const [selectedToken, setSelectedToken] = useState<ListElement>();
   const [GGxAccounts, setGGxAccounts] = useState<Account[]>([]);
   const [tx, setTx] = useState<string>();
-  const [txRes, setTxRes] = useState<IndexedTx>();
+  const [_, setTxRes] = useState<IndexedTx>();
 
 
   // Modal related states

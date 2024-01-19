@@ -16,7 +16,7 @@ interface TokenSelectorProps {
 export type TokenWithPrice = Token & { price: number };
 
 export function useTokens() {
-    const [tokens, setTokensWithPrice] = useState<TokenWithPrice[]>([]);
+    const [tokenWithPrices, setTokenWithPrices] = useState<TokenWithPrice[]>([]);
 
     const loadTokens = () => {
         const contract = new Contract();
@@ -29,15 +29,15 @@ export function useTokens() {
                         price: prices.get(token.symbol) ?? 0
                     }
                 });
-                setTokensWithPrice(tokensWithPrice);
+                setTokenWithPrices(tokensWithPrice);
             })
         });
     }
 
-    return [tokens, loadTokens] as const;
+    return [tokenWithPrices, loadTokens] as const;
 }
 
-export default function TokenSelector({ token, amount, onChange, tokens, lockedAmount }: TokenSelectorProps) {
+export default function TokenSelector({ token, amount, onChange, tokens, lockedAmount }: Readonly<TokenSelectorProps>) {
     useEffect(() => {
         if (tokens.length > 0 && token === undefined) {
             onChange(tokens[0], 0)

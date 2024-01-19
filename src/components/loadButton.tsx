@@ -9,7 +9,7 @@ interface ButtonProps {
     onClick: () => void,
 }
 
-export default function LoadingButton(props: ButtonProps) {
+export default function LoadingButton(props: Readonly<ButtonProps>) {
     const loading = props.loading ?? false;
     const className = props.className ?? "";
     const disabled = props.disabled ?? false;

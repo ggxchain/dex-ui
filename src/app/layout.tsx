@@ -12,15 +12,15 @@ const metadata: Metadata = {
 
 export default function Layout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
     <html lang="en">
       <body className={`inter.className min-h-dvh`}>
         <main className='h-max flex flex-col'>
           <HeaderWithNavbar />
-          <div className="flex min-h-full h-max flex-col items-center justify-between md:ml-64">
+          <div className="flex h-dvh flex-col items-center justify-between md:ml-64">
             <div className="text-slate-100 flex md:h-[80vh] w-full p-5 md:mt-10 md:p-10 md:rounded-2xl md:bg-bg-gr-2/20">
               {children}
             </div>

@@ -9,7 +9,7 @@ interface InputWithPriceInfoProps {
     className?: string;
 }
 
-export default function InputWithPriceInfo(props: InputWithPriceInfoProps) {
+export default function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
     const onChange = props.onChange ?? (() => { });
     const value = props.value ?? 0;
 

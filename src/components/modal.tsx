@@ -8,7 +8,7 @@ interface ModalProps {
     onClose: () => void;
 }
 
-export default function Modal({ children, isOpen, onClose, modalTitle }: ModalProps) {
+export default function Modal({ children, isOpen, onClose, modalTitle }: Readonly<ModalProps>) {
 
     return (
         <div className={`fixed ${isOpen ? "" : "hidden"} left-0 top-0 z-50 h-full w-full overflow-y-auto overflow-x-hidden outline-none`} aria-modal="true">
