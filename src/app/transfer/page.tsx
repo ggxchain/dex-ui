@@ -16,6 +16,7 @@ import CexService from "@/services/cex";
 import { ibcHashToDenom } from "@/services/keplr";
 import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
+import InputWithPriceInfo from "@/components/inputWithPriceInfo";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -310,15 +311,14 @@ export default function Transfer() {
           />
 
           <p className="mt-2">Amount</p>
-          <div className="relative w-full">
-            <input className="mt-1 rounded-2xl border pl-5 md:pl-5 md:p-2 p-1 basis-1/4 bg-transparent w-full"
-              type="number"
-              value={modalAmount.toString()}
-              placeholder="amount"
-              onChange={(e) => setModalAmount(Number(e.target.value))}
-            />
-            <p className="absolute bottom-0 opacity-50 right-2 top-1/2 -translate-y-1/2">{selectedToken?.symbol}{modalAmount >= 2 ? "s" : ""} <span className="text-sm">(${amountPrice.toFixed(2)})</span></p>
-          </div>
+          <InputWithPriceInfo
+            className="mt-1 rounded-2xl border pl-5 md:pl-5 md:p-2 p-1 basis-1/4 bg-transparent w-full"
+            value={modalAmount}
+            onChange={(e) => setModalAmount(Number(e.target.value))}
+            symbol={selectedToken?.symbol ?? ""}
+            placeholder="amount"
+            price={amountPrice}
+          />
 
           <div className="w-full flex justify-center mt-2">
             <LoadingButton disabled={modalAmount <= 0 || isGGxWalletNotConnected || walletIsNotInitialized} loading={modalLoading}

@@ -10,6 +10,7 @@ import Select from "@/components/select";
 import TokenList from "@/components/tokenList";
 import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
+import InputWithPriceInfo from "@/components/inputWithPriceInfo";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -162,6 +163,8 @@ export default function Wallet() {
         setSelectedToken(token);
     }
 
+    const amountPrice = modalAmount * (selectedToken ? tokenPrices.get(selectedToken.symbol) ?? 0 : 0);
+
     return (
         <div className="w-full h-full flex flex-col">
             <div className="flex w-full justify-between items-center">
@@ -204,9 +207,14 @@ export default function Wallet() {
             <Modal modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`} isOpen={modal} onClose={onModalClose}>
                 <div className="flex flex-col w-full px-5">
                     <p>{modalTitle.current} amount</p>
-                    <div className="w-full relative pt-1">
-                        <input type="number" value={modalAmount.toString()} onChange={(e) => setModalAmount(+Number(e.target.value))} className="h-10 pl-3 rounded-xl w-full bg-bg-gr-2/50 text-slate-100" placeholder="0.0" />
-                    </div>
+                    <InputWithPriceInfo
+                        className="mt-1 rounded-2xl border pl-5 md:pl-5 md:p-2 p-1 basis-1/4 bg-transparent w-full"
+                        value={modalAmount}
+                        onChange={(e) => setModalAmount(Number(e.target.value))}
+                        symbol={selectedToken?.name ?? ""}
+                        placeholder="amount"
+                        price={amountPrice}
+                    />
                     <div className="flex w-full justify-center">
                         <LoadingButton loading={modalLoading} disabled={modalAmount === 0} className="disabled:opacity-50 text-lg md:w-1/2 mt-5 w-3/4 p-3 grow-on-hover glow-on-hover border border-white rounded-xl" onClick={omModalSubmit}>
                             <p>{modalTitle.current}</p>
