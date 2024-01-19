@@ -12,11 +12,12 @@ import TokenList from "@/components/tokenList";
 export default function Wallet() {
     const [tokens, setTokens] = useState<Token[]>([]);
     const [ownedTokens, setOwnedTokens] = useState<Token[]>([]);
-    const [balances, setBalances] = useState<Map<TokenId, Amount>>(new Map<TokenId, Amount>());
+    const [balances, setBalances] = useState<Map<string, Amount>>(new Map<string, Amount>());
     const [search, setSearch] = useState<string>("");
-    const [tokenPrices, setTokenPrices] = useState<Map<TokenId, Amount>>(new Map<TokenId, Amount>());
+    const [tokenPrices, setTokenPrices] = useState<Map<string, Amount>>(new Map<string, Amount>());
     const [ggxAccounts, setGGXAccounts] = useState<Account[]>([]);
     const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(undefined);
+    const [selectedToken, setSelectedToken] = useState<Token | undefined>(undefined);
 
     // A hack to force a re-render
     const [update, setUpdate] = useState<boolean>(false);
@@ -34,11 +35,11 @@ export default function Wallet() {
             setTokens(tokens);
             const cex = new CexService();
             cex.tokenPrices(tokens.map((token) => token.symbol)).then((prices) => {
-                const map = new Map<TokenId, Amount>();
+                const map = new Map<string, Amount>();
                 prices.forEach((value, key) => {
                     const token = tokens.find((token) => token.symbol === key);
                     if (token !== undefined) {
-                        map.set(token.id, value);
+                        map.set(JSON.stringify(token.id), value);
                     }
                 });
                 setTokenPrices(map);
@@ -55,14 +56,13 @@ export default function Wallet() {
 
     useEffect(() => {
         const contract = new Contract();
-        setBalances(new Map<TokenId, Amount>());
+        setBalances(new Map<string, Amount>());
         for (const token of ownedTokens) {
             contract.balanceOf(token.id).then((balance) => {
                 setBalances((balances) => {
-                    balances.set(token.id, balance);
+                    balances.set(JSON.stringify(token.id), balance);
                     return balances;
                 })
-                setUpdate(!update);
             })
         }
     }, [ownedTokens, selectedAccount]);
@@ -77,10 +77,12 @@ export default function Wallet() {
     }
 
     const filteredTokens = tokens.filter((token) => filter(token));
+    const isTokenNotSelected = selectedToken === undefined;
 
     const total = ownedTokens.reduce<number>((total, token) => {
-        const balance = balances.get(token.id);
-        const price = tokenPrices.get(token.id);
+        const token_id_str = JSON.stringify(token.id);
+        const balance = balances.get(token_id_str);
+        const price = tokenPrices.get(token_id_str);
         if (balance === undefined || price === undefined) {
             return total;
         }
@@ -88,13 +90,14 @@ export default function Wallet() {
     }, 0);
 
     const onDeposit = () => {
-        const contract = new Contract();
-        for (const token of filteredTokens) {
-            contract.deposit(token.id, 10).then(() => {
-            })
+        if (isTokenNotSelected) {
+            return;
         }
-
-        refreshBalances();
+        const contract = new Contract();
+        // TODO: probably we need modal here with amount input
+        contract.deposit(selectedToken.id, 10, () => {
+            refreshBalances();
+        })
     };
 
     const connectWallet = () => {
@@ -106,7 +109,14 @@ export default function Wallet() {
     }
 
     const onWithdraw = () => {
-        // TODO
+        if (isTokenNotSelected) {
+            return;
+        }
+        const contract = new Contract();
+        // TODO: probably we need modal here with amount input
+        contract.withdraw(selectedToken.id, 10, () => {
+            refreshBalances();
+        });
     };
 
     const walletIsNotInitialized = ggxAccounts.length === 0;
@@ -120,8 +130,9 @@ export default function Wallet() {
     };
 
     const displayTokens = filteredTokens.map((token) => {
-        const balance = balances.get(token.id);
-        const price = tokenPrices.get(token.id);
+        const token_id_str = JSON.stringify(token.id);
+        const balance = balances.get(token_id_str);
+        const price = tokenPrices.get(token_id_str);
 
         return {
             ...token,
@@ -131,13 +142,17 @@ export default function Wallet() {
         }
     })
 
+    const onTokenSelect = (token: Token) => {
+        setSelectedToken(token);
+    }
+
     return (
-        <div className="w-full">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl ">${total.toFixed(2)}</h1>
-                <div className="flex">
-                    <button onClick={onDeposit} disabled={ggxAccounts.length === 0} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-32 w-24 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit</button>
-                    <button onClick={onWithdraw} disabled={walletIsNotInitialized} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-32 w-24 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw</button>
+        <div className="w-full h-full flex flex-col">
+            <div className="flex w-full justify-between items-center">
+                <h1 className="text-2xl md:text-3xl">${total.toFixed(2)}</h1>
+                <div className="flex md:flex-row flex-col">
+                    <button onClick={onDeposit} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
+                    <button onClick={onWithdraw} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
                 </div>
             </div>
 
@@ -159,7 +174,7 @@ export default function Wallet() {
             </div>
             {
                 filteredTokens.length > 0 &&
-                <TokenList className={`${walletIsNotInitialized ? "opacity-50" : "opacity-100"} w-full`} tokens={displayTokens} />
+                <TokenList className={`${walletIsNotInitialized ? "opacity-50" : "opacity-100"} w-full`} tokens={displayTokens} onClick={onTokenSelect} />
             }
             {
                 tokens.length === 0 &&

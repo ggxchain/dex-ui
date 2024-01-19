@@ -99,7 +99,7 @@ export default function Transfer() {
       balance: Number.parseInt(balance.amount) / (10 ** (token?.coinDecimals ?? 6)),
       symbol,
       estimatedPrice: prices.get(symbol) ?? NaN,
-      id: index,
+      id: { u64: index },
       url,
       network: "",
     };
@@ -112,7 +112,6 @@ export default function Transfer() {
         if (value.denom.includes("ibc/")) {
           const info = ibcHashToDenom(chain.chainName, value.denom);
           if (!info) return acc;
-          console.log(info);
           acc.push({
             denom: info.base,
             amount: value.amount,
@@ -210,10 +209,10 @@ export default function Transfer() {
 
   return (
     <div className="text-slate-100 flex flex-col w-full items-center h-full">
-      <div className="flex mt-1 justify-between w-full">
+      <div className="flex mt-1 justify-between w-full items-center">
         <h1 className="text-3xl">${total.toFixed(2)}</h1>
         <div className="flex flex-col">
-          <Select<ChainInfo> onChange={(chain) => setChain(chain)} options={chains} value={chain} className="m-1 w-full h-full md:max-w-128 max-w-64" childFormatter={(chain) => {
+          <Select<ChainInfo> onChange={(chain) => setChain(chain)} options={chains} value={chain} className="m-1 w-full h-full md:max-w-96 max-w-48" childFormatter={(chain) => {
             return (<div className="w-full md:p-2 p-1 m-0 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
               <span className="text-base truncate">{chain.chainName}</span>
             </div>)
