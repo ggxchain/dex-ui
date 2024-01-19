@@ -31,8 +31,7 @@ export default function Transfer() {
   const [selectedToken, setSelectedToken] = useState<ListElement>();
   const [GGxAccounts, setGGxAccounts] = useState<Account[]>([]);
   const [tx, setTx] = useState<string>();
-  const [_, setTxRes] = useState<IndexedTx>();
-
+  const [txRes, setTxRes] = useState<IndexedTx>();
 
   // Modal related states
   const [modal, setModal] = useState<boolean>(false);
@@ -41,10 +40,6 @@ export default function Transfer() {
   const [modalAmount, setModalAmount] = useState<number>(0);
   const [modalGGxAccount, setModalGGxAccount] = useState<Account>();
   const [modalSourceChannel, setModalSourceChannel] = useState<string>("channel-0");
-
-
-
-
 
   // init chain
   useEffect(() => {

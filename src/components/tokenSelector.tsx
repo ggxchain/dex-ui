@@ -4,6 +4,7 @@ import Contract from "@/services/contract";
 import { Token } from "@/types";
 import CexService from "@/services/cex";
 import Select from "./select";
+import Image from "next/image";
 
 interface TokenSelectorProps {
     token?: TokenWithPrice;
@@ -80,7 +81,7 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
                     childFormatter={(token: Token) => {
                         return (
                             <div className="flex items-center text-slate-100 w-full grow-on-hover border-white md:text-lg text-base ">
-                                <img src={`/svg/${token.symbol}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
+                                <Image width={0} height={0} src={`/svg/${token.symbol}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
                                 <p className="font-bold">{token.name}</p>
                                 <sup className="pl-1 opacity-90">{token.network}</sup>
                             </div>
