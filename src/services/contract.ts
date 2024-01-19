@@ -53,8 +53,6 @@ export default class Contract {
     }
 
     async allTokens(): Promise<Token[]> {
-        console.log(await this.contract.tokens());
-
         return (await this.contract.tokens()).map((tokenId) => this.mapTokenIdToToken(tokenId));
     }
 
@@ -106,7 +104,6 @@ export default class Contract {
             JSON.stringify(value.id) === JSON.stringify(tokenId)
         );
         if (token === undefined) {
-            console.log(tokenId);
             throw new Error("Token not found");
         }
         return token as Token;
