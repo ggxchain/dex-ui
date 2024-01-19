@@ -191,18 +191,7 @@ export default function Wallet() {
                     }
                 </div>
             </div>
-            {
-                filteredTokens.length > 0 &&
-                <TokenList className={`${walletIsNotInitialized ? "opacity-50" : "opacity-100"} w-full`} tokens={displayTokens} onClick={onTokenSelect} />
-            }
-            {
-                tokens.length === 0 &&
-                <div className="flex justify-center">
-                    <div className="w-12">
-                        <Spinner />
-                    </div>
-                </div>
-            }
+            <TokenList className={`${walletIsNotInitialized ? "opacity-50" : "opacity-100"} w-full`} tokens={displayTokens} onClick={onTokenSelect} />
 
             <Modal modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`} isOpen={modal} onClose={onModalClose}>
                 <div className="flex flex-col w-full px-5">
