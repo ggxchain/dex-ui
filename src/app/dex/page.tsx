@@ -34,7 +34,7 @@ export default function Dex() {
   useEffect(() => {
     updateUserOrders();
     loadTokens();
-  }, [loadTokens, updateUserOrders]);
+  }, []);
 
   useEffect(() => {
     if (sell !== undefined) {

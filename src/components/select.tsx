@@ -10,9 +10,11 @@ interface SelectProps<Type> {
     options: readonly Type[];
     childFormatter: (value: Type) => ReactNode;
     className?: string;
+    name?: string;
+    wrapperClassName?: string;
 }
 
-export default function Select<Type>({ value, onChange, options, childFormatter, className }: Readonly<SelectProps<Type>>) {
+export default function Select<Type>({ value, onChange, options, childFormatter, className, name, wrapperClassName}: Readonly<SelectProps<Type>>) {
     const onChangeValue = (e: SingleValue<Type>) => {
         if (e === null) {
             return;
@@ -21,42 +23,47 @@ export default function Select<Type>({ value, onChange, options, childFormatter,
     }
 
     return (
-        <ReactSelect
-            instanceId={`react-select`}
-            value={value}
-            onChange={onChangeValue}
-            options={options}
-            className={className}
-            theme={(theme) => ({
-                ...theme,
-                borderRadius: 16
-            })}
-            styles={{
-                control: (baseStyles, state) => ({
-                    ...baseStyles,
-                    backgroundColor: 'transparent',
-                    borderRadius: '0px',
-                    borderTopLeftRadius: '1rem',
-                    borderBottomLeftRadius: '1rem'
-                }),
-                option: (baseStyles, state) => ({
-                    ...baseStyles,
-                    borderRadius: '16px',
-                    marginBottom: '1px',
-                }),
-                menu: (baseStyles, state) => ({
-                    ...baseStyles,
-                    backgroundColor: 'transparent',
-                    boxShadow: 'none',
-                }),
-                menuList: (baseStyles, state) => ({
-                    ...baseStyles,
-                }),
-            }}
+        <div className={"relative w-full h-full ".concat(wrapperClassName ?? "")}>
+            <ReactSelect
+                instanceId={`react-select`}
+                value={value}
+                onChange={onChangeValue}
+                options={options}
+                className={className}
+                theme={(theme) => ({
+                    ...theme,
+                    borderRadius: 16
+                })}
+                styles={{
+                    control: (baseStyles, state) => ({
+                        ...baseStyles,
+                        backgroundColor: 'transparent',
+                        borderRadius: '0px',
+                        borderTopLeftRadius: '1rem',
+                        borderBottomLeftRadius: '1rem'
+                    }),
+                    option: (baseStyles, state) => ({
+                        ...baseStyles,
+                        borderRadius: '16px',
+                        marginBottom: '1px',
+                    }),
+                    menu: (baseStyles, state) => ({
+                        ...baseStyles,
+                        backgroundColor: 'transparent',
+                        boxShadow: 'none',
+                    }),
+                    menuList: (baseStyles, state) => ({
+                        ...baseStyles,
+                    }),
+                }}
 
-            formatOptionLabel={(token) => {
-                return childFormatter(token)
-            }}
-        />
+                formatOptionLabel={(token) => {
+                    return childFormatter(token)
+                }}
+            />
+            <p className="absolute top-1/4 left-2 -translate-y-1/2 text-[75%] opacity-75" style={{ lineHeight: "1", marginBlockStart: "0" }}>
+                {name}
+            </p>
+        </div>
     )
 }

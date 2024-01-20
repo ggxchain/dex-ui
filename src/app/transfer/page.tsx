@@ -16,7 +16,7 @@ import CexService from "@/services/cex";
 import { ibcHashToDenom } from "@/services/keplr";
 import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
-import InputWithPriceInfo from "@/components/inputWithPriceInfo";
+import {InputWithPriceInfo, Input} from "@/components/input";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -272,52 +272,50 @@ export default function Transfer() {
       </div>
 
       <Modal isOpen={modal} modalTitle={`${selectedToken?.symbol ?? ""} IBC ${modalTitle.current} `} onClose={() => { setModal(false) }} >
-        <div className="px-5 flex flex-col">
-          <p>Transfer from</p>
+        <div className="px-5 flex flex-col w-full">
           {
             walletIsNotInitialized
-              ? <button onClick={connectWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
-              : <Select<AccountData> onChange={(account) => (setAccount(account))} options={accounts} value={account} className="m-1 w-full h-full"
+              ? <button onClick={connectWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-3 mt-2 grow-on-hover glow-on-hover">Connect Keplr wallet</button>
+              : <Select<AccountData> name="From" onChange={(account) => (setAccount(account))} options={accounts} value={account} className="mt-1 w-full h-full" wrapperClassName="mt-2"
                 childFormatter={(account) => {
-                  return (<div className="w-full md:p-2 p-1 m-0 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                  return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
                     <span className="text-base truncate">{account.address}</span>
                   </div>)
                 }}
               />
           }
-          <p className="mt-2">Transfet to (GGx)</p>
           {isGGxWalletNotConnected
-            ? <button onClick={connectGGxWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect GGx wallet</button>
-            : <Select<Account> onChange={ggxOnSelect} options={GGxAccounts} value={modalGGxAccount} className="m-1 w-full h-full"
+            ? <button onClick={connectGGxWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-3 mt-2 grow-on-hover glow-on-hover">Connect GGx wallet</button>
+            : <Select<Account> name="To" onChange={ggxOnSelect} options={GGxAccounts} value={modalGGxAccount} className="mt-1 w-full h-full" wrapperClassName="mt-2"
               childFormatter={(account) => {
-                return (<div className="w-full md:p-2 p-1 m-0 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
-                  <span className="text-base">{account.name ? account.name : `Account ${GGxAccounts.findIndex((acc) => acc.address == account.address)}`}</span>
+                return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                  <span className="text-base truncate">{account.name ? account.name : account.address}</span>
                 </div>)
               }}
             />
           }
 
-          <p className="mt-2">Channel</p>
-          <input className="mt-1 rounded-2xl border pl-5 md:pl-5 md:p-2 p-1 basis-1/4 bg-transparent w-full"
+          <Input name="Channel"
             type="text"
+            className="mt-1 rounded-2xl border pl-5 p-3 basis-1/4 bg-transparent w-full"
+            wrapperClassName="mt-2"
             value={modalSourceChannel}
-            placeholder="sourceChannel"
             onChange={(e) => setModalSourceChannel(e.target.value)}
           />
 
-          <p className="mt-2">Amount</p>
           <InputWithPriceInfo
-            className="mt-1 rounded-2xl border pl-5 md:pl-5 md:p-2 p-1 basis-1/4 bg-transparent w-full"
+            name="Amount"
+            className="mt-1 rounded-2xl border pl-5 p-3 basis-1/4 bg-transparent w-full"
+            wrapperClassName="mt-2"
             value={modalAmount}
             onChange={(e) => setModalAmount(Number(e.target.value))}
-            symbol={selectedToken?.symbol ?? ""}
-            placeholder="amount"
+            symbol={selectedToken?.name ?? ""}
             price={amountPrice}
           />
 
           <div className="w-full flex justify-center mt-2">
             <LoadingButton disabled={modalAmount <= 0 || isGGxWalletNotConnected || walletIsNotInitialized} loading={modalLoading}
-              className="disabled:opacity-50 rounded-2xl border p-2 m-2 basis-2/5 grow-on-hover"
+              className="disabled:opacity-50 rounded-2xl border p-3 m-2 basis-2/5 grow-on-hover"
               onClick={onModalSubmit}>
               IBC {modalTitle.current}
             </LoadingButton>

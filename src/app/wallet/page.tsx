@@ -9,7 +9,7 @@ import Select from "@/components/select";
 import TokenList from "@/components/tokenList";
 import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
-import InputWithPriceInfo from "@/components/inputWithPriceInfo";
+import {InputWithPriceInfo, Input} from "@/components/input";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -194,13 +194,12 @@ export default function Wallet() {
 
             <Modal modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`} isOpen={modal} onClose={onModalClose}>
                 <div className="flex flex-col w-full px-5">
-                    <p>{modalTitle.current} amount</p>
                     <InputWithPriceInfo
-                        className="mt-1 rounded-2xl border pl-5 md:pl-5 md:p-2 p-1 basis-1/4 bg-transparent w-full"
+                        name="Amount"
+                        className="mt-1 rounded-2xl border pl-5 p-3 basis-1/4 bg-transparent w-full"
                         value={modalAmount}
                         onChange={(e) => setModalAmount(Number(e.target.value))}
                         symbol={selectedToken?.name ?? ""}
-                        placeholder="amount"
                         price={amountPrice}
                     />
                     <div className="flex w-full justify-center">
