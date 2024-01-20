@@ -261,8 +261,8 @@ export default function Transfer() {
 
       <div className="mt-10 flex flex-col items-end w-full">
         <div>
-          <Select<ChainInfo> onChange={(chain) => setChain(chain)} options={chains} value={chain} className="m-1 w-full h-full md:max-w-96 max-w-48" childFormatter={(chain) => {
-            return (<div className="w-full md:p-2 p-1 m-0 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+          <Select<ChainInfo> name="Chain" onChange={(chain) => setChain(chain)} options={chains} value={chain} className="w-full h-full md:max-w-96 max-w-48" wrapperClassName="pt-1" childFormatter={(chain) => {
+            return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
               <span className="text-base truncate">{chain.chainName}</span>
             </div>)
           }}
@@ -276,9 +276,9 @@ export default function Transfer() {
           {
             walletIsNotInitialized
               ? <button onClick={connectWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-3 mt-2 grow-on-hover glow-on-hover">Connect Keplr wallet</button>
-              : <Select<AccountData> name="From" onChange={(account) => (setAccount(account))} options={accounts} value={account} className="mt-1 w-full h-full" wrapperClassName="mt-2"
+              : <Select<AccountData> disabled={true} name="Source account (extension managed)" onChange={(account) => (setAccount(account))} options={accounts} value={account} className="mt-1 w-full h-full" wrapperClassName="mt-2 opacity-60"
                 childFormatter={(account) => {
-                  return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                  return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm">
                     <span className="text-base truncate">{account.address}</span>
                   </div>)
                 }}
@@ -286,9 +286,9 @@ export default function Transfer() {
           }
           {isGGxWalletNotConnected
             ? <button onClick={connectGGxWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-3 mt-2 grow-on-hover glow-on-hover">Connect GGx wallet</button>
-            : <Select<Account> name="To" onChange={ggxOnSelect} options={GGxAccounts} value={modalGGxAccount} className="mt-1 w-full h-full" wrapperClassName="mt-2"
+            : <Select<Account> name="Destination account" onChange={ggxOnSelect} options={GGxAccounts} value={modalGGxAccount} className="mt-1 w-full h-full" wrapperClassName="mt-2"
               childFormatter={(account) => {
-                return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm">
                   <span className="text-base truncate">{account.name ? account.name : account.address}</span>
                 </div>)
               }}

@@ -12,9 +12,11 @@ interface SelectProps<Type> {
     className?: string;
     name?: string;
     wrapperClassName?: string;
+    disabled?: boolean;
 }
 
-export default function Select<Type>({ value, onChange, options, childFormatter, className, name, wrapperClassName}: Readonly<SelectProps<Type>>) {
+export default function Select<Type>({ value, onChange, options, childFormatter, className, name, wrapperClassName, ...props}: Readonly<SelectProps<Type>>) {
+    const disabled = props.disabled ?? false;
     const onChangeValue = (e: SingleValue<Type>) => {
         if (e === null) {
             return;
@@ -25,6 +27,7 @@ export default function Select<Type>({ value, onChange, options, childFormatter,
     return (
         <div className={"relative w-full h-full ".concat(wrapperClassName ?? "")}>
             <ReactSelect
+                isDisabled={disabled}
                 instanceId={`react-select`}
                 value={value}
                 onChange={onChangeValue}
