@@ -260,8 +260,8 @@ export default function Transfer() {
       </div>
 
       <div className="mt-10 flex flex-col items-end w-full">
-        <div>
-          <Select<ChainInfo> name="Chain" onChange={(chain) => setChain(chain)} options={chains} value={chain} className="w-full h-full md:max-w-96 max-w-48" wrapperClassName="pt-1" childFormatter={(chain) => {
+        <div className="w-full h-full md:max-w-96 max-w-48">
+          <Select<ChainInfo> name="Chain" onChange={(chain) => setChain(chain)} options={chains} value={chain} className="w-full h-full" wrapperClassName="pt-1" childFormatter={(chain) => {
             return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
               <span className="text-base truncate">{chain.chainName}</span>
             </div>)

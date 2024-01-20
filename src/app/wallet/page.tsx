@@ -9,7 +9,7 @@ import Select from "@/components/select";
 import TokenList from "@/components/tokenList";
 import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
-import {InputWithPriceInfo, Input} from "@/components/input";
+import {InputWithPriceInfo} from "@/components/input";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -175,14 +175,14 @@ export default function Wallet() {
             </div>
 
             <div className="flex justify-between md:mt-10 mt-1 items-center">
-                <input type="text" placeholder="Search..." onChange={onSearch} className="md:w-[30%] w-[45%] h-10 pl-3 rounded-xl bg-bg-gr-2/20 text-slate-100" />
-                <div className="w-[45%] md:w-[30%] md:max-w-64 max-w-48">
+                <input type="text" placeholder="Search..." onChange={onSearch} className="md:w-[30%] w-[45%] p-3 rounded-xl bg-bg-gr-2/20 text-slate-100" />
+                <div className="w-[45%] md:w-[30%] md:max-w-96 max-w-48">
                     {
                         walletIsNotInitialized
-                            ? <button onClick={connectWallet} className="text-center text-slate-100 secondary-gradient rounded-2xl text-wrap w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
+                            ? <button onClick={connectWallet} className="text-center text-slate-100 secondary-gradient rounded-2xl text-wrap w-full h-full md:text-base text-sm p-3 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
                             : <Select<Account> name="Account" onChange={handleSelectChange} options={ggxAccounts} value={selectedAccount} className="w-full h-full" wrapperClassName="pt-1"
                                 childFormatter={(account) => {
-                                    return (<div className="w-full md:p-2 p-1 m-0 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                                    return (<div className="w-full p-3 m-0 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
                                         <span className="text-base">{account.name ? account.name : `Account ${ggxAccounts.findIndex((acc) => acc.address == account.address)}`}</span>
                                     </div>)
                                 }}
