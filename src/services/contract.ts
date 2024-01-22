@@ -6,6 +6,7 @@ import Pair, { PairUtils } from "@/pair";
 import GGxContract from "./contract/ggx";
 import ContractMock from "./contract/mock"
 import { CONTRACT_MOCKED } from "@/consts";
+import { toast } from "react-toastify";
 
 export type onFinalize = () => void;
 
@@ -122,35 +123,58 @@ export default class Contract {
         if (this.wallet.pubkey() === undefined) {
             return Promise.reject("Wallet is not initialized");
         }
-
-        this.contract.deposit(tokenId, amount, callback);
+        wrapCallWithNotifications(curry(this.contract.deposit, this.contract, tokenId, amount), "Deposit", callback);
     }
 
     async withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize) {
         if (this.wallet.pubkey() === undefined) {
             return Promise.reject("Wallet is not initialized");
         }
-        this.contract.withdraw(tokenId, amount, callback);
+        wrapCallWithNotifications(curry(this.contract.withdraw, this.contract, tokenId, amount), "Withdraw", callback);
     }
 
     async cancelOrder(counterId: CounterId, callback: onFinalize) {
         if (this.wallet.pubkey() === undefined) {
             return Promise.reject("Wallet is not initialized");
         }
-        this.contract.cancelOrder(counterId, callback);
+        wrapCallWithNotifications(curry(this.contract.cancelOrder, this.contract, counterId), "Cancel order", callback);
     }
 
     async makeOrder(pair: Pair, amountOffered: Amount, amoutRequested: Amount, orderType: OrderType, callback: onFinalize) {
         if (this.wallet.pubkey() === undefined) {
             return Promise.reject("Wallet is not initialized");
         }
-        return this.contract.makeOrder(pair, orderType, amountOffered, amoutRequested, callback);
+        wrapCallWithNotifications(curry(this.contract.makeOrder, this.contract, pair, orderType, amountOffered, amoutRequested), "Order", callback);
     }
 
     async takeOrder(counterId: CounterId, callback: onFinalize) {
         if (this.wallet.pubkey() === undefined) {
             return Promise.reject("Wallet is not initialized");
         }
-        return this.contract.takeOrder(counterId, callback);
+        wrapCallWithNotifications(curry(this.contract.takeOrder, this.contract, counterId), "Order", callback);
     }
 }
+
+type WrapCall<T> = (_: onFinalize) => Promise<T>;
+
+function curry<T>(f: Function, _this: ContractInterface, ...args: any[]): WrapCall<T> {
+    return (onFinalize: onFinalize) => f.call(_this, ...args, onFinalize);
+}
+
+function wrapCallWithNotifications<T>(call: WrapCall<T>, text: String, callback: onFinalize): ReturnType<typeof toast.promise> {
+    const wrappedOnFinalize = () => {
+        toast.success(`${text} finalized`);
+        callback();
+    }
+
+    return toast.promise(call(wrappedOnFinalize), {
+        "pending": `Sending the ${text.toLowerCase()}...`,
+        "success": `${text} submitted`,
+        error: {
+            render({ data }) {
+                return `${data}`
+            }
+        }
+    });
+};
+

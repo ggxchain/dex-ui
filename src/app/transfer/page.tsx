@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   assertIsDeliverTxSuccess,
   Coin,
+  DeliverTxResponse,
   IndexedTx,
   SigningStargateClient,
 } from "@cosmjs/stargate";
@@ -16,7 +17,8 @@ import CexService from "@/services/cex";
 import { ibcHashToDenom } from "@/services/keplr";
 import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
-import {InputWithPriceInfo, Input} from "@/components/input";
+import { InputWithPriceInfo, Input } from "@/components/input";
+import { toast } from "react-toastify";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -175,7 +177,7 @@ export default function Transfer() {
     };
 
     try {
-      const result = await client.sendIbcTokens(
+      const result = await toast.promise(client.sendIbcTokens(
         account.address,
         modalGGxAccount.address,
         sendAmount,
@@ -185,8 +187,16 @@ export default function Transfer() {
         Math.floor(Date.now() / 1000) + 300,
         fee,
         ""
-      );
-      assertIsDeliverTxSuccess(result);
+      ), {
+        pending: "Sending IBC transaction...",
+        success: "Transaction submitted successfully",
+        error: {
+          render({ data }: { data: DeliverTxResponse }) {
+            return `Transaction failed: ${assertIsDeliverTxSuccess(data)}`;
+          },
+        }
+      });
+
 
       if (result.code == 0) {
         console.log(
