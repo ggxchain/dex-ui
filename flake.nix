@@ -2,7 +2,7 @@
   description = "A very basic flake";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05"; # We want to use packages from the binary cache
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11"; # We want to use packages from the binary cache
     flake-utils.url = "github:numtide/flake-utils";
     
   };

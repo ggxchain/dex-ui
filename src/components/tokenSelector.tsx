@@ -4,11 +4,13 @@ import Contract from "@/services/contract";
 import { Token } from "@/types";
 import CexService from "@/services/cex";
 import Select from "./select";
+import Image from "next/image";
+import {Input} from "./input";
 
 interface TokenSelectorProps {
     token?: TokenWithPrice;
     tokens: TokenWithPrice[];
-    amount: number;
+    amount?: number;
     lockedAmount?: boolean;
     onChange: (tokenId: TokenWithPrice, amount: number) => void;
 }
@@ -16,7 +18,7 @@ interface TokenSelectorProps {
 export type TokenWithPrice = Token & { price: number };
 
 export function useTokens() {
-    const [tokens, setTokensWithPrice] = useState<TokenWithPrice[]>([]);
+    const [tokenWithPrices, setTokenWithPrices] = useState<TokenWithPrice[]>([]);
 
     const loadTokens = () => {
         const contract = new Contract();
@@ -29,15 +31,15 @@ export function useTokens() {
                         price: prices.get(token.symbol) ?? 0
                     }
                 });
-                setTokensWithPrice(tokensWithPrice);
+                setTokenWithPrices(tokensWithPrice);
             })
         });
     }
 
-    return [tokens, loadTokens] as const;
+    return [tokenWithPrices, loadTokens] as const;
 }
 
-export default function TokenSelector({ token, amount, onChange, tokens, lockedAmount }: TokenSelectorProps) {
+export default function TokenSelector({ token, amount, onChange, tokens, lockedAmount }: Readonly<TokenSelectorProps>) {
     useEffect(() => {
         if (tokens.length > 0 && token === undefined) {
             onChange(tokens[0], 0)
@@ -80,7 +82,7 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
                     childFormatter={(token: Token) => {
                         return (
                             <div className="flex items-center text-slate-100 w-full grow-on-hover border-white md:text-lg text-base ">
-                                <img src={`/svg/${token.symbol}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
+                                <Image width={0} height={0} src={`/svg/${token.symbol}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
                                 <p className="font-bold">{token.name}</p>
                                 <sup className="pl-1 opacity-90">{token.network}</sup>
                             </div>
@@ -88,8 +90,8 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
                     }}
                 />
                 <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-2.5 md:p-1.5 pr-2 rounded-r-[1rem] flex flex-col md:text-base text-xs">
-                    <input value={amount} step="2" className="w-full text-right disabled:text-gray-400 disabled:cursor-not-allowed" type="number" placeholder="0.00" disabled={lockedAmount} onChange={handleAmountChange} />
-                    <p className="text-xs whitespace-nowrap">~= {((amount || 0.0) * token.price).toFixed(2)}$</p>
+                    <Input name="Amount" value={amount} step="2" className="bg-transparent w-full text-right disabled:text-gray-400 disabled:cursor-not-allowed" type="number" placeholder="0.00" disabled={lockedAmount} onChange={handleAmountChange} />
+                    <p className="text-xs whitespace-nowrap">~= {((amount ?? 0.0) * token.price).toFixed(2)}$</p>
                 </div>
             </div>
         </div>

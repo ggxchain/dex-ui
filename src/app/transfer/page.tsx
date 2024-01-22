@@ -1,7 +1,7 @@
 "use client";
 
 import type { AccountData, ChainInfo } from "@keplr-wallet/types";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   assertIsDeliverTxSuccess,
   Coin,
@@ -14,22 +14,32 @@ import GGXWallet, { Account } from "@/services/ggx";
 import ibcChains from "@/config/chains";
 import CexService from "@/services/cex";
 import { ibcHashToDenom } from "@/services/keplr";
+import Modal from "@/components/modal";
+import LoadingButton from "@/components/loadButton";
+import {InputWithPriceInfo, Input} from "@/components/input";
+
+type ModalTypes = "Deposit" | "Withdraw";
 
 export default function Transfer() {
   const chains = ibcChains;
   const [chain, setChain] = useState<ChainInfo>(ibcChains[0]);
   const [client, setClient] = useState<SigningStargateClient>();
   const [account, setAccount] = useState<AccountData>();
-  const [amount, setAmount] = useState<number>(0);
   const [accounts, setAccounts] = useState<readonly AccountData[]>([]);
   const [balances, setBalances] = useState<readonly Coin[]>();
   const [prices, setPrices] = useState<Map<string, number>>(new Map());
   const [selectedToken, setSelectedToken] = useState<ListElement>();
   const [GGxAccounts, setGGxAccounts] = useState<Account[]>([]);
-  const [selectedGGxAccount, setSelectedGGxAccount] = useState<Account>();
-  const [sourceChannel, setSourceChannel] = useState<string>("channel-0");
   const [tx, setTx] = useState<string>();
   const [txRes, setTxRes] = useState<IndexedTx>();
+
+  // Modal related states
+  const [modal, setModal] = useState<boolean>(false);
+  const modalTitle = useRef<ModalTypes>("Deposit");
+  const [modalLoading, setModalLoading] = useState<boolean>(false);
+  const [modalAmount, setModalAmount] = useState<number>(0);
+  const [modalGGxAccount, setModalGGxAccount] = useState<Account>();
+  const [modalSourceChannel, setModalSourceChannel] = useState<string>("channel-0");
 
   // init chain
   useEffect(() => {
@@ -42,7 +52,7 @@ export default function Transfer() {
     ggx.getAccounts().then((accounts) => {
       setGGxAccounts(accounts);
       const ggx = new GGXWallet();
-      setSelectedGGxAccount(ggx.pubkey());
+      setModalGGxAccount(ggx.pubkey());
     });
   }
 
@@ -139,11 +149,11 @@ export default function Transfer() {
   };
 
   const sendIbcToken = async () => {
-    if (!client || !selectedGGxAccount || !account?.address) {
+    if (!client || !modalGGxAccount || !account?.address) {
       console.error(
         "some input is undefine client, ibcRecipent, address",
         client,
-        selectedGGxAccount?.address,
+        modalGGxAccount?.address,
         account?.address
       );
       return;
@@ -151,7 +161,7 @@ export default function Transfer() {
 
     const sendAmount = {
       denom: selectedToken?.symbol ?? "ert",
-      amount: amount.toString(),
+      amount: modalAmount.toString(),
     };
 
     const fee = {
@@ -167,10 +177,10 @@ export default function Transfer() {
     try {
       const result = await client.sendIbcTokens(
         account.address,
-        selectedGGxAccount.address,
+        modalGGxAccount.address,
         sendAmount,
         "transfer",
-        sourceChannel,
+        modalSourceChannel,
         undefined,
         Math.floor(Date.now() / 1000) + 300,
         fee,
@@ -194,90 +204,124 @@ export default function Transfer() {
   };
 
   const ggxOnSelect = (account: Account) => {
-    setSelectedGGxAccount(account);
+    setModalGGxAccount(account);
     const ggx = new GGXWallet();
     ggx.selectAccount(account);
+  }
+
+  const onModalOpen = (modalType: ModalTypes) => {
+    if (isGGxWalletNotConnected || walletIsNotInitialized || selectedToken === undefined) return;
+
+    modalTitle.current = modalType;
+    setModalLoading(false);
+    setModalAmount(0);
+    setModalSourceChannel("channel-0");
+    setModal(true);
+  }
+
+  const onModalSubmit = () => {
+    if (!modalGGxAccount) return;
+    if (modalAmount <= 0) return;
+    if (!selectedToken) return;
+    if (modalSourceChannel === "") return;
+
+    setModalLoading(true);
+    switch (modalTitle.current) {
+      case "Deposit":
+        sendIbcToken().then(() => {
+          setModal(false);
+          getBalances()
+        })
+        break;
+      case "Withdraw":
+        console.error("not implemented");
+        setModal(false);
+
+        break;
+    }
   }
 
   const tokens = balances?.map((balance, index) => mapToken(balance, index)) ?? [];
 
   const walletIsNotInitialized = !account?.address || !client;
-  const isGGxWalletNotConnected = selectedGGxAccount === undefined;
+  const isGGxWalletNotConnected = modalGGxAccount === undefined;
   const total = tokens.reduce((acc, token) => acc + token.balance * token.estimatedPrice, 0);
-  const amountPrice = amount * (selectedToken ? prices.get(selectedToken.symbol) ?? 0 : 0);
+  const amountPrice = modalAmount * (selectedToken ? prices.get(selectedToken.symbol) ?? 0 : 0);
 
 
   return (
     <div className="text-slate-100 flex flex-col w-full items-center h-full">
       <div className="flex mt-1 justify-between w-full items-center">
         <h1 className="text-3xl">${total.toFixed(2)}</h1>
-        <div className="flex flex-col">
-          <Select<ChainInfo> onChange={(chain) => setChain(chain)} options={chains} value={chain} className="m-1 w-full h-full md:max-w-96 max-w-48" childFormatter={(chain) => {
-            return (<div className="w-full md:p-2 p-1 m-0 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+        <div className="flex md:flex-row flex-col">
+          <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
+          <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
+        </div>
+      </div>
+
+      <div className="mt-10 flex flex-col items-end w-full">
+        <div className="w-full h-full md:max-w-96 max-w-48">
+          <Select<ChainInfo> name="Chain" onChange={(chain) => setChain(chain)} options={chains} value={chain} className="w-full h-full" wrapperClassName="pt-1" childFormatter={(chain) => {
+            return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
               <span className="text-base truncate">{chain.chainName}</span>
             </div>)
           }}
           />
         </div>
+        <TokenList selected={selectedToken} onClick={setSelectedToken} className={`w-full mt-2 ${walletIsNotInitialized ? "opacity-50" : "opacity-100"}`} tokens={tokens} />
       </div>
 
-      <div className="flex w-full flex-col mt-5 items-center md:max-w-128 max-w-64">
-        <p>Transfer from</p>
-        {
-          walletIsNotInitialized
-            ? <button onClick={connectWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
-            : <Select<AccountData> onChange={(account) => (setAccount(account))} options={accounts} value={account} className="m-1 w-full h-full"
+      <Modal isOpen={modal} modalTitle={`${selectedToken?.symbol ?? ""} IBC ${modalTitle.current} `} onClose={() => { setModal(false) }} >
+        <div className="px-5 flex flex-col w-full">
+          {
+            walletIsNotInitialized
+              ? <button onClick={connectWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-3 mt-2 grow-on-hover glow-on-hover">Connect Keplr wallet</button>
+              : <Select<AccountData> disabled={true} name="Source account (extension managed)" onChange={(account) => (setAccount(account))} options={accounts} value={account} className="mt-1 w-full h-full" wrapperClassName="mt-2 opacity-60"
+                childFormatter={(account) => {
+                  return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm">
+                    <span className="text-base truncate">{account.address}</span>
+                  </div>)
+                }}
+              />
+          }
+          {isGGxWalletNotConnected
+            ? <button onClick={connectGGxWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-3 mt-2 grow-on-hover glow-on-hover">Connect GGx wallet</button>
+            : <Select<Account> name="Destination account" onChange={ggxOnSelect} options={GGxAccounts} value={modalGGxAccount} className="mt-1 w-full h-full" wrapperClassName="mt-2"
               childFormatter={(account) => {
-                return (<div className="w-full md:p-2 p-1 m-0 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
-                  <span className="text-base truncate">{account.address}</span>
+                return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm">
+                  <span className="text-base truncate">{account.name ? account.name : account.address}</span>
                 </div>)
               }}
             />
-        }
-        <p className="mt-2">Transfet to (GGx)</p>
-        {isGGxWalletNotConnected
-          ? <button onClick={connectGGxWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-2 md:p-4 m-1 grow-on-hover glow-on-hover">Connect GGx wallet</button>
-          : <Select<Account> onChange={ggxOnSelect} options={GGxAccounts} value={selectedGGxAccount} className="m-1 w-full h-full"
-            childFormatter={(account) => {
-              return (<div className="w-full md:p-2 p-1 m-0 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
-                <span className="text-base">{account.name ? account.name : `Account ${GGxAccounts.findIndex((acc) => acc.address == account.address)}`}</span>
-              </div>)
-            }}
-          />
-        }
+          }
 
-        <p className="mt-2">Channel</p>
-        <input className="mt-1 rounded-2xl border pl-5 md:pl-5 md:p-2 p-1 basis-1/4 bg-transparent w-full"
-          type="text"
-          value={sourceChannel}
-          placeholder="sourceChannel"
-          onChange={(e) => setSourceChannel(e.target.value)}
-        />
-
-        <p className="mt-2">Amount</p>
-        <div className="relative w-full">
-          <input className="mt-1 rounded-2xl border pl-5 md:pl-5 md:p-2 p-1 basis-1/4 bg-transparent w-full"
-            type="number"
-            value={amount}
-            placeholder="amount"
-            onChange={(e) => setAmount(Number(e.target.value))}
+          <Input name="Channel"
+            type="text"
+            className="mt-1 rounded-2xl border pl-5 p-3 basis-1/4 bg-transparent w-full"
+            wrapperClassName="mt-2"
+            value={modalSourceChannel}
+            onChange={(e) => setModalSourceChannel(e.target.value)}
           />
-          <p className="absolute bottom-0 py-auto my-auto opacity-50 right-2 top-1/2 -translate-y-1/2">{selectedToken?.symbol}{amount >= 2 ? "s" : ""} <span className="text-sm">(${amountPrice.toFixed(2)})</span></p>
+
+          <InputWithPriceInfo
+            name="Amount"
+            className="mt-1 rounded-2xl border pl-5 p-3 basis-1/4 bg-transparent w-full"
+            wrapperClassName="mt-2"
+            value={modalAmount}
+            onChange={(e) => setModalAmount(Number(e.target.value))}
+            symbol={selectedToken?.name ?? ""}
+            price={amountPrice}
+          />
+
+          <div className="w-full flex justify-center mt-2">
+            <LoadingButton disabled={modalAmount <= 0 || isGGxWalletNotConnected || walletIsNotInitialized} loading={modalLoading}
+              className="disabled:opacity-50 rounded-2xl border p-3 m-2 basis-2/5 grow-on-hover"
+              onClick={onModalSubmit}>
+              IBC {modalTitle.current}
+            </LoadingButton>
+          </div>
         </div>
-
-        <button
-          className="rounded-2xl border p-2 m-2 basis-1/4 grow-on-hover"
-          onClick={sendIbcToken}
-        >
-          IBC Transfer
-        </button>
-
-      </div>
-
-
-
-      <TokenList selected={selectedToken} onClick={setSelectedToken} className={`w-full mt-10 ${walletIsNotInitialized ? "opacity-50" : "opacity-100"}`} tokens={tokens} />
-
+      </Modal>
     </div >
   );
 }

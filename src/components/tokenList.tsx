@@ -1,4 +1,5 @@
 import { Token } from "@/types";
+import Image from "next/image";
 
 export interface ListElement extends Token {
     balance: number;
@@ -45,7 +46,7 @@ export default function TokenList({ tokens, onClick, className, selected }: Read
                             <tr key={token.symbol} onClick={() => handleClick(token)} className={`text-center even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20 [&>td]:px-6 [&>td]:py-1 rounded-xl ${isSelected ? "filter backdrop-brightness-125" : ""} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}>
                                 <td className="rounded-l-lg">
                                     <div className="flex items-center w-full">
-                                        <img src={token.url} className="md:w-10 md:h-10 w-5 h-5 my-1 mr-2" alt={`${token.name} icon`} />
+                                        <Image width={0} height={0} src={token.url} className="md:w-10 md:h-10 w-5 h-5 my-1 mr-2" alt={`${token.name} icon`} />
                                         <p className="font-bold">{token.name}</p>
                                         <sup className="pl-1 opacity-80">{token.network}</sup>
                                     </div>
