@@ -23,6 +23,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-select": "^5.8.0",
+    "react-toastify": "^10.0.4",
     "tailwindcss-safe-area": "^0.4.1",
     "ts-node": "^10.9.2"
   },

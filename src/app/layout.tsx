@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import HeaderWithNavbar from '@/components/header'
+import { ToastContainer } from 'react-toastify'
+
+import 'react-toastify/dist/ReactToastify.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,6 +22,8 @@ export default function Layout({
     <html lang="en">
       <body className={`inter.className min-h-dvh`}>
         <main className='h-max flex flex-col'>
+          <ToastContainer position='top-right' closeOnClick theme='colored' />
+
           <HeaderWithNavbar />
           <div className="flex h-dvh flex-col items-center justify-between md:ml-64">
             <div className="text-slate-100 flex md:h-[80vh] w-full p-5 md:mt-10 md:p-10 md:rounded-2xl md:bg-bg-gr-2/20">
@@ -26,6 +31,7 @@ export default function Layout({
             </div>
           </div>
         </main>
+
       </body>
     </html>
   )
