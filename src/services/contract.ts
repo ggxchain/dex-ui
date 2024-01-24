@@ -8,7 +8,9 @@ import ContractMock from "./contract/mock"
 import { CONTRACT_MOCKED } from "@/consts";
 import { toast } from "react-toastify";
 
-export type onFinalize = () => void;
+import { ISubmittableResult } from "@polkadot/types/types";
+
+export type onFinalize = (error: string | undefined) => void;
 
 export interface ContractInterface {
     deposit(tokenId: TokenId, amount: Amount, callback: onFinalize): Promise<void>;
@@ -157,9 +159,13 @@ function curry<T>(f: Function, _this: ContractInterface, ...args: any[]): WrapCa
 }
 
 function wrapCallWithNotifications<T>(call: WrapCall<T>, text: String, callback: onFinalize): ReturnType<typeof toast.promise> {
-    const wrappedOnFinalize = () => {
-        toast.success(`${text} finalized`);
-        callback();
+    const wrappedOnFinalize = (error: string | undefined) => {
+        if (error !== undefined) {
+            toast.error(`Error: ${error}`);
+        } else {
+            toast.success(`${text} finalized`);
+        }
+        callback(error);
     }
 
     return toast.promise(call(wrappedOnFinalize), {

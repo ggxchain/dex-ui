@@ -148,10 +148,23 @@ export default class GGxContract implements ContractInterface {
         return decodeAddress(address);
     }
 
-    transactionCallback(method: onFinalize): (_: ISubmittableResult) => void {
+    transactionCallback(callback: onFinalize): (_: ISubmittableResult) => void {
         return (result: ISubmittableResult) => {
             if (result.status.isFinalized) {
-                method();
+                if (result.dispatchError) {
+                    if (result.dispatchError.isModule) {
+                        // Dex pallet error
+                        const { method } = result.dispatchError.registry.findMetaError(result.dispatchError.asModule);
+
+                        callback(method);
+                    } else {
+                        // BadOrigin, Not enough balance, etc.
+                        callback(result.dispatchError.toString());
+                    }
+                } else {
+                    // Success
+                    callback(undefined);
+                }
             }
         }
     }
