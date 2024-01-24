@@ -21,6 +21,7 @@ export interface ContractInterface {
     makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, callback: onFinalize): Promise<void>;
     cancelOrder(counterId: CounterId, callback: onFinalize): Promise<void>;
     takeOrder(counterId: CounterId, callback: onFinalize): Promise<void>;
+    tokenInfo(tokenId: TokenId): Promise<Token>;
 }
 
 export default class Contract {
@@ -54,7 +55,7 @@ export default class Contract {
     }
 
     async allTokens(): Promise<Token[]> {
-        return (await this.contract.tokens()).map((tokenId) => this.mapTokenIdToToken(tokenId));
+        return Promise.all((await this.contract.tokens()).map((tokenId) => this.mapTokenIdToToken(tokenId)));
     }
 
     async allTokensOfOwner(): Promise<Token[]> {
@@ -62,7 +63,7 @@ export default class Contract {
         if (address === undefined) {
             return Promise.reject("Wallet is not connected");
         }
-        return (await this.contract.ownersTokens(address)).map((tokenId) => this.mapTokenIdToToken(tokenId));
+        return Promise.all((await this.contract.ownersTokens(address)).map((tokenId) => this.mapTokenIdToToken(tokenId)));
     }
 
     async allOrders(pair: Pair): Promise<Order[]> {
@@ -90,24 +91,18 @@ export default class Contract {
             return Promise.reject("Wallet is not connected");
         }
         const orders = await this.contract.userOrders(address);
-        return orders.map((value) => {
+        return await Promise.all(orders.map(async (value) => {
             return {
                 ...value,
-                token1: this.mapTokenIdToToken(value.pair[0]),
-                token2: this.mapTokenIdToToken(value.pair[1])
+                token1: await this.mapTokenIdToToken(value.pair[0]),
+                token2: await this.mapTokenIdToToken(value.pair[1])
             }
-        });
+        }));
     }
 
     // Probably, we would need to create a mapping for this on frontend.
-    mapTokenIdToToken(tokenId: TokenId): Token {
-        const token = mockedTokens().find((value) =>
-            JSON.stringify(value.id) === JSON.stringify(tokenId)
-        );
-        if (token === undefined) {
-            throw new Error("Token not found");
-        }
-        return token as Token;
+    async mapTokenIdToToken(tokenId: TokenId): Promise<Token> {
+        return await this.contract.tokenInfo(tokenId)
     }
 
     async balanceOf(tokenId: TokenId): Promise<Amount> {
@@ -169,7 +164,7 @@ function wrapCallWithNotifications<T>(call: WrapCall<T>, text: String, callback:
 
     return toast.promise(call(wrappedOnFinalize), {
         "pending": `Sending the ${text.toLowerCase()}...`,
-        "success": `${text} submitted`,
+        "success": { render: `${text} submitted`, icon: false },
         error: {
             render({ data }) {
                 return `${data}`

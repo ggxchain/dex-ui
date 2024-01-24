@@ -9,7 +9,7 @@ import Select from "@/components/select";
 import TokenList from "@/components/tokenList";
 import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
-import {InputWithPriceInfo} from "@/components/input";
+import { InputWithPriceInfo } from "@/components/input";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -154,7 +154,7 @@ export default function Wallet() {
             ...token,
             balance: balance ?? 0,
             estimatedPrice: price ?? 0,
-            url: `/svg/${token.symbol}.svg`
+            url: `/svg/${token.symbol.toLowerCase()}.svg`
         }
     })
 

@@ -19,7 +19,7 @@
           devShells = {
             default = pkgs.mkShell {
                 nativeBuildInputs = with pkgs; [
-                  nodejs-18_x
+                  typescript
                 ];
 
                 buildInputs = [];

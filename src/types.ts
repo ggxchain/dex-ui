@@ -6,7 +6,7 @@ type U32 = { u32: number };
 type U64 = { u64: number };
 type U128 = { u128: number };
 
-export type TokenId = U8 | U16 | U32 | U64 | U128;
+export type TokenId = number;
 
 export type Amount = number
 export type PubKey = string

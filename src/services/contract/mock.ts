@@ -1,5 +1,5 @@
 import mockedTokens from "@/mock";
-import { TokenId, CounterId, Order, Amount, PubKey, DetailedOrder, OrderType } from "@/types";
+import { TokenId, CounterId, Order, Amount, PubKey, DetailedOrder, OrderType, Token } from "@/types";
 import Pair, { PairUtils } from "@/pair";
 import { ContractInterface, onFinalize } from "../contract";
 import GGXWallet from "../ggx";
@@ -27,6 +27,9 @@ export default class ContractMock implements ContractInterface {
             this.ordersByUser = new Map(JSON.parse(ordersByUser));
             this.ordersByPair = new Map(JSON.parse(ordersByPair));
         }
+    }
+    tokenInfo(tokenId: number): Promise<Token> {
+        return Promise.resolve(mockedTokens()[tokenId])
     }
 
     save() {
