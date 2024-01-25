@@ -113,8 +113,12 @@ export default function Wallet() {
 
         method.call(contract, selectedToken.id, modalAmount, () => {
             refreshBalances();
-            onModalClose();
-        }).catch(errorHandler)
+            setModal(false);
+        }).catch((error) => {
+            console.log(error);
+            setModal(false);
+            errorHandler(error);
+        })
     }
 
     const onModalOpen = (type: InteractType) => {
@@ -122,13 +126,9 @@ export default function Wallet() {
             return;
         }
         modalTitle.current = type;
-        setModal(true);
-    }
-
-    const onModalClose = () => {
         setModalLoading(false);
         setModalAmount(0);
-        setModal(false);
+        setModal(true);
     }
 
     const connectWallet = () => {
@@ -167,6 +167,7 @@ export default function Wallet() {
     }
 
     const amountPrice = modalAmount * (selectedToken ? tokenPrices.get(selectedToken.symbol) ?? 0 : 0);
+    const selectedTokenBalance = selectedToken ? balances.get(JSON.stringify(selectedToken.id)) ?? 0 : 0;
 
     return (
         <div className="w-full h-full flex flex-col">
@@ -174,7 +175,7 @@ export default function Wallet() {
                 <h1 className="text-2xl md:text-3xl">${total.toFixed(2)}</h1>
                 <div className="flex md:flex-row flex-col">
                     <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
-                    <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
+                    <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected || selectedTokenBalance <= 0} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
                 </div>
             </div>
 
@@ -196,7 +197,7 @@ export default function Wallet() {
             </div>
             <TokenList className={`${walletIsNotInitialized ? "opacity-50" : "opacity-100"} w-full`} tokens={displayTokens} onClick={onTokenSelect} />
 
-            <Modal modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`} isOpen={modal} onClose={onModalClose}>
+            <Modal modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`} isOpen={modal} onClose={() => setModal(false)}>
                 <div className="flex flex-col w-full px-5">
                     <InputWithPriceInfo
                         name="Amount"

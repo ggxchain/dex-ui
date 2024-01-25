@@ -29,11 +29,6 @@ export enum Errors {
     NotEnoughBalance = "Not enough balance",
     InvalidTokenId = "Invalid token id",
 }
-
-export function errorHandler(error: Errors): undefined {
-    toast.error(`Error: ${error}`);
-    return undefined
-}
 export default class Contract {
     contract: ContractInterface;
     wallet: GGXWallet = new GGXWallet();
@@ -224,6 +219,11 @@ export default class Contract {
 
 }
 
+export function errorHandler(error: Errors): undefined {
+    toast.error(`Error: ${error}`);
+    return undefined
+}
+
 type WrapCall<T> = (_: onFinalize) => Promise<T>;
 
 function curry<T>(f: Function, _this: ContractInterface, ...args: any[]): WrapCall<T> {
@@ -245,6 +245,7 @@ function wrapCallWithNotifications<T>(call: WrapCall<T>, text: String, callback:
         "success": { render: `${text} submitted`, icon: false },
         error: {
             render({ data }) {
+                callback(`${data}`);
                 return `${data}`
             }
         }
