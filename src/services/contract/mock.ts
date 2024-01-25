@@ -29,7 +29,7 @@ export default class ContractMock implements ContractInterface {
         }
     }
     tokenInfo(tokenId: number): Promise<Token> {
-        return Promise.resolve(mockedTokens()[tokenId])
+        return Promise.resolve(mockedTokens().find((value) => value.id === tokenId)!);
     }
 
     save() {
@@ -56,7 +56,7 @@ export default class ContractMock implements ContractInterface {
             deposit.push({ tokenId: tokenId, amount });
         }
         this.save();
-        callback();
+        callback(undefined);
         return Promise.resolve();
     }
 
@@ -109,7 +109,7 @@ export default class ContractMock implements ContractInterface {
             deposit[index].amount -= amount;
         }
         this.save();
-        callback();
+        callback(undefined);
         return Promise.resolve();
     }
 
@@ -189,7 +189,7 @@ export default class ContractMock implements ContractInterface {
         }
         this.withdraw(PairUtils.ownedToken(pair, orderType), amountOffered, () => { });
         this.save();
-        callback();
+        callback(undefined);
         return Promise.resolve();
     }
 
@@ -220,7 +220,7 @@ export default class ContractMock implements ContractInterface {
         }
 
         this.save();
-        callback();
+        callback(undefined);
         return Promise.resolve();
     }
 
@@ -243,7 +243,7 @@ export default class ContractMock implements ContractInterface {
             this.cancelOrder(counterId, () => { }, true);
 
         }
-        callback();
+        callback(undefined);
         return Promise.resolve();
     }
 }

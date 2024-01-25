@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react";
-import Contract from "@/services/contract";
+import Contract, { errorHandler } from "@/services/contract";
 import GGXWallet from "@/services/ggx";
 import Ruler from "@/components/ruler";
 import { Amount, DetailedOrder, Order, Token } from "@/types";
@@ -41,7 +41,7 @@ export default function Dex() {
       const contract = new Contract();
       contract.balanceOf(sell.id).then((balance) => {
         setAvailableBalance(balance);
-      });
+      }).catch(errorHandler)
     }
   }, [sell]);
 
@@ -97,9 +97,9 @@ export default function Dex() {
 
     if (isMaker) {
       // Buy or sell is related to the first token in the pair. So, in our case it's sell.
-      contract.makeOrder(pair, sellAmount, buyAmount, "SELL", callback);
+      contract.makeOrder(pair, sellAmount, buyAmount, "SELL", callback).catch(errorHandler);
     } else if (!isOrderNotChosen) {
-      contract.takeOrder(order.counter, callback);
+      contract.takeOrder(order.counter, callback).catch(errorHandler);
     }
   }
 
@@ -248,7 +248,7 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
         const orders = filteredOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => b.amoutRequested / b.amountOffered - a.amoutRequested / a.amountOffered);
         onChange(orders[0]);
       }
-    });
+    }).catch(errorHandler);
   }, [buyToken, sellToken, onChange, selectedOrder]);
 
   const buyOrders = orders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => a.amoutRequested / a.amountOffered - b.amoutRequested / b.amountOffered);
@@ -325,7 +325,7 @@ const useUserOrders = () => {
     const contract = new Contract();
     contract.allUserOrders().then((orders: DetailedOrder[]) => {
       setOrders(orders);
-    });
+    }).catch(errorHandler);
   }
 
   return [orders, updateOrders] as const;
@@ -342,7 +342,7 @@ function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
     const contract = new Contract();
     contract.cancelOrder(order.counter, () => {
       cancelOrder(order);
-    });
+    }).catch(errorHandler);
   }
 
   return <div className="w-full h-full flex flex-col p-5 text-xs md:text-base">

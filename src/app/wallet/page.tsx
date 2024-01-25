@@ -1,7 +1,7 @@
 "use client"
 
 import CexService from "@/services/cex";
-import Contract from "@/services/contract";
+import Contract, { errorHandler } from "@/services/contract";
 import GGXWallet, { Account } from "@/services/ggx";
 import { Token, Amount } from "@/types";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
@@ -31,16 +31,20 @@ export default function Wallet() {
 
     const refreshBalances = async () => {
         const contract = new Contract();
-        const tokens = await contract.allTokensOfOwner();
+
+        const tokens = await contract.allTokensOfOwner().catch(errorHandler);
+        if (tokens === undefined) {
+            return;
+        }
         setBalances(new Map<string, Amount>());
         setOwnedTokens(tokens);
         const balancesPromises = tokens.map((token) => {
-            return contract.balanceOf(token.id);
+            return contract.balanceOf(token.id).catch(errorHandler)
         });
         const balancesResults = await Promise.all(balancesPromises);
         const balances = new Map<string, Amount>();
         balancesResults.forEach((balance, index) => {
-            balances.set(JSON.stringify(tokens[index].id), balance);
+            balances.set(JSON.stringify(tokens[index].id), balance ?? 0);
         });
         setBalances(balances);
     }
@@ -62,7 +66,7 @@ export default function Wallet() {
                     }
                 });
                 setTokenPrices(map);
-            });
+            }).catch(errorHandler);
         });
 
         const ggx = new GGXWallet();
@@ -110,7 +114,7 @@ export default function Wallet() {
         method.call(contract, selectedToken.id, modalAmount, () => {
             refreshBalances();
             onModalClose();
-        });
+        }).catch(errorHandler)
     }
 
     const onModalOpen = (type: InteractType) => {

@@ -14,11 +14,6 @@ describe('CexService', () => {
         cexService = new CexService();
     });
 
-    afterEach(() => {
-        // Clean up localStorage after each test
-        window.localStorage.clear();
-    });
-
     const mock = () => {
         window.localStorage.setItem('prices.lastUpdated', '123456');
         window.localStorage.setItem('prices.cache', JSON.stringify([['btc', 10], ['usdt', 20]]));

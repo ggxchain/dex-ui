@@ -4,31 +4,31 @@ import { Token } from "./types";
 export default function mockedTokens(): Token[] {
     return [
         {
-            "id": 1,
+            "id": 0,
             "name": "USDT",
             "symbol": "usdt",
             "network": "ERC20",
         },
         {
-            "id": 2,
+            "id": 1,
             "name": "BTC",
             "symbol": "btc",
             "network": "Bitcoin",
         },
         {
-            "id": 3,
+            "id": 2,
             "name": "USDC",
             "symbol": "usdc",
             "network": "ERC20",
         },
         {
-            "id": 4,
+            "id": 3,
             "name": "ATOM",
             "symbol": "atom",
             "network": "Cosmos",
         },
         {
-            "id": 5,
+            "id": 4,
             "name": "ETH",
             "symbol": "eth",
             "network": "Ethereum",

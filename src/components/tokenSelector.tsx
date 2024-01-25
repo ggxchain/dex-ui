@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import Spinner from "./spinner";
-import Contract from "@/services/contract";
+import Contract, { errorHandler } from "@/services/contract";
 import { Token } from "@/types";
 import CexService from "@/services/cex";
 import Select from "./select";
@@ -33,7 +33,7 @@ export function useTokens() {
                 });
                 setTokenWithPrices(tokensWithPrice);
             })
-        });
+        }).catch(errorHandler)
     }
 
     return [tokenWithPrices, loadTokens] as const;

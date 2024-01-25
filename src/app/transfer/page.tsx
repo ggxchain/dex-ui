@@ -111,7 +111,7 @@ export default function Transfer() {
       balance: Number.parseInt(balance.amount) / (10 ** (token?.coinDecimals ?? 6)),
       symbol,
       estimatedPrice: prices.get(symbol) ?? NaN,
-      id: { u64: index },
+      id: index,
       url,
       network: "",
     };

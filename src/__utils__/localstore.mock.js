@@ -1,21 +1,21 @@
 const localStorageMock = (function () {
-    let store = {};
+    let store = new Map();
 
     return {
         getItem(key) {
-            return store[key];
+            return store.get(key) ?? null
         },
 
         setItem(key, value) {
-            store[key] = value;
+            store.set(key, value)
         },
 
         clear() {
-            store = {};
+            store.clear();
         },
 
         removeItem(key) {
-            delete store[key];
+            store.delete(key);
         },
 
         getAll() {
