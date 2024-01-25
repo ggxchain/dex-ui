@@ -1,11 +1,5 @@
 import Pair from "./pair"
 
-type U8 = { u8: number };
-type U16 = { u16: number };
-type U32 = { u32: number };
-type U64 = { u64: number };
-type U128 = { u128: number };
-
 export type TokenId = number;
 
 export type Amount = number
