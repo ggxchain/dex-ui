@@ -240,7 +240,6 @@ export default class Contract {
 
 export function errorHandler(error: Errors): undefined {
     toast.error(`Error: ${error}`);
-    console.log(error)
     return undefined
 }
 

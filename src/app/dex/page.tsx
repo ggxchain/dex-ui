@@ -11,9 +11,7 @@ import Pair, { PairUtils } from "@/pair";
 import { useRouter } from "next/navigation";
 import { BN_ONE, BN_ZERO } from "@polkadot/util";
 import { displayNumberWithPrecision } from "@/utils";
-
-const presionNumber = 6;
-const precision = 10 ** presionNumber;
+import { CALCULATION_PRECISION, CALCULATION_PRECISION_NUMBER } from "@/consts";
 
 type TokenData = TokenWithPrice & {
   amount: Amount;
@@ -73,12 +71,12 @@ export default function Dex() {
   const isUserBalanceNotEnough = !isWalletNotConnected && availableBalance.lt(sellAmount);
 
 
-  const displayAmount = (amount: Amount) => displayNumberWithPrecision(amount, presionNumber, 2);
+  const displayAmount = (amount: Amount) => displayNumberWithPrecision(amount, CALCULATION_PRECISION, 2);
   const orderRateWithPrecision = order !== undefined
-    ? order.amountOffered.muln(precision).div(order.amoutRequested)
+    ? order.amountOffered.muln(CALCULATION_PRECISION_NUMBER).div(order.amoutRequested)
     : BN_ZERO;
   const rateWithPrecion = isMaker && !isSellAmountZero && !isTokenNotSelected
-    ? buy.amount.muln(precision).div(sell.amount)
+    ? buy.amount.muln(CALCULATION_PRECISION_NUMBER).div(sell.amount)
     : orderRateWithPrecision;
 
   const buyAmount = isMaker && !isTokenNotSelected
@@ -131,7 +129,7 @@ export default function Dex() {
 
   // 1/rate
   // Twice precision because rate is multiplied by precision.
-  const reverseRateWithPrecision = rateWithPrecion.gtn(0) ? BN_ONE.muln(precision).muln(precision).div(rateWithPrecion) : BN_ZERO;
+  const reverseRateWithPrecision = rateWithPrecion.gtn(0) ? BN_ONE.muln(CALCULATION_PRECISION_NUMBER).muln(CALCULATION_PRECISION_NUMBER).div(rateWithPrecion) : BN_ZERO;
   const sellPriceRateWithPrecision = reverseRateWithPrecision.muln(sell?.price ?? 0);
 
   const buyPriceWithPrecision = buyAmount.mul(sellPriceRateWithPrecision);
@@ -259,14 +257,14 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
       const filteredOrders = orders.filter((order: Order) => order.pubkey !== wallet.pubkey()?.address)
       setOrders(filteredOrders);
       if (orders.length > 0 && !selectedOrder) {
-        const orders = filteredOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => (b.amoutRequested.muln(precision).div(b.amountOffered)).sub((a.amoutRequested.muln(precision).div(a.amountOffered))).toNumber());
+        const orders = filteredOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => (b.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(b.amountOffered)).sub((a.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(a.amountOffered))).toNumber());
         onChange(orders[0]);
       }
     }).catch(errorHandler);
   }, [buyToken, sellToken, onChange, selectedOrder]);
 
-  const buyOrders = orders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => (a.amoutRequested.muln(precision).div(a.amountOffered)).sub((b.amoutRequested.muln(precision).div(b.amountOffered))).toNumber());
-  const sellOrders = orders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => (b.amoutRequested.muln(precision).div(b.amountOffered)).sub((a.amoutRequested.muln(precision).div(a.amountOffered))).toNumber());
+  const buyOrders = orders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => (a.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(a.amountOffered)).sub((b.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(b.amountOffered))).toNumber());
+  const sellOrders = orders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => (b.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(b.amountOffered)).sub((a.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(a.amountOffered))).toNumber());
 
   const buyTotalVolume = buyOrders.reduce((acc, order) => order.amoutRequested.add(acc), BN_ZERO);
   const sellTotalVolume = sellOrders.reduce((acc, order) => order.amountOffered.add(acc), BN_ZERO);
@@ -290,11 +288,11 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
             sellOrders.length === 0
               ? <tr><td className="text-red-600">No asks found</td></tr>
               : sellOrders.map((order) => {
-                const orderPrice = order.amoutRequested.muln(precision).div(order.amountOffered);
+                const orderPrice = order.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(order.amountOffered);
                 const percent = order.amountOffered.muln(100).div(sellTotalVolume).toNumber();
                 return (
                   <tr key={order.counter} className="relative w-full text-red-600">
-                    <td className="p-1 pl-4 text-left font-bold">{displayNumberWithPrecision(orderPrice, presionNumber, 9)}</td>
+                    <td className="p-1 pl-4 text-left font-bold">{displayNumberWithPrecision(orderPrice, CALCULATION_PRECISION_NUMBER, 9)}</td>
                     <td className="p-1 text-right text-white font-bold">
                       {order.amountOffered.toString()}
                       <div style={{ width: `${Math.round(percent)}%` }} className="absolute bg-red-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
@@ -312,13 +310,13 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
               : buyOrders.map((order) => {
                 const selected = order.counter == selectedOrder?.counter;
                 const percent = order.amoutRequested.muln(100).div(buyTotalVolume).toNumber();
-                const orderPrice = order.amountOffered.muln(precision).div(order.amoutRequested);
+                const orderPrice = order.amountOffered.muln(CALCULATION_PRECISION_NUMBER).div(order.amoutRequested);
                 return (
                   <tr key={order.counter} className={`relative w-full cursor-pointer glow-on-hover rounded-l-md text-green-500 ${selected} `} onClick={() => onChange(order)}>
                     <td className="p-1 relative text-left font-bold">
                       {selected && <p className="absolute h-full left-0">↠</p>}
                       <p className="pl-3">
-                        {displayNumberWithPrecision(orderPrice, presionNumber, 9)}
+                        {displayNumberWithPrecision(orderPrice, CALCULATION_PRECISION_NUMBER, 9)}
                       </p>
                     </td>
                     <td className="p-1 text-right text-white font-bold">
@@ -381,9 +379,8 @@ function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
             : orders.map((order) => {
               const ownedToken = PairUtils.ownedToken(order.pair, order.orderType) == order.pair[0] ? order.token1 : order.token2;
               const desiredToken = PairUtils.desiredToken(order.pair, order.orderType) == order.pair[0] ? order.token1 : order.token2;
-              console.log(order);
-              const price = order.amoutRequested.muln(precision).div(order.amountOffered);
-              const priceString = displayNumberWithPrecision(price, presionNumber, 9);
+              const price = order.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(order.amountOffered);
+              const priceString = displayNumberWithPrecision(price, CALCULATION_PRECISION_NUMBER, 9);
               return (
                 <tr key={order.counter} className="h-full w-full even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20">
 

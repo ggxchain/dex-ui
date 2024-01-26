@@ -10,8 +10,9 @@ import TokenList from "@/components/tokenList";
 import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
 import { InputWithPriceInfo } from "@/components/input";
-import { BN, BN_ONE, BN_ZERO } from "@polkadot/util";
+import { BN, BN_ZERO } from "@polkadot/util";
 import { displayNumberWithPrecision } from "@/utils";
+import { CALCULATION_PRECISION, CALCULATION_PRECISION_NUMBER } from "@/consts";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -109,13 +110,13 @@ export default function Wallet() {
     const filteredTokens = tokens.filter((token) => filter(token));
     const isTokenNotSelected = selectedToken === undefined;
 
-    const total = dexOwnedTokens.reduce<BN>((total, tokenId) => {
+    const totalWithPrecision = dexOwnedTokens.reduce<BN>((total, tokenId) => {
         const balance = dexBalances.get(tokenId);
         const price = tokenPrices.get(tokenId);
         if (balance === undefined || price === undefined) {
             return total;
         }
-        return total.add(balance.mul(new BN(price)));
+        return total.add(balance.mul(new BN(price * CALCULATION_PRECISION_NUMBER)));
     }, BN_ZERO);
 
     const omModalSubmit = () => {
@@ -131,7 +132,6 @@ export default function Wallet() {
             refreshBalances();
             setModal(false);
         }).catch((error) => {
-            console.log(error);
             setModal(false);
             errorHandler(error);
         })
@@ -187,7 +187,7 @@ export default function Wallet() {
     return (
         <div className="w-full h-full flex flex-col">
             <div className="flex w-full justify-between items-center">
-                <h1 className="text-2xl md:text-3xl">${total.toString()}</h1>
+                <h1 className="text-2xl md:text-3xl">${displayNumberWithPrecision(totalWithPrecision, CALCULATION_PRECISION, 2)}</h1>
                 <div className="flex md:flex-row flex-col">
                     <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
                     <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected || selectedTokenBalance.lte(BN_ZERO)} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>

@@ -1,4 +1,6 @@
+import { CALCULATION_PRECISION, CALCULATION_PRECISION_NUMBER } from "@/consts";
 import { Amount, Token } from "@/types";
+import { displayNumberWithPrecision } from "@/utils";
 import Image from "next/image";
 
 export interface ListElement extends Token {
@@ -41,7 +43,7 @@ export default function TokenList({ tokens, onClick, className, selected }: Read
                 {
                     tokens.map((token) => {
                         const isSelected = token.id === selected?.id;
-                        const estimatedPrice = token.balance.muln(token.estimatedPrice);
+                        const estimatedPriceWithPrecision = token.balance.muln(token.estimatedPrice * CALCULATION_PRECISION_NUMBER);
 
                         return (
                             <tr key={token.symbol} onClick={() => handleClick(token)} className={`text-center even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20 [&>td]:px-6 [&>td]:py-1 rounded-xl ${isSelected ? "filter backdrop-brightness-125" : ""} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}>
@@ -56,7 +58,7 @@ export default function TokenList({ tokens, onClick, className, selected }: Read
                                     <td>
                                         {token.balance.toString()} {`${token.symbol.toUpperCase()} `}
                                         <span className="text-sm opacity-50">
-                                            (${estimatedPrice.toString()})
+                                            (${displayNumberWithPrecision(estimatedPriceWithPrecision, CALCULATION_PRECISION, 2)})
                                         </span>
                                     </td>
                                 }
