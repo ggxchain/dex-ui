@@ -110,6 +110,15 @@ export default function Wallet() {
     const filteredTokens = tokens.filter((token) => filter(token));
     const isTokenNotSelected = selectedToken === undefined;
 
+    const totalOnChainWithPrecision = dexOwnedTokens.reduce<BN>((total, tokenId) => {
+        const balance = chainBalances.get(tokenId);
+        const price = tokenPrices.get(tokenId);
+        if (balance === undefined || price === undefined) {
+            return total;
+        }
+        return total.add(balance.mul(new BN(price * CALCULATION_PRECISION_NUMBER)));
+    }, BN_ZERO)
+
     const totalWithPrecision = dexOwnedTokens.reduce<BN>((total, tokenId) => {
         const balance = dexBalances.get(tokenId);
         const price = tokenPrices.get(tokenId);
@@ -117,7 +126,7 @@ export default function Wallet() {
             return total;
         }
         return total.add(balance.mul(new BN(price * CALCULATION_PRECISION_NUMBER)));
-    }, BN_ZERO);
+    }, totalOnChainWithPrecision);
 
     const omModalSubmit = () => {
         if (isTokenNotSelected || modalAmount.eq(BN_ZERO)) {
@@ -168,11 +177,13 @@ export default function Wallet() {
     const displayTokens = filteredTokens.map((token) => {
         const balance = dexBalances.get(token.id);
         const price = tokenPrices.get(token.id);
+        const chainBalance = chainBalances.get(token.id);
 
         return {
             ...token,
             balance: balance ?? BN_ZERO,
             estimatedPrice: price ?? 0,
+            onChainBalance: chainBalance?.eq(BN_ZERO) ? undefined : chainBalance,
             url: `/svg/${token.symbol.toLowerCase()}.svg`
         }
     })
@@ -187,7 +198,7 @@ export default function Wallet() {
     return (
         <div className="w-full h-full flex flex-col">
             <div className="flex w-full justify-between items-center">
-                <h1 className="text-2xl md:text-3xl">${displayNumberWithPrecision(totalWithPrecision, CALCULATION_PRECISION, 2)}</h1>
+                <h1 className="text-xl md:text-3xl break-words w-[40%]">${displayNumberWithPrecision(totalWithPrecision, CALCULATION_PRECISION, 2)}</h1>
                 <div className="flex md:flex-row flex-col">
                     <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
                     <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected || selectedTokenBalance.lte(BN_ZERO)} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
@@ -210,7 +221,7 @@ export default function Wallet() {
                     }
                 </div>
             </div>
-            <TokenList className={`${walletIsNotInitialized ? "opacity-50" : "opacity-100"} w-full`} tokens={displayTokens} onClick={onTokenSelect} />
+            <TokenList onChain={true} className={`${walletIsNotInitialized ? "opacity-50" : "opacity-100"} w-full`} tokens={displayTokens} onClick={onTokenSelect} />
 
             <Modal modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`} isOpen={modal} onClose={() => setModal(false)}>
                 <div className="flex flex-col w-full px-5">

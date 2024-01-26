@@ -20,6 +20,8 @@ import LoadingButton from "@/components/loadButton";
 import { InputWithPriceInfo, Input } from "@/components/input";
 import { toast } from "react-toastify";
 import { BN, BN_ZERO } from "@polkadot/util";
+import { CALCULATION_PRECISION, CALCULATION_PRECISION_NUMBER } from "@/consts";
+import { displayNumberWithPrecision } from "@/utils";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -256,14 +258,14 @@ export default function Transfer() {
 
   const walletIsNotInitialized = !account?.address || !client;
   const isGGxWalletNotConnected = modalGGxAccount === undefined;
-  const total = tokens.reduce((acc, token) => token.balance.muln(token.estimatedPrice).add(acc), BN_ZERO);
+  const total = tokens.reduce((acc, token) => token.balance.muln(token.estimatedPrice * CALCULATION_PRECISION_NUMBER).add(acc), BN_ZERO);
   const amountPrice = modalAmount * (selectedToken ? prices.get(selectedToken.symbol) ?? 0 : 0);
 
 
   return (
     <div className="text-slate-100 flex flex-col w-full items-center h-full">
       <div className="flex mt-1 justify-between w-full items-center">
-        <h1 className="text-3xl">${total.toString()}</h1>
+        <h1 className="text-xl md:text-3xl break-words w-[40%]">${displayNumberWithPrecision(total, CALCULATION_PRECISION, 2)}</h1>
         <div className="flex md:flex-row flex-col">
           <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
           <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
