@@ -8,7 +8,7 @@ import { Amount, CounterId, Order, OrderType, Token, TokenId } from "@/types";
 import Pair from "@/pair";
 import GGXWallet from "../ggx";
 
-import { hexToString } from "@polkadot/util";
+import { BN_ZERO, hexToString } from "@polkadot/util";
 
 import { ContractInterface, onFinalize } from "../contract";
 
@@ -32,9 +32,9 @@ export default class GGxContract implements ContractInterface {
 
         const result = await api.query.dex.userTokenInfoes(addressParam, tokenId);
         if (result !== undefined) {
-            return Promise.resolve(result.amount.toNumber());
+            return Promise.resolve(result.amount.toBn());
         }
-        return Promise.resolve(0);
+        return Promise.resolve(BN_ZERO);
     }
 
     async withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize) {
@@ -77,31 +77,72 @@ export default class GGxContract implements ContractInterface {
         return Promise.resolve([])
     }
 
+    async onChainBalanceOf(tokenId: TokenId, address: string): Promise<Amount> {
+        const api = await this.apiPromise();
+        const addressParam = this.createAddress(address);
+
+        const result = await api.query.assets.account(tokenId, addressParam);
+        if (result !== undefined && result.isSome) {
+            return Promise.resolve(result.unwrap().balance.toBn());
+        }
+        return Promise.resolve(BN_ZERO);
+    }
+
     async pairOrders(pair: Pair): Promise<Order[]> {
         const api = await this.apiPromise();
 
         const orderList = await api.query.dex.pairOrders(pair);
-        const orders = await Promise.all(orderList.map((number) => api.query.dex.orders(number)));
+        const ordersOpt = await Promise.all(orderList.map((number) => api.query.dex.orders(number)));
 
-        if (orders !== undefined) {
-            return Promise.resolve(orders.map((orderOpt) => orderOpt.toJSON() as Order));
+        if (ordersOpt !== undefined) {
+            return ordersOpt.reduce<Order[]>((acc, orderOpt) => {
+                if (orderOpt.isNone) {
+                    return acc;
+                }
+                const order = orderOpt.unwrap();
+                acc.push({
+                    pubkey: order.address.toString(),
+                    pair: [order.pair[0].toNumber(), order.pair[1].toNumber()],
+                    counter: order.counter.toNumber(),
+                    timestamp: order.timestamp.toNumber(),
+                    orderType: order.orderType.toString() as OrderType,
+                    amountOffered: order.amountOffered.toBn(),
+                    amoutRequested: order.amoutRequested.toBn()
+                })
+                return acc;
+            }, []);
         }
-        return Promise.reject(orders);
+        return Promise.reject([]);
     }
 
     async userOrders(address: string): Promise<Order[]> {
         const api = await this.apiPromise();
 
         const orderList = await api.query.dex.userOrders.entries(address);
-        const orders = await Promise.all(orderList.map(([storageKey]) => api.query.dex.orders(storageKey.args[1])));
+        const ordersOpt = await Promise.all(orderList.map(([storageKey]) => api.query.dex.orders(storageKey.args[1])));
 
-        if (orders !== undefined) {
-            return Promise.resolve(orders.map((orderOpt) => orderOpt.toJSON() as Order));
+        if (ordersOpt !== undefined) {
+            return ordersOpt.reduce<Order[]>((acc, orderOpt) => {
+                if (orderOpt.isNone) {
+                    return acc;
+                }
+                const order = orderOpt.unwrap();
+                acc.push({
+                    pubkey: order.address.toString(),
+                    pair: [order.pair[0].toNumber(), order.pair[1].toNumber()],
+                    counter: order.counter.toNumber(),
+                    timestamp: order.timestamp.toNumber(),
+                    orderType: order.orderType.toString() as OrderType,
+                    amountOffered: order.amountOffered.toBn(),
+                    amoutRequested: order.amoutRequested.toBn()
+                })
+                return acc;
+            }, []);
         }
-        return Promise.reject(orders);
+        return Promise.reject([]);
     }
 
-    async makeOrder(pair: Pair, orderType: OrderType, amountOffered: number, amoutRequested: number, callback: onFinalize): Promise<void> {
+    async makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, callback: onFinalize): Promise<void> {
         const api = await this.apiPromise();
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);
@@ -166,6 +207,18 @@ export default class GGxContract implements ContractInterface {
                     callback(undefined);
                 }
             }
+        }
+    }
+
+    getOrder(order: PalletDexOrder): Order {
+        return {
+            pubkey: order.pubkey,
+            pair: order.pair,
+            counter: order.counter,
+            timestamp: order.timestamp,
+            orderType: order.orderType,
+            amountOffered: order.amountOffered,
+            amoutRequested: order.amoutRequested
         }
     }
 }

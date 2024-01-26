@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 export type onFinalize = (error: string | undefined) => void;
 
 export interface ContractInterface {
+    // On dex interactions
     deposit(tokenId: TokenId, amount: Amount, callback: onFinalize): Promise<void>;
     balanceOf(tokenId: TokenId, address: string): Promise<Amount>;
     withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize): Promise<void>;
@@ -20,7 +21,11 @@ export interface ContractInterface {
     makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, callback: onFinalize): Promise<void>;
     cancelOrder(counterId: CounterId, callback: onFinalize): Promise<void>;
     takeOrder(counterId: CounterId, callback: onFinalize): Promise<void>;
+
+    // On chain information
     tokenInfo(tokenId: TokenId): Promise<Token>;
+    // Sadly we can't fetch all tokens owned by user, so we have to fetch all tokens and then filter them.
+    onChainBalanceOf(tokenId: TokenId, address: string): Promise<Amount>;
 }
 
 export enum Errors {
@@ -75,7 +80,7 @@ export default class Contract {
         return this.mocked;
     }
 
-    async allTokens(): Promise<Token[]> {
+    async allTokens(): Promise<TokenId[]> {
         const now = new Date().getTime();
         if (now - this.lastUpdated > TOKENS_LIST_TTL) {
             this.tokenList = await this.contract.tokens();
@@ -85,12 +90,27 @@ export default class Contract {
                 window.localStorage.setItem('lastUpdated', JSON.stringify(this.lastUpdated));
             }
         }
-        return await Promise.all(this.tokenList.map((tokenId) => this.mapTokenIdToToken(tokenId)));
+        return await Promise.resolve(this.tokenList);
     }
 
-    async allTokensOfOwner(): Promise<Token[]> {
+    async allTokensWithInfo(): Promise<Token[]> {
+        const tokens = await this.allTokens();
+        return await Promise.all(tokens.map(async (value) => {
+            return {
+                ...await this.mapTokenIdToToken(value),
+                id: value
+            }
+        }));
+    }
+
+    async allTokensOfOwner(): Promise<TokenId[]> {
         const address = this.walletAddress();
-        return Promise.all((await this.contract.ownersTokens(address)).map((tokenId) => this.mapTokenIdToToken(tokenId)));
+        return await this.contract.ownersTokens(address);
+    }
+
+    async onChainBalanceOf(tokenId: TokenId): Promise<Amount> {
+        const address = this.walletAddress();
+        return await this.contract.onChainBalanceOf(tokenId, address);
     }
 
     async allOrders(pair: Pair): Promise<Order[]> {
@@ -151,7 +171,7 @@ export default class Contract {
 
     async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
         const _ = this.walletAddress(); // Check if wallet is initialized
-        if (amount <= 0) {
+        if (amount.lten(0)) {
             throw new Error(Errors.AmountIsLessOrEqualToZero);
         }
         await this.validateTokenId(tokenId);
@@ -163,7 +183,7 @@ export default class Contract {
         const _ = this.walletAddress(); // Check if wallet is initialized
         await this.validateTokenId(tokenId);
 
-        if (amount <= 0) {
+        if (amount.lten(0)) {
             throw new Error(Errors.AmountIsLessOrEqualToZero);
         }
         const balance = await this.balanceOf(tokenId);
@@ -184,7 +204,7 @@ export default class Contract {
         await this.validateTokenId(pair[0]);
         await this.validateTokenId(pair[1]);
 
-        if (amountOffered <= 0 || amoutRequested <= 0) {
+        if (amountOffered.lten(0) || amoutRequested.lten(0)) {
             throw new Error(Errors.AmountIsLessOrEqualToZero);
         }
 
@@ -212,15 +232,15 @@ export default class Contract {
     async validateTokenId(tokenId: TokenId) {
         // Should be safe to do as it cached
         const tokens = await this.allTokens();
-        if (tokens.findIndex((value) => value.id === tokenId) === -1) {
+        if (tokens.findIndex((value) => value === tokenId) === -1) {
             throw new Error(Errors.InvalidTokenId);
         }
     }
-
 }
 
 export function errorHandler(error: Errors): undefined {
     toast.error(`Error: ${error}`);
+    console.log(error)
     return undefined
 }
 

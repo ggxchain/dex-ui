@@ -3,66 +3,83 @@
 import CexService from "@/services/cex";
 import Contract, { errorHandler } from "@/services/contract";
 import GGXWallet, { Account } from "@/services/ggx";
-import { Token, Amount } from "@/types";
+import { Token, Amount, TokenId } from "@/types";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Select from "@/components/select";
 import TokenList from "@/components/tokenList";
 import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
 import { InputWithPriceInfo } from "@/components/input";
+import { BN, BN_ONE, BN_ZERO } from "@polkadot/util";
+import { displayNumberWithPrecision } from "@/utils";
 
 type InteractType = "Deposit" | "Withdraw";
 
+type FetchUserTokenId = () => Promise<TokenId[]>;
+type FetchBalance = (tokenId: TokenId) => Promise<Amount>;
+
+const useOwnedTokens = (fetchUserTokens: FetchUserTokenId, fetchUserBalance: FetchBalance) => {
+    const [tokens, setTokens] = useState<TokenId[]>([]);
+    const [balances, setBalances] = useState<Map<TokenId, Amount>>(new Map<TokenId, Amount>());
+
+
+    const refreshBalances = async () => {
+        const contract = new Contract();
+        const tokens = await fetchUserTokens.call(contract).catch(errorHandler);
+        if (tokens === undefined) {
+            return;
+        }
+        setTokens(tokens);
+        setBalances(new Map<TokenId, Amount>());
+        const balancesPromises = tokens.map((token) => {
+            return fetchUserBalance.call(contract, token).catch(errorHandler)
+        });
+        const balancesResults = await Promise.all(balancesPromises);
+        const balances = new Map<TokenId, Amount>();
+        balancesResults.forEach((balance, index) => {
+            balances.set(tokens[index], balance ?? BN_ZERO);
+        });
+        setBalances(balances);
+    }
+
+    return [tokens, balances, refreshBalances] as const;
+}
+
 export default function Wallet() {
+    const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(Contract.prototype.allTokensOfOwner, Contract.prototype.balanceOf);
+    const [_, chainBalances, refreshChainBalances] = useOwnedTokens(Contract.prototype.allTokens, Contract.prototype.onChainBalanceOf);
     const [tokens, setTokens] = useState<Token[]>([]);
-    const [ownedTokens, setOwnedTokens] = useState<Token[]>([]);
-    const [balances, setBalances] = useState<Map<string, Amount>>(new Map<string, Amount>());
     const [search, setSearch] = useState<string>("");
-    const [tokenPrices, setTokenPrices] = useState<Map<string, Amount>>(new Map<string, Amount>());
+    const [tokenPrices, setTokenPrices] = useState<Map<TokenId, number>>(new Map<TokenId, number>());
     const [ggxAccounts, setGGXAccounts] = useState<Account[]>([]);
     const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(undefined);
     const [selectedToken, setSelectedToken] = useState<Token | undefined>(undefined);
 
     // Modal related states
     const [modal, setModal] = useState<boolean>(false);
-    const [modalAmount, setModalAmount] = useState<Amount>(0);
+    const [modalAmount, setModalAmount] = useState<Amount>(BN_ZERO);
     const modalTitle = useRef<InteractType>("Deposit");
     const [modalLoading, setModalLoading] = useState<boolean>(false);
 
     const refreshBalances = async () => {
-        const contract = new Contract();
-
-        const tokens = await contract.allTokensOfOwner().catch(errorHandler);
-        if (tokens === undefined) {
-            return;
-        }
-        setBalances(new Map<string, Amount>());
-        setOwnedTokens(tokens);
-        const balancesPromises = tokens.map((token) => {
-            return contract.balanceOf(token.id).catch(errorHandler)
-        });
-        const balancesResults = await Promise.all(balancesPromises);
-        const balances = new Map<string, Amount>();
-        balancesResults.forEach((balance, index) => {
-            balances.set(JSON.stringify(tokens[index].id), balance ?? 0);
-        });
-        setBalances(balances);
+        refreshDexBalances();
+        refreshChainBalances();
     }
 
     useEffect(() => {
         const contract = new Contract();
-        contract.allTokens().then((tokens) => {
+        contract.allTokensWithInfo().then((tokens) => {
             setTokens(tokens);
             if (tokens.length > 0) {
                 setSelectedToken(tokens[0]);
             }
             const cex = new CexService();
             cex.tokenPrices(tokens.map((token) => token.symbol)).then((prices) => {
-                const map = new Map<string, Amount>();
+                const map = new Map<TokenId, number>();
                 prices.forEach((value, key) => {
                     const token = tokens.find((token) => token.symbol === key);
                     if (token !== undefined) {
-                        map.set(JSON.stringify(token.id), value);
+                        map.set(token.id, value);
                     }
                 });
                 setTokenPrices(map);
@@ -92,18 +109,17 @@ export default function Wallet() {
     const filteredTokens = tokens.filter((token) => filter(token));
     const isTokenNotSelected = selectedToken === undefined;
 
-    const total = ownedTokens.reduce<number>((total, token) => {
-        const token_id_str = JSON.stringify(token.id);
-        const balance = balances.get(token_id_str);
-        const price = tokenPrices.get(token_id_str);
+    const total = dexOwnedTokens.reduce<BN>((total, tokenId) => {
+        const balance = dexBalances.get(tokenId);
+        const price = tokenPrices.get(tokenId);
         if (balance === undefined || price === undefined) {
             return total;
         }
-        return total + balance * price;
-    }, 0);
+        return total.add(balance.mul(new BN(price)));
+    }, BN_ZERO);
 
     const omModalSubmit = () => {
-        if (isTokenNotSelected || modalAmount === 0) {
+        if (isTokenNotSelected || modalAmount.eq(BN_ZERO)) {
             return;
         }
         const contract = new Contract();
@@ -127,7 +143,7 @@ export default function Wallet() {
         }
         modalTitle.current = type;
         setModalLoading(false);
-        setModalAmount(0);
+        setModalAmount(BN_ZERO);
         setModal(true);
     }
 
@@ -150,13 +166,12 @@ export default function Wallet() {
     };
 
     const displayTokens = filteredTokens.map((token) => {
-        const token_id_str = JSON.stringify(token.id);
-        const balance = balances.get(token_id_str);
-        const price = tokenPrices.get(token_id_str);
+        const balance = dexBalances.get(token.id);
+        const price = tokenPrices.get(token.id);
 
         return {
             ...token,
-            balance: balance ?? 0,
+            balance: balance ?? BN_ZERO,
             estimatedPrice: price ?? 0,
             url: `/svg/${token.symbol.toLowerCase()}.svg`
         }
@@ -166,16 +181,16 @@ export default function Wallet() {
         setSelectedToken(token);
     }
 
-    const amountPrice = modalAmount * (selectedToken ? tokenPrices.get(selectedToken.symbol) ?? 0 : 0);
-    const selectedTokenBalance = selectedToken ? balances.get(JSON.stringify(selectedToken.id)) ?? 0 : 0;
+    const amountPrice = modalAmount.mul((selectedToken ? new BN(tokenPrices.get(selectedToken.id) ?? 0) : BN_ZERO));
+    const selectedTokenBalance = selectedToken ? new BN(dexBalances.get(selectedToken.id) ?? 0) : BN_ZERO;
 
     return (
         <div className="w-full h-full flex flex-col">
             <div className="flex w-full justify-between items-center">
-                <h1 className="text-2xl md:text-3xl">${total.toFixed(2)}</h1>
+                <h1 className="text-2xl md:text-3xl">${total.toString()}</h1>
                 <div className="flex md:flex-row flex-col">
                     <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
-                    <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected || selectedTokenBalance <= 0} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
+                    <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected || selectedTokenBalance.lte(BN_ZERO)} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
                 </div>
             </div>
 
@@ -202,13 +217,13 @@ export default function Wallet() {
                     <InputWithPriceInfo
                         name="Amount"
                         className="mt-1 rounded-2xl border pl-5 p-3 basis-1/4 bg-transparent w-full"
-                        value={modalAmount}
-                        onChange={(e) => setModalAmount(Number(e.target.value))}
+                        value={modalAmount.toString()}
+                        onChange={(e) => setModalAmount(new BN(e.target.value))}
                         symbol={selectedToken?.name ?? ""}
-                        price={amountPrice}
+                        price={amountPrice.toNumber()}
                     />
                     <div className="flex w-full justify-center">
-                        <LoadingButton loading={modalLoading} disabled={modalAmount === 0} className="disabled:opacity-50 text-lg md:w-1/2 mt-5 w-3/4 p-3 grow-on-hover glow-on-hover border border-white rounded-xl" onClick={omModalSubmit}>
+                        <LoadingButton loading={modalLoading} disabled={modalAmount.eq(BN_ZERO)} className="disabled:opacity-50 text-lg md:w-1/2 mt-5 w-3/4 p-3 grow-on-hover glow-on-hover border border-white rounded-xl" onClick={omModalSubmit}>
                             <p>{modalTitle.current}</p>
                         </LoadingButton>
                     </div>

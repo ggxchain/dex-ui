@@ -1,18 +1,20 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import Spinner from "./spinner";
 import Contract, { errorHandler } from "@/services/contract";
-import { Token } from "@/types";
+import { Amount, Token } from "@/types";
 import CexService from "@/services/cex";
 import Select from "./select";
 import Image from "next/image";
 import { Input } from "./input";
+import { BN, BN_ZERO } from "@polkadot/util";
+import { displayNumberWithPrecision } from "@/utils";
 
 interface TokenSelectorProps {
     token?: TokenWithPrice;
     tokens: TokenWithPrice[];
-    amount?: number;
+    amount?: Amount;
     lockedAmount?: boolean;
-    onChange: (tokenId: TokenWithPrice, amount: number) => void;
+    onChange: (tokenId: TokenWithPrice, amount: Amount) => void;
 }
 
 export type TokenWithPrice = Token & { price: number };
@@ -22,7 +24,7 @@ export function useTokens() {
 
     const loadTokens = () => {
         const contract = new Contract();
-        contract.allTokens().then((tokens: Token[]) => {
+        contract.allTokensWithInfo().then((tokens: Token[]) => {
             const cex = new CexService();
             cex.tokenPrices(tokens.map((token) => token.symbol)).then((prices) => {
                 const tokensWithPrice = tokens.map((token) => {
@@ -42,7 +44,7 @@ export function useTokens() {
 export default function TokenSelector({ token, amount, onChange, tokens, lockedAmount }: Readonly<TokenSelectorProps>) {
     useEffect(() => {
         if (tokens.length > 0 && token === undefined) {
-            onChange(tokens[0], 0)
+            onChange(tokens[0], BN_ZERO)
         }
     });
 
@@ -61,15 +63,20 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
             return;
         }
 
-        onChange(e, 0)
+        onChange(e, BN_ZERO)
     };
 
     const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (Number(e.target.value) > 10000000) {
             return;
         }
-        onChange(token, Number(e.target.value))
+        // The question here should we allow decimals or not.
+        // My guess is not as it's not possible to work with decimals on chain.
+        // So probably tokens will be more like satoshi/gwei/wei and not like eth/btc.
+        onChange(token, new BN(Number(e.target.value)))
     };
+
+    const price = (amount ?? BN_ZERO).muln(100).muln(token.price);
 
     return (
         <div>
@@ -90,8 +97,8 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
                     }}
                 />
                 <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-2.5 md:p-1.5 pr-2 rounded-r-[1rem] flex flex-col md:text-base text-xs">
-                    <Input name="Amount" value={amount} step="2" className="bg-transparent w-full text-right disabled:text-gray-400 disabled:cursor-not-allowed" type="number" placeholder="0.00" disabled={lockedAmount} onChange={handleAmountChange} />
-                    <p className="text-xs whitespace-nowrap">~= {((amount ?? 0.0) * token.price).toFixed(2)}$</p>
+                    <Input name="Amount" value={amount?.toString()} step="2" className="bg-transparent w-full text-right disabled:text-gray-400 disabled:cursor-not-allowed" type="number" placeholder="0.00" disabled={lockedAmount} onChange={handleAmountChange} />
+                    <p className="text-xs whitespace-nowrap">~= {displayNumberWithPrecision(price, 2)}$</p>
                 </div>
             </div>
         </div>

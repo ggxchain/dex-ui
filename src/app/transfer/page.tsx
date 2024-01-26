@@ -19,6 +19,7 @@ import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
 import { InputWithPriceInfo, Input } from "@/components/input";
 import { toast } from "react-toastify";
+import { BN, BN_ZERO } from "@polkadot/util";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -108,9 +109,9 @@ export default function Transfer() {
     const symbol = token?.coinDenom ?? balance.denom;
     return {
       name: token?.coinDenom ?? balance.denom,
-      balance: Number.parseInt(balance.amount) / (10 ** (token?.coinDecimals ?? 6)),
+      balance: new BN(balance.amount).divn(10 ** (token?.coinDecimals ?? 6)),
       symbol,
-      estimatedPrice: prices.get(symbol) ?? NaN,
+      estimatedPrice: prices.get(symbol) ?? 0,
       id: index,
       url,
       network: "",
@@ -255,14 +256,14 @@ export default function Transfer() {
 
   const walletIsNotInitialized = !account?.address || !client;
   const isGGxWalletNotConnected = modalGGxAccount === undefined;
-  const total = tokens.reduce((acc, token) => acc + token.balance * token.estimatedPrice, 0);
+  const total = tokens.reduce((acc, token) => token.balance.muln(token.estimatedPrice).add(acc), BN_ZERO);
   const amountPrice = modalAmount * (selectedToken ? prices.get(selectedToken.symbol) ?? 0 : 0);
 
 
   return (
     <div className="text-slate-100 flex flex-col w-full items-center h-full">
       <div className="flex mt-1 justify-between w-full items-center">
-        <h1 className="text-3xl">${total.toFixed(2)}</h1>
+        <h1 className="text-3xl">${total.toString()}</h1>
         <div className="flex md:flex-row flex-col">
           <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
           <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>

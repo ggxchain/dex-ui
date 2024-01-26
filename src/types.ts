@@ -1,8 +1,9 @@
+import { BN } from "@polkadot/util";
 import Pair from "./pair"
 
 export type TokenId = number;
 
-export type Amount = number
+export type Amount = BN
 export type PubKey = string
 export type CounterId = number
 export type OrderType = "BUY" | "SELL"

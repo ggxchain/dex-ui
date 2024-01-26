@@ -1,8 +1,8 @@
-import { Token } from "@/types";
+import { Amount, Token } from "@/types";
 import Image from "next/image";
 
 export interface ListElement extends Token {
-    balance: number;
+    balance: Amount;
     estimatedPrice: number;
     url: string;
 }
@@ -41,6 +41,7 @@ export default function TokenList({ tokens, onClick, className, selected }: Read
                 {
                     tokens.map((token) => {
                         const isSelected = token.id === selected?.id;
+                        const estimatedPrice = token.balance.muln(token.estimatedPrice);
 
                         return (
                             <tr key={token.symbol} onClick={() => handleClick(token)} className={`text-center even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20 [&>td]:px-6 [&>td]:py-1 rounded-xl ${isSelected ? "filter backdrop-brightness-125" : ""} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}>
@@ -53,13 +54,13 @@ export default function TokenList({ tokens, onClick, className, selected }: Read
                                 </td>
                                 {
                                     <td>
-                                        {token.balance} {`${token.symbol.toUpperCase()} `}
+                                        {token.balance.toString()} {`${token.symbol.toUpperCase()} `}
                                         <span className="text-sm opacity-50">
-                                            (${(token.balance * token.estimatedPrice).toFixed(2)})
+                                            (${estimatedPrice.toString()})
                                         </span>
                                     </td>
                                 }
-                                <td className="rounded-r-lg">${token.estimatedPrice.toFixed(2)}</td>
+                                <td className="rounded-r-lg">${token.estimatedPrice.toString()}</td>
                             </tr>
                         )
                     })
