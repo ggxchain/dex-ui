@@ -20,6 +20,7 @@ import LoadingButton from "@/components/loadButton";
 import { InputWithPriceInfo, Input } from "@/components/input";
 import { toast } from "react-toastify";
 import { Keyring } from '@polkadot/keyring';
+import { u8aToHex } from '@polkadot/util';
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -178,17 +179,10 @@ export default function Transfer() {
     };
 
     try {
-      function toHexString(byteArray: Uint8Array ) : string{
-        var s = '0x';
-        byteArray.forEach(function(byte) {
-          s += ('0' + (byte & 0xFF).toString(16)).slice(-2);
-        });
-        return s;
-      }
-
       const keyring = new Keyring();
       const pair = keyring.addFromAddress(modalGGxAccount.address);
-      const recipientAddress = toHexString(pair.publicKey);
+      const recipientAddress = u8aToHex(pair.publicKey);
+      console.log(recipientAddress);
 
       const result = await toast.promise(client.sendIbcTokens(
         account.address,
