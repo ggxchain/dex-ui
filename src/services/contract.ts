@@ -233,6 +233,7 @@ export default class Contract {
         // Should be safe to do as it cached
         const tokens = await this.allTokens();
         if (tokens.findIndex((value) => value === tokenId) === -1) {
+            console.log(tokens, tokenId);
             throw new Error(Errors.InvalidTokenId);
         }
     }
@@ -240,6 +241,7 @@ export default class Contract {
 
 export function errorHandler(error: Errors): undefined {
     toast.error(`Error: ${error}`);
+    console.error(error);
     return undefined
 }
 
@@ -252,7 +254,7 @@ function curry<T>(f: Function, _this: ContractInterface, ...args: any[]): WrapCa
 function wrapCallWithNotifications<T>(call: WrapCall<T>, text: String, callback: onFinalize): ReturnType<typeof toast.promise> {
     const wrappedOnFinalize = (error: string | undefined) => {
         if (error !== undefined) {
-            toast.error(`Error: ${error}`);
+            toast.error(`${error}`);
         } else {
             toast.success(`${text} finalized`);
         }

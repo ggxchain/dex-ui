@@ -36,6 +36,7 @@ const useOwnedTokens = (fetchUserTokens: FetchUserTokenId, fetchUserBalance: Fet
             return fetchUserBalance.call(contract, token).catch(errorHandler)
         });
         const balancesResults = await Promise.all(balancesPromises);
+        console.log(balancesResults);
         const balances = new Map<TokenId, Amount>();
         balancesResults.forEach((balance, index) => {
             balances.set(tokens[index], balance ?? BN_ZERO);

@@ -72,7 +72,8 @@ export default class GGxContract implements ContractInterface {
         const api = await this.apiPromise();
         const output = await api.query.dex.userTokenInfoes.entries(address);
         if (output !== undefined) {
-            return output.map(([_, tokenInfo]) => tokenInfo.assetId.toNumber())
+            // Dex has a bug for now, use storage key instead
+            return output.map(([key, _tokenInfo]) => key.args[1].toNumber())
         }
         return Promise.resolve([])
     }
@@ -207,18 +208,6 @@ export default class GGxContract implements ContractInterface {
                     callback(undefined);
                 }
             }
-        }
-    }
-
-    getOrder(order: PalletDexOrder): Order {
-        return {
-            pubkey: order.pubkey,
-            pair: order.pair,
-            counter: order.counter,
-            timestamp: order.timestamp,
-            orderType: order.orderType,
-            amountOffered: order.amountOffered,
-            amoutRequested: order.amoutRequested
         }
     }
 }
