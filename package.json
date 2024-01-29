@@ -17,6 +17,8 @@
     "@polkadot/api": "^10.11.2",
     "@polkadot/api-contract": "^10.11.2",
     "@polkadot/extension-dapp": "^0.46.6",
+    "@polkadot/keyring": "^12.6.2",
+    "@polkadot/util": "^12.6.2",
     "chain-registry": "^1.25.0",
     "cryptocurrency-icons": "^0.18.1",
     "next": "14.0.4",
