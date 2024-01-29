@@ -56,7 +56,6 @@ export default class GGxContract implements ContractInterface {
     }
 
     async tokenInfo(tokenId: TokenId): Promise<Token> {
-        // TODO: cache it
         const api = await this.apiPromise();
         const metadata = await api.query.assets.metadata(tokenId);
 
@@ -64,7 +63,8 @@ export default class GGxContract implements ContractInterface {
             id: tokenId,
             name: hexToString(metadata.name.toString()),
             symbol: hexToString(metadata.symbol.toString()),
-            network: "GGx"
+            network: "GGx",
+            decimals: metadata.decimals.toNumber()
         }
     }
 

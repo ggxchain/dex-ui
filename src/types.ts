@@ -13,6 +13,7 @@ export type Token = {
     name: string;
     symbol: string;
     network: string;
+    decimals: number;
 }
 
 export type Order = {
