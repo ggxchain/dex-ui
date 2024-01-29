@@ -182,7 +182,6 @@ export default function Transfer() {
       const keyring = new Keyring();
       const pair = keyring.addFromAddress(modalGGxAccount.address);
       const recipientAddress = u8aToHex(pair.publicKey);
-      console.log(recipientAddress);
 
       const result = await toast.promise(client.sendIbcTokens(
         account.address,
