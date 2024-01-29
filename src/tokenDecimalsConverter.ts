@@ -17,8 +17,7 @@ export default class TokenDecimals {
     floatToBN(value: number): BN {
         const multiplier = new BN(10).pow(new BN(this.decimalPlaces));
 
-        const result = new BN(value).mul(multiplier);
-        return result;
+        return multiplier.muln(value);
     }
 
     BNToFloat(value: BN): number {
