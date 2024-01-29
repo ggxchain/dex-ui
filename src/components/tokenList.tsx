@@ -1,6 +1,6 @@
 import { CALCULATION_PRECISION, CALCULATION_PRECISION_NUMBER } from "@/consts";
+import TokenDecimals from "@/tokenDecimalsConverter";
 import { Amount, Token } from "@/types";
-import { displayNumberWithPrecision } from "@/utils";
 import { BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
 
@@ -50,6 +50,7 @@ export default function TokenList({ tokens, onClick, className, selected, onChai
                 {
                     tokens.map((token) => {
                         const isSelected = token.id === selected?.id;
+                        const amountConverter = new TokenDecimals(token.decimals);
 
                         return (
                             <tr key={token.symbol} onClick={() => handleClick(token)} className={`text-center even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20 [&>td]:px-6 [&>td]:py-1 rounded-xl ${isSelected ? "filter backdrop-brightness-125" : ""} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}>
@@ -61,12 +62,12 @@ export default function TokenList({ tokens, onClick, className, selected, onChai
                                     </div>
                                 </td>
                                 <td>
-                                    <Balance symbol={token.symbol} balance={token.balance} estimatedPrice={token.estimatedPrice} />
+                                    <Balance symbol={token.symbol} balance={amountConverter.BNToFloat(token.balance)} estimatedPrice={token.estimatedPrice} />
                                 </td>
                                 {
                                     onChain &&
                                     <td>
-                                        <Balance symbol={token.symbol} balance={token.onChainBalance ?? BN_ZERO} estimatedPrice={token.estimatedPrice} />
+                                        <Balance symbol={token.symbol} balance={amountConverter.BNToFloat(token.onChainBalance ?? BN_ZERO)} estimatedPrice={token.estimatedPrice} />
                                     </td>
                                 }
                                 <td className="rounded-r-lg">${token.estimatedPrice.toString()}</td>
@@ -80,13 +81,13 @@ export default function TokenList({ tokens, onClick, className, selected, onChai
 }
 
 interface BalanceProperties {
-    balance: Amount;
+    balance: number;
     estimatedPrice: number;
     symbol: string;
 }
 
 function Balance({ balance, estimatedPrice, symbol }: BalanceProperties) {
-    const estimatedPriceWithPrecision = balance.muln(estimatedPrice * CALCULATION_PRECISION_NUMBER);
+    const estimatedPriceWithPrecision = balance * estimatedPrice;
 
     return (
         <div className="flex flex-col text-xs md:text-base text-center break-words">
@@ -95,7 +96,7 @@ function Balance({ balance, estimatedPrice, symbol }: BalanceProperties) {
             }
 
             <span className="opacity-50 mt-1">
-                (${displayNumberWithPrecision(estimatedPriceWithPrecision, CALCULATION_PRECISION, 2)})
+                (${estimatedPriceWithPrecision.toFixed(2)})
             </span>
 
         </div>

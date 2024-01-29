@@ -1,11 +1,12 @@
 import GGXWallet from "./ggx";
-import { Token, TokenId, CounterId, Order, Amount, PubKey, DetailedOrder, OrderType } from "@/types";
+import { Token, TokenId, CounterId, Amount, PubKey, DetailedOrder, OrderType } from "@/types";
 import Pair, { PairUtils } from "@/pair";
 
 import GGxContract from "./contract/ggx";
 import ContractMock from "./contract/mock"
 import { CONTRACT_MOCKED, TOKENS_LIST_TTL } from "@/consts";
 import { toast } from "react-toastify";
+import Order from "@/order";
 
 export type onFinalize = (error: string | undefined) => void;
 
@@ -113,7 +114,7 @@ export default class Contract {
         return await this.contract.onChainBalanceOf(tokenId, address);
     }
 
-    async allOrders(pair: Pair): Promise<Order[]> {
+    async allOrders(pair: Pair): Promise<DetailedOrder[]> {
         const orders = await this.contract.pairOrders(pair);
         // TODO: We need to double check this logic after contract will be ready.
         // Currently we fetch both side tiker orders and then filter out duplicates.
@@ -132,7 +133,16 @@ export default class Contract {
             return acc;
         }, []);
 
-        return [...orders, ...reverseOrders];
+        const [token1, token2] = await Promise.all([this.mapTokenIdToToken(pair[0]), this.mapTokenIdToToken(pair[1])]);
+
+        return await Promise.all([...orders, ...reverseOrders].map(async (value) => {
+            return {
+                ...value,
+                token1, token2
+            }
+        }));
+
+
     }
 
     async allUserOrders(): Promise<DetailedOrder[]> {
@@ -233,7 +243,6 @@ export default class Contract {
         // Should be safe to do as it cached
         const tokens = await this.allTokens();
         if (tokens.findIndex((value) => value === tokenId) === -1) {
-            console.log(tokens, tokenId);
             throw new Error(Errors.InvalidTokenId);
         }
     }

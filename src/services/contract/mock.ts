@@ -1,8 +1,12 @@
 import mockedTokens from "@/mock";
-import { TokenId, CounterId, Order, Amount, PubKey, DetailedOrder, OrderType, Token } from "@/types";
+import { TokenId, CounterId, Amount, PubKey, OrderType, Token } from "@/types";
 import Pair, { PairUtils } from "@/pair";
 import { ContractInterface, onFinalize } from "../contract";
 import GGXWallet from "../ggx";
+import Order, { OrderUtils } from "@/order";
+
+import { BN, BN_ZERO } from "@polkadot/util";
+import TokenDecimals from "@/tokenDecimalsConverter";
 
 type TokenDepositMock = {
     tokenId: TokenId,
@@ -22,12 +26,28 @@ export default class ContractMock implements ContractInterface {
         const ordersByPair = window.sessionStorage.getItem("contractOrdersByPairMock");
 
         if (deposits !== null && orders !== null && ordersByUser !== null && ordersByPair !== null) {
-            this.deposits = new Map(JSON.parse(deposits));
-            this.orders = JSON.parse(orders);
             this.ordersByUser = new Map(JSON.parse(ordersByUser));
             this.ordersByPair = new Map(JSON.parse(ordersByPair));
+            // We use BN that is a class, so we need to convert it back to BN
+            this.deposits = new Map(JSON.parse(deposits));
+            this.deposits.forEach((value, key) => {
+                value.forEach((deposit) => {
+                    deposit.amount = new BN(deposit.amount, 16)
+                });
+            });
+            this.orders = JSON.parse(orders);
+            this.orders.forEach((value) => {
+                value.amountOffered = new BN(value.amountOffered, 16);
+                value.amoutRequested = new BN(value.amoutRequested, 16);
+            })
         }
     }
+
+    async onChainBalanceOf(tokenId: number, address: string): Promise<Amount> {
+        const tokenInfo = await this.tokenInfo(tokenId);
+        return Promise.resolve(new TokenDecimals(tokenInfo.decimals).floatToBN(1000));
+    }
+
     tokenInfo(tokenId: number): Promise<Token> {
         return Promise.resolve(mockedTokens().find((value) => value.id === tokenId)!);
     }
@@ -51,7 +71,7 @@ export default class ContractMock implements ContractInterface {
         }
         const index = deposit.findIndex((value) => JSON.stringify(value.tokenId) === JSON.stringify(tokenId));
         if (index !== -1) {
-            deposit[index].amount += amount;
+            deposit[index].amount = deposit[index].amount.add(amount);
         } else {
             deposit.push({ tokenId: tokenId, amount });
         }
@@ -63,14 +83,14 @@ export default class ContractMock implements ContractInterface {
     balanceOf(tokenId: TokenId, account: string): Promise<Amount> {
         const deposit = this.deposits.get(account);
         if (deposit === undefined) {
-            return Promise.resolve(0);
+            return Promise.resolve(BN_ZERO);
         }
         const token = deposit.find((value) => JSON.stringify(value.tokenId) === JSON.stringify(tokenId));
 
         if (token !== undefined) {
             return Promise.resolve(token.amount);
         } else {
-            return Promise.resolve(0);
+            return Promise.resolve(BN_ZERO);
         }
     }
 
@@ -106,7 +126,7 @@ export default class ContractMock implements ContractInterface {
         }
         const index = deposit.findIndex((value) => JSON.stringify(value.tokenId) === JSON.stringify(tokenId));
         if (index !== -1) {
-            deposit[index].amount -= amount;
+            deposit[index].amount = deposit[index].amount.sub(amount);
         }
         this.save();
         callback(undefined);
@@ -161,7 +181,7 @@ export default class ContractMock implements ContractInterface {
         return orders.at(index);
     }
 
-    makeOrder(pair: Pair, orderType: OrderType, amountOffered: number, amoutRequested: number, callback: onFinalize): Promise<void> {
+    makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, callback: onFinalize): Promise<void> {
         const counterId = (this.orders.at(-1)?.counter ?? 0) + 1;
         const order: Order = {
             pubkey: new GGXWallet().pubkey()?.address ?? "",
@@ -187,7 +207,7 @@ export default class ContractMock implements ContractInterface {
         } else {
             ordersByPair.push(counterId);
         }
-        this.withdraw(PairUtils.ownedToken(pair, orderType), amountOffered, () => { });
+        this.withdraw(OrderUtils.ownedToken(order), amountOffered, () => { });
         this.save();
         callback(undefined);
         return Promise.resolve();
@@ -216,7 +236,7 @@ export default class ContractMock implements ContractInterface {
 
         // Don't return funds if order is resolved.
         if (!resolved) {
-            this.deposit(PairUtils.ownedToken(order.pair, order.orderType), order.amountOffered, () => { });
+            this.deposit(OrderUtils.ownedToken(order), order.amountOffered, () => { });
         }
 
         this.save();
@@ -231,14 +251,14 @@ export default class ContractMock implements ContractInterface {
         if (order !== undefined && order.pubkey !== pubkey) {
             // Check that user has enough tokens to take the order.
 
-            const orderWant = PairUtils.desiredToken(order.pair, order.orderType);
+            const orderWant = OrderUtils.desiredToken(order);
             const balance = await this.balanceOf(orderWant, pubkey);
             if (balance < order.amoutRequested) {
                 return Promise.reject("Not enough tokens.");
             }
             this.withdraw(orderWant, order.amoutRequested, () => { });
-            this.deposit(PairUtils.ownedToken(order.pair, order.orderType), order.amountOffered, () => { }, pubkey);
-            this.deposit(PairUtils.desiredToken(order.pair, order.orderType), order.amoutRequested, () => { }, order.pubkey);
+            this.deposit(OrderUtils.ownedToken(order), order.amountOffered, () => { }, pubkey);
+            this.deposit(OrderUtils.desiredToken(order), order.amoutRequested, () => { }, order.pubkey);
             // 
             this.cancelOrder(counterId, () => { }, true);
 

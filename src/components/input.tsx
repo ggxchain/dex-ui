@@ -1,5 +1,3 @@
-import assert from "assert";
-
 type InputProps = React.ComponentPropsWithRef<'input'> & {
     name: string;
     wrapperClassName?: string;

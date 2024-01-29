@@ -1,5 +1,5 @@
 import { BN } from "@polkadot/util";
-import Pair from "./pair"
+import Order from "./order";
 
 export type TokenId = number;
 
@@ -14,16 +14,6 @@ export type Token = {
     symbol: string;
     network: string;
     decimals: number;
-}
-
-export type Order = {
-    pubkey: PubKey;
-    pair: Pair;
-    counter: CounterId;
-    timestamp: number;
-    orderType: OrderType
-    amountOffered: Amount;
-    amoutRequested: Amount;
 }
 
 export type DetailedOrder = Order & {

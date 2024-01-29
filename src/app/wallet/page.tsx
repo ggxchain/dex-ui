@@ -11,8 +11,7 @@ import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
 import { InputWithPriceInfo } from "@/components/input";
 import { BN, BN_ZERO } from "@polkadot/util";
-import { displayNumberWithPrecision } from "@/utils";
-import { CALCULATION_PRECISION, CALCULATION_PRECISION_NUMBER } from "@/consts";
+import TokenDecimals from "@/tokenDecimalsConverter";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -36,7 +35,6 @@ const useOwnedTokens = (fetchUserTokens: FetchUserTokenId, fetchUserBalance: Fet
             return fetchUserBalance.call(contract, token).catch(errorHandler)
         });
         const balancesResults = await Promise.all(balancesPromises);
-        console.log(balancesResults);
         const balances = new Map<TokenId, Amount>();
         balancesResults.forEach((balance, index) => {
             balances.set(tokens[index], balance ?? BN_ZERO);
@@ -50,6 +48,7 @@ const useOwnedTokens = (fetchUserTokens: FetchUserTokenId, fetchUserBalance: Fet
 export default function Wallet() {
     const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(Contract.prototype.allTokensOfOwner, Contract.prototype.balanceOf);
     const [_, chainBalances, refreshChainBalances] = useOwnedTokens(Contract.prototype.allTokens, Contract.prototype.onChainBalanceOf);
+    const [tokenMap, setTokenMap] = useState<Map<TokenId, Token>>(new Map<TokenId, Token>());
     const [tokens, setTokens] = useState<Token[]>([]);
     const [search, setSearch] = useState<string>("");
     const [tokenPrices, setTokenPrices] = useState<Map<TokenId, number>>(new Map<TokenId, number>());
@@ -59,7 +58,7 @@ export default function Wallet() {
 
     // Modal related states
     const [modal, setModal] = useState<boolean>(false);
-    const [modalAmount, setModalAmount] = useState<Amount>(BN_ZERO);
+    const [modalAmount, setModalAmount] = useState<number>(0);
     const modalTitle = useRef<InteractType>("Deposit");
     const [modalLoading, setModalLoading] = useState<boolean>(false);
 
@@ -72,6 +71,7 @@ export default function Wallet() {
         const contract = new Contract();
         contract.allTokensWithInfo().then((tokens) => {
             setTokens(tokens);
+            setTokenMap(new Map(tokens.map((token) => [token.id, token])));
             if (tokens.length > 0) {
                 setSelectedToken(tokens[0]);
             }
@@ -111,26 +111,26 @@ export default function Wallet() {
     const filteredTokens = tokens.filter((token) => filter(token));
     const isTokenNotSelected = selectedToken === undefined;
 
-    const totalOnChainWithPrecision = dexOwnedTokens.reduce<BN>((total, tokenId) => {
-        const balance = chainBalances.get(tokenId);
-        const price = tokenPrices.get(tokenId);
-        if (balance === undefined || price === undefined) {
-            return total;
-        }
-        return total.add(balance.mul(new BN(price * CALCULATION_PRECISION_NUMBER)));
-    }, BN_ZERO)
+    const totalOnChain = tokens.reduce<number>((total, token) => {
+        const balance = new TokenDecimals(token.decimals).BNToFloat(chainBalances.get(token.id) ?? BN_ZERO);
+        const price = tokenPrices.get(token.id) ?? 0;
+        return total + balance * price;
+    }, 0)
 
-    const totalWithPrecision = dexOwnedTokens.reduce<BN>((total, tokenId) => {
-        const balance = dexBalances.get(tokenId);
-        const price = tokenPrices.get(tokenId);
-        if (balance === undefined || price === undefined) {
+    const total = dexOwnedTokens.reduce<number>((total, tokenId) => {
+        const token = tokenMap.get(tokenId);
+        if (token === undefined) {
             return total;
         }
-        return total.add(balance.mul(new BN(price * CALCULATION_PRECISION_NUMBER)));
-    }, totalOnChainWithPrecision);
+
+        const balance = new TokenDecimals(token.decimals).BNToFloat(dexBalances.get(tokenId) ?? BN_ZERO);
+        const price = tokenPrices.get(tokenId) ?? 0;
+
+        return total + balance * price;
+    }, totalOnChain);
 
     const omModalSubmit = () => {
-        if (isTokenNotSelected || modalAmount.eq(BN_ZERO)) {
+        if (isTokenNotSelected || modalAmount <= 0) {
             return;
         }
         const contract = new Contract();
@@ -138,7 +138,9 @@ export default function Wallet() {
         let method = modalTitle.current === "Deposit" ? contract.deposit : contract.withdraw;
         setModalLoading(true);
 
-        method.call(contract, selectedToken.id, modalAmount, () => {
+        const amount = new TokenDecimals(selectedToken.decimals).floatToBN(modalAmount);
+
+        method.call(contract, selectedToken.id, amount, () => {
             refreshBalances();
             setModal(false);
         }).catch((error) => {
@@ -153,7 +155,7 @@ export default function Wallet() {
         }
         modalTitle.current = type;
         setModalLoading(false);
-        setModalAmount(BN_ZERO);
+        setModalAmount(0);
         setModal(true);
     }
 
@@ -193,13 +195,14 @@ export default function Wallet() {
         setSelectedToken(token);
     }
 
-    const amountPrice = modalAmount.mul((selectedToken ? new BN(tokenPrices.get(selectedToken.id) ?? 0) : BN_ZERO));
+    const selectedTokenPrice = selectedToken ? tokenPrices.get(selectedToken.id) ?? 0 : 0;
+    const amountPrice = modalAmount * selectedTokenPrice;
     const selectedTokenBalance = selectedToken ? new BN(dexBalances.get(selectedToken.id) ?? 0) : BN_ZERO;
 
     return (
         <div className="w-full h-full flex flex-col">
             <div className="flex w-full justify-between items-center">
-                <h1 className="text-xl md:text-3xl break-words w-[40%]">${displayNumberWithPrecision(totalWithPrecision, CALCULATION_PRECISION, 2)}</h1>
+                <h1 className="text-xl md:text-3xl break-words w-[40%]">${total.toFixed(2)}</h1>
                 <div className="flex md:flex-row flex-col">
                     <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
                     <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected || selectedTokenBalance.lte(BN_ZERO)} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
@@ -230,12 +233,12 @@ export default function Wallet() {
                         name="Amount"
                         className="mt-1 rounded-2xl border pl-5 p-3 basis-1/4 bg-transparent w-full"
                         value={modalAmount.toString()}
-                        onChange={(e) => setModalAmount(new BN(e.target.value))}
+                        onChange={(e) => setModalAmount(Number(e.target.value))}
                         symbol={selectedToken?.name ?? ""}
-                        price={amountPrice.toNumber()}
+                        price={amountPrice}
                     />
                     <div className="flex w-full justify-center">
-                        <LoadingButton loading={modalLoading} disabled={modalAmount.eq(BN_ZERO)} className="disabled:opacity-50 text-lg md:w-1/2 mt-5 w-3/4 p-3 grow-on-hover glow-on-hover border border-white rounded-xl" onClick={omModalSubmit}>
+                        <LoadingButton loading={modalLoading} disabled={modalAmount == 0} className="disabled:opacity-50 text-lg md:w-1/2 mt-5 w-3/4 p-3 grow-on-hover glow-on-hover border border-white rounded-xl" onClick={omModalSubmit}>
                             <p>{modalTitle.current}</p>
                         </LoadingButton>
                     </div>

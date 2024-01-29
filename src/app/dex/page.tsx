@@ -5,13 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import Contract, { errorHandler } from "@/services/contract";
 import GGXWallet from "@/services/ggx";
 import Ruler from "@/components/ruler";
-import { Amount, DetailedOrder, Order, Token } from "@/types";
+import { Amount, DetailedOrder, Token } from "@/types";
 import TokenSelector, { TokenWithPrice, useTokens } from "@/components/tokenSelector";
-import Pair, { PairUtils } from "@/pair";
+import Pair from "@/pair";
 import { useRouter } from "next/navigation";
-import { BN_ONE, BN_ZERO } from "@polkadot/util";
-import { displayNumberWithPrecision } from "@/utils";
-import { CALCULATION_PRECISION, CALCULATION_PRECISION_NUMBER } from "@/consts";
+import { BN_ZERO } from "@polkadot/util";
+import TokenDecimals from "@/tokenDecimalsConverter";
+import Order, { OrderUtils } from "@/order";
 
 type TokenData = TokenWithPrice & {
   amount: Amount;
@@ -21,13 +21,14 @@ export default function Dex() {
   const [isMaker, setIsMaker] = useState<boolean>(false);
   const [sell, setSell] = useState<TokenData>();
   const [buy, setBuy] = useState<TokenData>();
-  const [availableBalance, setAvailableBalance] = useState<Amount>(BN_ZERO);
+  const [availableBalanceNormalized, setAvailableBalanceNormalized] = useState<Amount>(BN_ZERO);
   const [order, setOrder] = useState<Order>();
   const [tokens, loadTokens] = useTokens();
   const [userOrders, updateUserOrders] = useUserOrders();
   const isConnected = useRef<boolean>();
 
   const router = useRouter();
+  const amountConverter = TokenDecimals.normalizedTokenDecimals(sell?.decimals ?? 1, buy?.decimals ?? 1)
 
   useEffect(() => {
     const wallet = new GGXWallet();
@@ -43,10 +44,10 @@ export default function Dex() {
     if (sell !== undefined) {
       const contract = new Contract();
       contract.balanceOf(sell.id).then((balance) => {
-        setAvailableBalance(balance);
+        setAvailableBalanceNormalized(amountConverter.normalize(balance, sell.decimals));
       }).catch(errorHandler)
     }
-  }, [sell]);
+  }, [sell, buy]);
 
   const onClear = () => {
     setSell(undefined);
@@ -58,33 +59,31 @@ export default function Dex() {
     router.push("/wallet");
   }
 
+
   const isTaker = !isMaker;
   const isTokenNotSelected = sell === undefined || buy === undefined;
   const isTokenSame = sell?.symbol === buy?.symbol;
   const isWalletNotConnected = !isConnected.current;
   const isOrderNotChosen = order === undefined;
 
-  const sellAmount = isMaker && !isTokenNotSelected ?
-    sell.amount
-    : order?.amoutRequested ?? BN_ZERO;
-  const isSellAmountZero = sellAmount.eq(BN_ZERO);
-  const isUserBalanceNotEnough = !isWalletNotConnected && availableBalance.lt(sellAmount);
+  const orderRequested = amountConverter.normalize(order?.amoutRequested ?? BN_ZERO, sell?.decimals ?? 1);
+  const orderOffered = amountConverter.normalize(order?.amountOffered ?? BN_ZERO, buy?.decimals ?? 1);
 
-
-  const displayAmount = (amount: Amount) => displayNumberWithPrecision(amount, CALCULATION_PRECISION, 2);
-  const orderRateWithPrecision = order !== undefined
-    ? order.amountOffered.muln(CALCULATION_PRECISION_NUMBER).div(order.amoutRequested)
-    : BN_ZERO;
-  const rateWithPrecion = isMaker && !isSellAmountZero && !isTokenNotSelected
-    ? buy.amount.muln(CALCULATION_PRECISION_NUMBER).div(sell.amount)
-    : orderRateWithPrecision;
+  const sellAmount = isMaker && !isTokenNotSelected
+    ? sell.amount
+    : orderRequested;
 
   const buyAmount = isMaker && !isTokenNotSelected
     ? buy.amount
-    : order?.amountOffered ?? BN_ZERO;
+    : orderOffered
 
-
+  const isSellAmountZero = sellAmount.eq(BN_ZERO);
+  const isUserBalanceNotEnough = !isWalletNotConnected && availableBalanceNormalized.lt(sellAmount);
   const isAmountZero = isSellAmountZero || buyAmount.eq(BN_ZERO);
+
+  const rate = !isTokenNotSelected && !buyAmount.eq(BN_ZERO)
+    ? amountConverter.divWithPrecision(buyAmount, sellAmount)
+    : 0;
 
   const isFormHasErrors = isTokenNotSelected || isTokenSame || isAmountZero || isWalletNotConnected || isUserBalanceNotEnough || (isTaker && isOrderNotChosen);
 
@@ -100,8 +99,10 @@ export default function Dex() {
     };
 
     if (isMaker) {
-      // Buy or sell is related to the first token in the pair. So, in our case it's sell.
-      contract.makeOrder(pair, sellAmount, buyAmount, "SELL", callback).catch(errorHandler);
+      // Basically, we need to send the amount of tokens that we want to sell but we need to convert it to the decimals of the token.
+      const sellTokenAmount = amountConverter.denormalize(sellAmount, sell.decimals);
+      const buyTokenAmount = amountConverter.denormalize(buyAmount, buy.decimals);
+      contract.makeOrder(pair, sellTokenAmount, buyTokenAmount, "SELL", callback).catch(errorHandler);
     } else if (!isOrderNotChosen) {
       contract.takeOrder(order.counter, callback).catch(errorHandler);
     }
@@ -111,34 +112,32 @@ export default function Dex() {
     setOrder(order);
   };
 
-  const onSellChange = (token: TokenWithPrice, amount: Amount) => {
+  const onSellChange = (token: TokenWithPrice, amount: number) => {
     if (token.id != sell?.id) {
       setOrder(undefined);
     }
-    setSell({ ...token, amount });
+    setSell({ ...token, amount: amountConverter.floatToBN(amount) });
   }
 
-  const onBuyChange = (token: TokenWithPrice, amount: Amount) => {
+  const onBuyChange = (token: TokenWithPrice, amount: number) => {
     if (token.id != buy?.id) {
       setOrder(undefined);
     }
-    setBuy({ ...token, amount });
+    setBuy({ ...token, amount: amountConverter.floatToBN(amount) });
   }
 
-  const buyPriceRateWithPrecision = rateWithPrecion.muln(buy?.price ?? 0);
+
+  const buyPriceRate = rate * (buy?.price ?? 0);
 
   // 1/rate
-  // Twice precision because rate is multiplied by precision.
-  const reverseRateWithPrecision = rateWithPrecion.gtn(0) ? BN_ONE.muln(CALCULATION_PRECISION_NUMBER).muln(CALCULATION_PRECISION_NUMBER).div(rateWithPrecion) : BN_ZERO;
-  const sellPriceRateWithPrecision = reverseRateWithPrecision.muln(sell?.price ?? 0);
+  const reverseRate = rate > 0 ? 1 / rate : 0;
+  const sellPriceRate = reverseRate * (sell?.price ?? 0);
 
-  const buyPriceWithPrecision = buyAmount.mul(sellPriceRateWithPrecision);
-  const sellPriceWithPrecision = sellAmount.mul(buyPriceRateWithPrecision);
+  const buyPrice = amountConverter.BNToFloat(buyAmount) * sellPriceRate;
+  const sellPrice = amountConverter.BNToFloat(sellAmount) * buyPriceRate;
 
-  const diff = sellPriceWithPrecision.toTwos(256).sub(buyPriceWithPrecision);
-  // Should be save to convert to number because rates won't be able to cross SAFE_INTEGER
-  const comparedToMarket = !isTokenNotSelected && !isAmountZero && buyPriceRateWithPrecision.gtn(0)
-    ? diff.muln(10_000).div(buyPriceWithPrecision).toNumber() / 100
+  const comparedToMarket = !isTokenNotSelected && !isAmountZero && buyPrice > 0
+    ? (sellPrice - buyPrice) * 100 / buyPrice
     : 0;
 
   return (
@@ -161,10 +160,10 @@ export default function Dex() {
               <p>Sell</p>
               <div className="flex">
                 <p className="text-opacity-75 font-thin">Available for swaps:</p>
-                <p className="font-normal mx-5">{availableBalance.toString()}</p>
+                <p className="font-normal mx-5">{amountConverter.BNToFloat(availableBalanceNormalized)}</p>
               </div>
             </div>
-            <TokenSelector token={sell} tokens={tokens} lockedAmount={isTaker} amount={sellAmount} onChange={onSellChange} />
+            <TokenSelector token={sell} tokens={tokens} lockedAmount={isTaker} amount={amountConverter.BNToFloat(sellAmount)} onChange={onSellChange} />
             <div className="flex flex-col text-xs text-orange-300">
               {
                 isUserBalanceNotEnough && !isTokenNotSelected &&
@@ -172,7 +171,7 @@ export default function Dex() {
                   <p className="w-4/5">The balance is not enough to make this swap</p>
                   {
                     isMaker && // Taker can't regulate the amount of the order.
-                    <button className="ml-2 p-1 rounded-2xl border grow-on-hover" onClick={() => setSell({ ...sell, amount: availableBalance })}>Set max</button>
+                    <button className="ml-2 p-1 rounded-2xl border grow-on-hover" onClick={() => setSell({ ...sell, amount: availableBalanceNormalized })}>Set max</button>
                   }
                 </div>
               }
@@ -184,20 +183,20 @@ export default function Dex() {
             </div>
 
             <p className="text-sm mt-2">Buy</p>
-            <TokenSelector token={buy} tokens={tokens} lockedAmount={isTaker} amount={buyAmount} onChange={onBuyChange} />
+            <TokenSelector token={buy} tokens={tokens} lockedAmount={isTaker} amount={amountConverter.BNToFloat(buyAmount)} onChange={onBuyChange} />
 
             <Ruler />
 
             <div className="mt-4">
               <div className="flex justify-between items-center">
                 <p className="font-semibold">Rate:</p>
-                {rateWithPrecion !== BN_ZERO && !isTokenNotSelected && !isTokenSame
+                {rate > 0 && !isTokenNotSelected && !isTokenSame
                   ? <div className="flex flex-col">
                     <p className="font-semibold">
-                      1 {sell.name} = {displayAmount(rateWithPrecion)} {buy.name} ≈ ${displayAmount(buyPriceRateWithPrecision)}
+                      1 {sell.name} = {rate.toFixed(3)} {buy.name} ≈ ${buyPriceRate.toFixed(2)}
                     </p>
                     <p className="text-xs text-right opacity-75">
-                      1 {buy.name} = {displayAmount(reverseRateWithPrecision)} {sell.name} ≈ ${displayAmount(sellPriceRateWithPrecision)}
+                      1 {buy.name} = {reverseRate.toFixed(3)} {sell.name} ≈ ${sellPriceRate.toFixed(2)}
                     </p>
                   </div>
                   : <p>0.00</p>
@@ -206,7 +205,7 @@ export default function Dex() {
 
               <div className="flex justify-between ">
                 <p className="font-semibold">Compared to CEx:</p>
-                <p className={`${comparedToMarket < 0 ? "text-red-500" : comparedToMarket > 0 ? "text-green-500" : ""}`}>{Math.abs(comparedToMarket)}%</p>
+                <p className={`${comparedToMarket < 0 ? "text-red-500" : comparedToMarket > 0 ? "text-green-500" : ""}`}>{Math.abs(comparedToMarket).toFixed(1)}%</p>
               </div>
 
               <div className="flex justify-between">
@@ -245,8 +244,20 @@ interface OrderBookProps {
   onChange: (order: Order) => void;
 }
 
+type NormalizedOrder = DetailedOrder & {
+  amountRequestedNormalized: Amount;
+  amountOfferedNormalized: Amount;
+}
+
 function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<OrderBookProps>) {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<NormalizedOrder[]>([]);
+
+  const amountConverter = TokenDecimals.normalizedTokenDecimals(sellToken.decimals, buyToken.decimals);
+  const sortCmp = (a: NormalizedOrder, b: NormalizedOrder) => {
+    const aPrice = amountConverter.divWithPrecision(a.amountRequestedNormalized, a.amountOfferedNormalized);
+    const bPrice = amountConverter.divWithPrecision(b.amountRequestedNormalized, b.amountOfferedNormalized);
+    return aPrice - bPrice;
+  }
 
   useEffect(() => {
     const contract = new Contract();
@@ -254,17 +265,24 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
     contract.allOrders(tokenPair).then((orders) => {
       const wallet = new GGXWallet();
       // Don't show him his own orders.
-      const filteredOrders = orders.filter((order: Order) => order.pubkey !== wallet.pubkey()?.address)
+      const filteredOrders = orders.filter((order: DetailedOrder) => order.pubkey !== wallet.pubkey()?.address).map((order: DetailedOrder) => {
+        const [desiredToken, ownedToken] = OrderUtils.desiredToken(order) == order.pair[0] ? [order.token1, order.token2] : [order.token2, order.token1];
+        return {
+          ...order,
+          amountRequestedNormalized: amountConverter.normalize(order.amoutRequested, desiredToken.decimals),
+          amountOfferedNormalized: amountConverter.normalize(order.amountOffered, ownedToken.decimals),
+        }
+      });
       setOrders(filteredOrders);
       if (orders.length > 0 && !selectedOrder) {
-        const orders = filteredOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => (b.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(b.amountOffered)).sub((a.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(a.amountOffered))).toNumber());
+        const orders = filteredOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(b, a));
         onChange(orders[0]);
       }
     }).catch(errorHandler);
   }, [buyToken, sellToken, onChange, selectedOrder]);
 
-  const buyOrders = orders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => (a.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(a.amountOffered)).sub((b.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(b.amountOffered))).toNumber());
-  const sellOrders = orders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => (b.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(b.amountOffered)).sub((a.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(a.amountOffered))).toNumber());
+  const buyOrders = orders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(a, b));
+  const sellOrders = orders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => sortCmp(b, a));
 
   const buyTotalVolume = buyOrders.reduce((acc, order) => order.amoutRequested.add(acc), BN_ZERO);
   const sellTotalVolume = sellOrders.reduce((acc, order) => order.amountOffered.add(acc), BN_ZERO);
@@ -288,13 +306,14 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
             sellOrders.length === 0
               ? <tr><td className="text-red-600">No asks found</td></tr>
               : sellOrders.map((order) => {
-                const orderPrice = order.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(order.amountOffered);
+                const orderPrice = amountConverter.divWithPrecision(order.amountRequestedNormalized, order.amountOfferedNormalized);
+                // It's safe to not normalize the volume as it compared agains same denominator.
                 const percent = order.amountOffered.muln(100).div(sellTotalVolume).toNumber();
                 return (
                   <tr key={order.counter} className="relative w-full text-red-600">
-                    <td className="p-1 pl-4 text-left font-bold">{displayNumberWithPrecision(orderPrice, CALCULATION_PRECISION_NUMBER, 9)}</td>
+                    <td className="p-1 pl-4 text-left font-bold">{orderPrice.toFixed(9)}</td>
                     <td className="p-1 text-right text-white font-bold">
-                      {order.amountOffered.toString()}
+                      {amountConverter.BNToFloat(order.amountOfferedNormalized).toFixed(9)}
                       <div style={{ width: `${Math.round(percent)}%` }} className="absolute bg-red-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
                     </td>
                   </tr>
@@ -310,17 +329,17 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
               : buyOrders.map((order) => {
                 const selected = order.counter == selectedOrder?.counter;
                 const percent = order.amoutRequested.muln(100).div(buyTotalVolume).toNumber();
-                const orderPrice = order.amountOffered.muln(CALCULATION_PRECISION_NUMBER).div(order.amoutRequested);
+                const orderPrice = amountConverter.divWithPrecision(order.amountOfferedNormalized, order.amountRequestedNormalized);
                 return (
                   <tr key={order.counter} className={`relative w-full cursor-pointer glow-on-hover rounded-l-md text-green-500 ${selected} `} onClick={() => onChange(order)}>
                     <td className="p-1 relative text-left font-bold">
                       {selected && <p className="absolute h-full left-0">↠</p>}
                       <p className="pl-3">
-                        {displayNumberWithPrecision(orderPrice, CALCULATION_PRECISION_NUMBER, 9)}
+                        {orderPrice.toFixed(9)}
                       </p>
                     </td>
                     <td className="p-1 text-right text-white font-bold">
-                      {order.amoutRequested.toString()}
+                      {amountConverter.BNToFloat(order.amountRequestedNormalized).toFixed(9)}
                       <div style={{ width: `${Math.round(percent)}%` }} className="absolute bg-green-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
                     </td>
 
@@ -377,22 +396,24 @@ function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
           orders.length === 0
             ? <tr><td className="text-slate-100 opacity-50 text-center">No orders found</td></tr>
             : orders.map((order) => {
-              const ownedToken = PairUtils.ownedToken(order.pair, order.orderType) == order.pair[0] ? order.token1 : order.token2;
-              const desiredToken = PairUtils.desiredToken(order.pair, order.orderType) == order.pair[0] ? order.token1 : order.token2;
-              const price = order.amoutRequested.muln(CALCULATION_PRECISION_NUMBER).div(order.amountOffered);
-              const priceString = displayNumberWithPrecision(price, CALCULATION_PRECISION_NUMBER, 9);
+              const ownedToken = OrderUtils.ownedToken(order) == order.pair[0] ? order.token1 : order.token2;
+              const desiredToken = OrderUtils.desiredToken(order) == order.pair[0] ? order.token1 : order.token2;
+              const amountConverter = TokenDecimals.normalizedTokenDecimals(desiredToken.decimals, ownedToken.decimals);
+              const requested = amountConverter.normalize(order.amoutRequested, desiredToken.decimals);
+              const offered = amountConverter.normalize(order.amountOffered, ownedToken.decimals);
+              const price = amountConverter.divWithPrecision(requested, offered);
               return (
                 <tr key={order.counter} className="h-full w-full even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20">
 
                   {/*Buy*/}
                   <td className="p-1 text-center rounded-l-xl">
-                    {order.amoutRequested.toString()} {desiredToken.name}
+                    {amountConverter.BNToFloat(requested).toFixed(9)} {desiredToken.name}
                   </td>
                   {/*Price*/}
-                  <td className="p-1 text-center">{priceString} {desiredToken.name}</td>
+                  <td className="p-1 text-center">{price.toFixed(9)} {desiredToken.name}</td>
 
                   <td className="p-1 text-center text-white">
-                    {order.amountOffered.toString()} {ownedToken.name}
+                    {amountConverter.BNToFloat(offered).toFixed(9)} {ownedToken.name}
                   </td>
                   <td className="rounded-r-xl">
                     <button onClick={() => onCancel(order)} className="md:p-1 p-[0.125rem] w-full grow-on-hover glow-on-hover rounded-xl border">Cancel</button>

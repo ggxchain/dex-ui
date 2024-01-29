@@ -21,7 +21,7 @@ import { InputWithPriceInfo, Input } from "@/components/input";
 import { toast } from "react-toastify";
 import { BN, BN_ZERO } from "@polkadot/util";
 import { CALCULATION_PRECISION, CALCULATION_PRECISION_NUMBER } from "@/consts";
-import { displayNumberWithPrecision } from "@/utils";
+import TokenDecimals from "@/tokenDecimalsConverter";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -111,12 +111,13 @@ export default function Transfer() {
     const symbol = token?.coinDenom ?? balance.denom;
     return {
       name: token?.coinDenom ?? balance.denom,
-      balance: new BN(balance.amount).divn(10 ** (token?.coinDecimals ?? 6)),
+      balance: new BN(balance.amount),
       symbol,
       estimatedPrice: prices.get(symbol) ?? 0,
       id: index,
       url,
       network: "",
+      decimals: token?.coinDecimals ?? 1,
     };
   }
 
@@ -154,7 +155,7 @@ export default function Transfer() {
   };
 
   const sendIbcToken = async () => {
-    if (!client || !modalGGxAccount || !account?.address) {
+    if (!client || !modalGGxAccount || !account?.address || !selectedToken || !modalSourceChannel) {
       console.error(
         "some input is undefine client, ibcRecipent, address",
         client,
@@ -164,9 +165,10 @@ export default function Transfer() {
       return;
     }
 
+    const amount = new TokenDecimals(selectedToken.decimals).floatToBN(modalAmount);
     const sendAmount = {
-      denom: selectedToken?.symbol ?? "ert",
-      amount: modalAmount.toString(),
+      denom: selectedToken.symbol,
+      amount: amount.toString(),
     };
 
     const fee = {
@@ -258,14 +260,17 @@ export default function Transfer() {
 
   const walletIsNotInitialized = !account?.address || !client;
   const isGGxWalletNotConnected = modalGGxAccount === undefined;
-  const total = tokens.reduce((acc, token) => token.balance.muln(token.estimatedPrice * CALCULATION_PRECISION_NUMBER).add(acc), BN_ZERO);
+  const total = tokens.reduce((acc, token) => {
+    const balance = new TokenDecimals(token.decimals).BNToFloat(token.balance);
+    return acc + balance * (prices.get(token.symbol) ?? 0);
+  }, 0);
   const amountPrice = modalAmount * (selectedToken ? prices.get(selectedToken.symbol) ?? 0 : 0);
 
 
   return (
     <div className="text-slate-100 flex flex-col w-full items-center h-full">
       <div className="flex mt-1 justify-between w-full items-center">
-        <h1 className="text-xl md:text-3xl break-words w-[40%]">${displayNumberWithPrecision(total, CALCULATION_PRECISION, 2)}</h1>
+        <h1 className="text-xl md:text-3xl break-words w-[40%]">${total.toFixed(2)}</h1>
         <div className="flex md:flex-row flex-col">
           <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
           <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
