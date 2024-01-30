@@ -19,7 +19,9 @@ import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
 import { InputWithPriceInfo, Input } from "@/components/input";
 import { toast } from "react-toastify";
-import { BN, BN_ZERO } from "@polkadot/util";
+import { BN, BN_ZERO, u8aToHex } from "@polkadot/util";
+import { Keyring } from '@polkadot/keyring';
+
 import { CALCULATION_PRECISION, CALCULATION_PRECISION_NUMBER } from "@/consts";
 import TokenDecimals from "@/tokenDecimalsConverter";
 
@@ -182,9 +184,13 @@ export default function Transfer() {
     };
 
     try {
+      const keyring = new Keyring();
+      const pair = keyring.addFromAddress(modalGGxAccount.address);
+      const recipientAddress = u8aToHex(pair.publicKey);
+
       const result = await toast.promise(client.sendIbcTokens(
         account.address,
-        modalGGxAccount.address,
+        recipientAddress,
         sendAmount,
         "transfer",
         modalSourceChannel,
