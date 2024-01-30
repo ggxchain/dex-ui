@@ -19,10 +19,9 @@ import Modal from "@/components/modal";
 import LoadingButton from "@/components/loadButton";
 import { InputWithPriceInfo, Input } from "@/components/input";
 import { toast } from "react-toastify";
-import { BN, BN_ZERO, u8aToHex } from "@polkadot/util";
+import { BN, u8aToHex } from "@polkadot/util";
 import { Keyring } from '@polkadot/keyring';
 
-import { CALCULATION_PRECISION, CALCULATION_PRECISION_NUMBER } from "@/consts";
 import TokenDecimals from "@/tokenDecimalsConverter";
 
 type ModalTypes = "Deposit" | "Withdraw";

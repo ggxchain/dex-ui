@@ -1,4 +1,3 @@
-import { CALCULATION_PRECISION, CALCULATION_PRECISION_NUMBER } from "@/consts";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import { Amount, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";

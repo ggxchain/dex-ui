@@ -4,13 +4,14 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Signer } from '@polkadot/api/types';
 import { ISubmittableResult } from "@polkadot/types/types";
 import { decodeAddress } from '@polkadot/util-crypto';
-import { Amount, CounterId, Order, OrderType, Token, TokenId } from "@/types";
+import { Amount, CounterId, OrderType, Token, TokenId } from "@/types";
 import Pair from "@/pair";
 import GGXWallet from "../ggx";
 
 import { BN_ZERO, hexToString } from "@polkadot/util";
 
 import { ContractInterface, onFinalize } from "../contract";
+import Order from "@/order";
 
 export default class GGxContract implements ContractInterface {
     api: ApiPromise | undefined;
