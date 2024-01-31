@@ -218,7 +218,7 @@ export default function Wallet() {
                             : <Select<Account> name="Account" onChange={handleSelectChange} options={ggxAccounts} value={selectedAccount} className="w-full h-full" wrapperClassName="pt-1"
                                 childFormatter={(account) => {
                                     return (<div className="w-full p-3 m-0 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
-                                        <span className="text-base">{account.name ? account.name : `Account ${ggxAccounts.findIndex((acc) => acc.address == account.address)}`}</span>
+                                        <span className="text-base">{account.name ? account.name : `Account ${ggxAccounts.findIndex((acc) => acc.address === account.address)}`}</span>
                                     </div>)
                                 }}
                             />
@@ -238,7 +238,7 @@ export default function Wallet() {
                         price={amountPrice}
                     />
                     <div className="flex w-full justify-center">
-                        <LoadingButton loading={modalLoading} disabled={modalAmount == 0} className="disabled:opacity-50 text-lg md:w-1/2 mt-5 w-3/4 p-3 grow-on-hover glow-on-hover border border-white rounded-xl" onClick={omModalSubmit}>
+                        <LoadingButton loading={modalLoading} disabled={modalAmount === 0} className="disabled:opacity-50 text-lg md:w-1/2 mt-5 w-3/4 p-3 grow-on-hover glow-on-hover border border-white rounded-xl" onClick={omModalSubmit}>
                             <p>{modalTitle.current}</p>
                         </LoadingButton>
                     </div>

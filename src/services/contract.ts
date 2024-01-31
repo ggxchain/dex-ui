@@ -197,7 +197,7 @@ export default class Contract {
             throw new Error(Errors.AmountIsLessOrEqualToZero);
         }
         const balance = await this.balanceOf(tokenId);
-        if (balance < amount) {
+        if (balance.lt(amount)) {
             throw new Error(Errors.NotEnoughBalance);
         }
 
@@ -218,8 +218,8 @@ export default class Contract {
             throw new Error(Errors.AmountIsLessOrEqualToZero);
         }
 
-        const balance = await this.balanceOf(orderType == "SELL" ? pair[0] : pair[1]);
-        if (balance < amountOffered) {
+        const balance = await this.balanceOf(orderType === "SELL" ? pair[0] : pair[1]);
+        if (balance.lt(amountOffered)) {
             throw new Error(Errors.NotEnoughBalance);
         }
 
@@ -249,7 +249,7 @@ export default class Contract {
 }
 
 export function errorHandler(error: Errors): undefined {
-    toast.error(`Error: ${error}`);
+    toast.error(`${error}`);
     console.error(error);
     return undefined
 }

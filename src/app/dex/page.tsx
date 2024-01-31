@@ -81,7 +81,7 @@ export default function Dex() {
   const isUserBalanceNotEnough = !isWalletNotConnected && availableBalanceNormalized.lt(sellAmount);
   const isAmountZero = isSellAmountZero || buyAmount.eq(BN_ZERO);
 
-  const rate = !isTokenNotSelected && !buyAmount.eq(BN_ZERO)
+  const rate = !isTokenNotSelected && !buyAmount.eq(BN_ZERO) && !sellAmount.eq(BN_ZERO)
     ? amountConverter.divWithPrecision(buyAmount, sellAmount)
     : 0;
 
@@ -113,14 +113,14 @@ export default function Dex() {
   };
 
   const onSellChange = (token: TokenWithPrice, amount: number) => {
-    if (token.id != sell?.id) {
+    if (token.id !== sell?.id) {
       setOrder(undefined);
     }
     setSell({ ...token, amount: amountConverter.floatToBN(amount) });
   }
 
   const onBuyChange = (token: TokenWithPrice, amount: number) => {
-    if (token.id != buy?.id) {
+    if (token.id !== buy?.id) {
       setOrder(undefined);
     }
     setBuy({ ...token, amount: amountConverter.floatToBN(amount) });
@@ -266,7 +266,7 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
       const wallet = new GGXWallet();
       // Don't show him his own orders.
       const filteredOrders = orders.filter((order: DetailedOrder) => order.pubkey !== wallet.pubkey()?.address).map((order: DetailedOrder) => {
-        const [desiredToken, ownedToken] = OrderUtils.desiredToken(order) == order.pair[0] ? [order.token1, order.token2] : [order.token2, order.token1];
+        const [desiredToken, ownedToken] = OrderUtils.desiredToken(order) === order.pair[0] ? [order.token1, order.token2] : [order.token2, order.token1];
         return {
           ...order,
           amountRequestedNormalized: amountConverter.normalize(order.amoutRequested, desiredToken.decimals),
@@ -275,7 +275,7 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
       });
       setOrders(filteredOrders);
       if (orders.length > 0 && !selectedOrder) {
-        const orders = filteredOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(b, a));
+        const orders = filteredOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(a, b));
         onChange(orders[0]);
       }
     }).catch(errorHandler);
@@ -327,7 +327,7 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
             buyOrders.length === 0
               ? <tr><td className="text-green-500">No bids found</td></tr>
               : buyOrders.map((order) => {
-                const selected = order.counter == selectedOrder?.counter;
+                const selected = order.counter === selectedOrder?.counter;
                 const percent = order.amoutRequested.muln(100).div(buyTotalVolume).toNumber();
                 const orderPrice = amountConverter.divWithPrecision(order.amountOfferedNormalized, order.amountRequestedNormalized);
                 return (
@@ -396,8 +396,8 @@ function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
           orders.length === 0
             ? <tr><td className="text-slate-100 opacity-50 text-center">No orders found</td></tr>
             : orders.map((order) => {
-              const ownedToken = OrderUtils.ownedToken(order) == order.pair[0] ? order.token1 : order.token2;
-              const desiredToken = OrderUtils.desiredToken(order) == order.pair[0] ? order.token1 : order.token2;
+              const ownedToken = OrderUtils.ownedToken(order) === order.pair[0] ? order.token1 : order.token2;
+              const desiredToken = OrderUtils.desiredToken(order) === order.pair[0] ? order.token1 : order.token2;
               const amountConverter = TokenDecimals.normalizedTokenDecimals(desiredToken.decimals, ownedToken.decimals);
               const requested = amountConverter.normalize(order.amoutRequested, desiredToken.decimals);
               const offered = amountConverter.normalize(order.amountOffered, ownedToken.decimals);
