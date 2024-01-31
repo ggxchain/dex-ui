@@ -42,11 +42,11 @@ export default class CexService {
 
     async tokenPrices(tokens: string[]): Promise<Prices> {
         const now = new Date().getTime();
-        if (tokens.every((o) => this.cache.has(o)) && now - this.lastUpdated < EXCHANGE_PRICE_TTL) {
+        if (tokens.every((o) => this.lastFetchedArray.includes(o)) && now - this.lastUpdated < EXCHANGE_PRICE_TTL) {
             return this.cache;
         } else {
             // We need combine the tokens that we already fetched and the new tokens to avoid spamming.
-            const newTokens = tokens.filter((o) => !this.cache.has(o));
+            const newTokens = tokens.filter((o) => !this.lastFetchedArray.includes(o));
             const allTokens = [...this.lastFetchedArray, ...newTokens];
             const prices = await cryptoCompareFetcher(allTokens);
             this.lastUpdated = now;

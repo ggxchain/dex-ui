@@ -1,14 +1,9 @@
-import Pair from "./pair"
+import { BN } from "@polkadot/util";
+import Order from "./order";
 
-type U8 = { u8: number };
-type U16 = { u16: number };
-type U32 = { u32: number };
-type U64 = { u64: number };
-type U128 = { u128: number };
+export type TokenId = number;
 
-export type TokenId = U8 | U16 | U32 | U64 | U128;
-
-export type Amount = number
+export type Amount = BN
 export type PubKey = string
 export type CounterId = number
 export type OrderType = "BUY" | "SELL"
@@ -18,16 +13,7 @@ export type Token = {
     name: string;
     symbol: string;
     network: string;
-}
-
-export type Order = {
-    pubkey: PubKey;
-    pair: Pair;
-    counter: CounterId;
-    timestamp: number;
-    orderType: OrderType
-    amountOffered: Amount;
-    amoutRequested: Amount;
+    decimals: number;
 }
 
 export type DetailedOrder = Order & {

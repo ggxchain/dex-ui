@@ -1,11 +1,11 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import Spinner from "./spinner";
-import Contract from "@/services/contract";
+import Contract, { errorHandler } from "@/services/contract";
 import { Token } from "@/types";
 import CexService from "@/services/cex";
 import Select from "./select";
 import Image from "next/image";
-import {Input} from "./input";
+import { Input } from "./input";
 
 interface TokenSelectorProps {
     token?: TokenWithPrice;
@@ -22,7 +22,7 @@ export function useTokens() {
 
     const loadTokens = () => {
         const contract = new Contract();
-        contract.allTokens().then((tokens: Token[]) => {
+        contract.allTokensWithInfo().then((tokens: Token[]) => {
             const cex = new CexService();
             cex.tokenPrices(tokens.map((token) => token.symbol)).then((prices) => {
                 const tokensWithPrice = tokens.map((token) => {
@@ -33,7 +33,7 @@ export function useTokens() {
                 });
                 setTokenWithPrices(tokensWithPrice);
             })
-        });
+        }).catch(errorHandler)
     }
 
     return [tokenWithPrices, loadTokens] as const;
@@ -68,8 +68,13 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
         if (Number(e.target.value) > 10000000) {
             return;
         }
+        // The question here should we allow decimals or not.
+        // My guess is not as it's not possible to work with decimals on chain.
+        // So probably tokens will be more like satoshi/gwei/wei and not like eth/btc.
         onChange(token, Number(e.target.value))
     };
+
+    const price = (amount ?? 0) * token.price;
 
     return (
         <div>
@@ -82,7 +87,7 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
                     childFormatter={(token: Token) => {
                         return (
                             <div className="flex items-center text-slate-100 w-full grow-on-hover border-white md:text-lg text-base ">
-                                <Image width={0} height={0} src={`/svg/${token.symbol}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
+                                <Image width={0} height={0} src={`/svg/${token.symbol.toLowerCase()}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
                                 <p className="font-bold">{token.name}</p>
                                 <sup className="pl-1 opacity-90">{token.network}</sup>
                             </div>
@@ -90,8 +95,8 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
                     }}
                 />
                 <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-2.5 md:p-1.5 pr-2 rounded-r-[1rem] flex flex-col md:text-base text-xs">
-                    <Input name="Amount" value={amount} step="2" className="bg-transparent w-full text-right disabled:text-gray-400 disabled:cursor-not-allowed" type="number" placeholder="0.00" disabled={lockedAmount} onChange={handleAmountChange} />
-                    <p className="text-xs whitespace-nowrap">~= {((amount ?? 0.0) * token.price).toFixed(2)}$</p>
+                    <Input name="Amount" value={amount?.toString()} step="2" className="bg-transparent w-full text-right disabled:text-gray-400 disabled:cursor-not-allowed" type="number" placeholder="0.00" disabled={lockedAmount} onChange={handleAmountChange} />
+                    <p className="text-xs whitespace-nowrap">~= {price.toFixed(2)}$</p>
                 </div>
             </div>
         </div>

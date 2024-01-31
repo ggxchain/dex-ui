@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "cp -r ./node_modules/cryptocurrency-icons/svg/color ./public/svg && next build",
+    "generate:defs": "npx tsx node_modules/.bin/polkadot-types-from-defs --input ./src/interfaces --endpoint ./ggx.json --package @types/src/interfaces",
+    "generate:types": "npx tsx node_modules/.bin/polkadot-types-from-chain --endpoint ./ggx.json --output ./src/interfaces --package ggx/typegen",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
@@ -26,10 +28,12 @@
     "react-dom": "^18",
     "react-select": "^5.8.0",
     "react-toastify": "^10.0.4",
-    "tailwindcss-safe-area": "^0.4.1",
-    "ts-node": "^10.9.2"
+    "tailwindcss-safe-area": "^0.4.1"
   },
   "devDependencies": {
+    "@polkadot/dev": "^0.78.8",
+    "@polkadot/dev-test": "^0.78.8",
+    "@polkadot/typegen": "^10.11.2",
     "@testing-library/jest-dom": "^6.2.0",
     "@testing-library/react": "^14.1.2",
     "@types/node": "^20",
@@ -38,10 +42,9 @@
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

@@ -1,5 +1,3 @@
-import assert from "assert";
-
 type InputProps = React.ComponentPropsWithRef<'input'> & {
     name: string;
     wrapperClassName?: string;
@@ -26,7 +24,6 @@ type InputWithPriceInfoProps = InputProps & {
 };
 
 export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
-    assert(typeof props.value === "number")
     const value = props.value ?? 0;
     // We don't want to pass wrapperClassName to Input component
     const forwardProps = { ...props, wrapperClassName: '' };
@@ -36,6 +33,6 @@ export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
             type="number"
             value={value.toString()}
         />
-        <p className="absolute bottom-0 opacity-50 right-2 top-1/2 -translate-y-1/2">{props.symbol}{value >= 2 ? "s" : ""} <span className="text-sm">(${props.price.toFixed(2)})</span></p>
+        <p className="absolute bottom-0 opacity-50 right-2 top-1/2 -translate-y-1/2">{props.symbol} <span className="text-sm">(${props.price.toFixed(2)})</span></p>
     </div>)
 }

@@ -1,169 +1,181 @@
-import { GGX_CONTRACT_ADDRESS, GGX_WSS_URL, WASM_GAS_LIMIT, WASM_PROOF_LIMIT } from "@/consts";
-import GGxContractMetadata from "@/config/contractMetadata";
+import { GGX_WSS_URL } from "@/consts";
 
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { ContractPromise } from '@polkadot/api-contract';
 import { Signer } from '@polkadot/api/types';
-import type { WeightV2, } from '@polkadot/types/interfaces';
 import { ISubmittableResult } from "@polkadot/types/types";
 import { decodeAddress } from '@polkadot/util-crypto';
-import { Amount, CounterId, Order, OrderType, TokenId } from "@/types";
+import { Amount, CounterId, OrderType, Token, TokenId } from "@/types";
 import Pair from "@/pair";
 import GGXWallet from "../ggx";
 
-import { ContractInterface, onFinalize } from "../contract";
+import { BN_ZERO, hexToString } from "@polkadot/util";
 
-type OkWrapper<T> = {
-    ok: T
-}
+import { ContractInterface, onFinalize } from "../contract";
+import Order from "@/order";
 
 export default class GGxContract implements ContractInterface {
+    api: ApiPromise | undefined;
+
     constructor() { }
 
     async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
-        const contract = await this.contract();
-        const initialGasLimit = this.initialGasLimit(contract);
+        const api = await this.apiPromise();
+
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);
 
-        const { gasRequired } = await contract.query.deposit(sender, { gasLimit: initialGasLimit }, tokenId, amount);
-        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-
-        await contract.tx.deposit({ gasLimit }, tokenId, amount).signAndSend(sender, { signer: senderSigner }, transactionCallback);
+        await api.tx.dex.deposit(tokenId, amount).signAndSend(sender, { signer: senderSigner }, transactionCallback);
     }
 
     async balanceOf(tokenId: TokenId, address: string): Promise<Amount> {
-        const contract = await this.contract();
+        const api = await this.apiPromise();
         const addressParam = this.createAddress(address);
-        const initialGasLimit = this.initialGasLimit(contract);
-        const { gasRequired } = await contract.query.balanceOf(address, { gasLimit: initialGasLimit }, addressParam, tokenId);
-        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-        const { result, output } = await contract.query.balanceOf(address, { gasLimit }, addressParam, tokenId);
-        if (result.isOk && output !== null) {
-            return Promise.resolve(this.decodeAmount(output.toHex()));
+
+        const result = await api.query.dex.userTokenInfoes(addressParam, tokenId);
+        if (result !== undefined) {
+            return Promise.resolve(result.amount.toBn());
         }
-        return Promise.reject(result.asErr);
+        return Promise.resolve(BN_ZERO);
     }
 
     async withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize) {
-        const contract = await this.contract();
-        const initialGasLimit = this.initialGasLimit(contract);
+        const api = await this.apiPromise();
+
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);
 
-        const { gasRequired } = await contract.query.withdraw(sender, { gasLimit: initialGasLimit }, tokenId, amount);
-        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-
-        await contract.tx.withdraw({ gasLimit }, tokenId, amount).signAndSend(sender, { signer: senderSigner }, transactionCallback);
+        await api.tx.dex.withdraw(tokenId, amount).signAndSend(sender, { signer: senderSigner }, transactionCallback);
     }
 
     async tokens(): Promise<TokenId[]> {
-        const contract = await this.contract();
-        const initialGasLimit = this.initialGasLimit(contract);
-        const [sender] = await this.accountSigner();
-
-        const { gasRequired } = await contract.query.tokens(sender, { gasLimit: initialGasLimit });
-        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-        const { result, output } = await contract.query.tokens(sender, { gasLimit });
-        if (result.isOk && output !== null) {
-            return Promise.resolve((output.toJSON() as unknown as OkWrapper<TokenId[]>).ok);
+        const api = await this.apiPromise();
+        const output = await api.query.dex.tokenInfoes();
+        if (output !== undefined) {
+            return output.map((tokenId) => tokenId.toNumber());
         }
-        return Promise.reject(result.asErr);
+        return Promise.resolve([])
+    }
 
+    async tokenInfo(tokenId: TokenId): Promise<Token> {
+        const api = await this.apiPromise();
+        const metadata = await api.query.assets.metadata(tokenId);
+
+        return {
+            id: tokenId,
+            name: hexToString(metadata.name.toString()),
+            symbol: hexToString(metadata.symbol.toString()),
+            network: "GGx",
+            decimals: metadata.decimals.toNumber()
+        }
     }
 
     async ownersTokens(address: string): Promise<TokenId[]> {
-        const contract = await this.contract();
-        const addressParam = this.createAddress(address);
-        const initialGasLimit = this.initialGasLimit(contract);
-        const { gasRequired } = await contract.query.ownersTokens(address, { gasLimit: initialGasLimit }, addressParam);
-        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-        const { result, output } = await contract.query.ownersTokens(address, { gasLimit }, addressParam);
-        if (result.isOk && output !== null) {
-            return Promise.resolve((output.toJSON() as unknown as OkWrapper<TokenId[]>).ok);
+        const api = await this.apiPromise();
+        const output = await api.query.dex.userTokenInfoes.entries(address);
+        if (output !== undefined) {
+            // Dex has a bug for now, use storage key instead
+            return output.map(([key, _tokenInfo]) => key.args[1].toNumber())
         }
-        return Promise.reject(result.asErr);
+        return Promise.resolve([])
     }
 
-    async orderFor(counterId: CounterId): Promise<Order> {
-        const contract = await this.contract();
-        const initialGasLimit = this.initialGasLimit(contract)
-        const [sender] = await this.accountSigner();
-        const { gasRequired } = await contract.query.orderFor(sender, { gasLimit: initialGasLimit }, counterId);
-        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-        const { result, output } = await contract.query.orderFor(sender, { gasLimit }, counterId);
-        if (result.isOk && output !== null) {
-            return Promise.resolve((output.toJSON() as unknown as OkWrapper<Order>).ok);
+    async onChainBalanceOf(tokenId: TokenId, address: string): Promise<Amount> {
+        const api = await this.apiPromise();
+        const addressParam = this.createAddress(address);
+
+        const result = await api.query.assets.account(tokenId, addressParam);
+        if (result !== undefined && result.isSome) {
+            return Promise.resolve(result.unwrap().balance.toBn());
         }
-        return Promise.reject(result.asErr);
+        return Promise.resolve(BN_ZERO);
     }
 
     async pairOrders(pair: Pair): Promise<Order[]> {
-        const contract = await this.contract();
-        const initialGasLimit = this.initialGasLimit(contract)
-        const [sender] = await this.accountSigner();
-        const { gasRequired } = await contract.query.pairOrders(sender, { gasLimit: initialGasLimit }, ...pair);
-        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-        const { result, output } = await contract.query.pairOrders(sender, { gasLimit }, ...pair);
-        if (result.isOk && output !== null) {
-            return Promise.resolve((output.toJSON() as unknown as OkWrapper<Order[]>).ok);
+        const api = await this.apiPromise();
+
+        const orderList = await api.query.dex.pairOrders(pair);
+        const ordersOpt = await Promise.all(orderList.map((number) => api.query.dex.orders(number)));
+
+        if (ordersOpt !== undefined) {
+            return ordersOpt.reduce<Order[]>((acc, orderOpt) => {
+                if (orderOpt.isNone) {
+                    return acc;
+                }
+                const order = orderOpt.unwrap();
+                acc.push({
+                    pubkey: order.address.toString(),
+                    pair: [order.pair[0].toNumber(), order.pair[1].toNumber()],
+                    counter: order.counter.toNumber(),
+                    timestamp: order.timestamp.toNumber(),
+                    orderType: order.orderType.toString() as OrderType,
+                    amountOffered: order.amountOffered.toBn(),
+                    amoutRequested: order.amoutRequested.toBn()
+                })
+                return acc;
+            }, []);
         }
-        return Promise.reject(result.asErr);
+        return Promise.reject([]);
     }
 
     async userOrders(address: string): Promise<Order[]> {
-        const contract = await this.contract();
-        const addressParam = this.createAddress(address);
-        const initialGasLimit = this.initialGasLimit(contract);
-        const { gasRequired } = await contract.query.userOrders(address, { gasLimit: initialGasLimit }, addressParam);
-        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-        const { result, output } = await contract.query.userOrders(address, { gasLimit }, addressParam);
-        if (result.isOk && output !== null) {
-            return Promise.resolve((output.toJSON() as unknown as OkWrapper<Order[]>).ok);
+        const api = await this.apiPromise();
+
+        const orderList = await api.query.dex.userOrders.entries(address);
+        const ordersOpt = await Promise.all(orderList.map(([storageKey]) => api.query.dex.orders(storageKey.args[1])));
+
+        if (ordersOpt !== undefined) {
+            return ordersOpt.reduce<Order[]>((acc, orderOpt) => {
+                if (orderOpt.isNone) {
+                    return acc;
+                }
+                const order = orderOpt.unwrap();
+                acc.push({
+                    pubkey: order.address.toString(),
+                    pair: [order.pair[0].toNumber(), order.pair[1].toNumber()],
+                    counter: order.counter.toNumber(),
+                    timestamp: order.timestamp.toNumber(),
+                    orderType: order.orderType.toString() as OrderType,
+                    amountOffered: order.amountOffered.toBn(),
+                    amoutRequested: order.amoutRequested.toBn()
+                })
+                return acc;
+            }, []);
         }
-        return Promise.reject(result.asErr);
+        return Promise.reject([]);
     }
 
-    async makeOrder(pair: Pair, orderType: OrderType, amountOffered: number, amoutRequested: number, callback: onFinalize): Promise<void> {
-        const contract = await this.contract();
-        const initialGasLimit = this.initialGasLimit(contract);
+    async makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, callback: onFinalize): Promise<void> {
+        const api = await this.apiPromise();
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);
 
-        const { gasRequired } = await contract.query.makeOrder(sender, { gasLimit: initialGasLimit }, ...pair, amountOffered, amoutRequested, orderType);
-        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-
-        await contract.tx.makeOrder({ gasLimit }, ...pair, amountOffered, amoutRequested, orderType).signAndSend(sender, { signer: senderSigner }, transactionCallback);
+        await api.tx.dex.makeOrder(...pair, amountOffered, amoutRequested, orderType).signAndSend(sender, { signer: senderSigner }, transactionCallback);
     }
 
     async cancelOrder(counterId: CounterId, callback: onFinalize): Promise<void> {
-        const contract = await this.contract();
-        const initialGasLimit = this.initialGasLimit(contract);
+        const api = await this.apiPromise();
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);
 
-        const { gasRequired } = await contract.query.cancelOrder(sender, { gasLimit: initialGasLimit }, counterId);
-        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-
-        await contract.tx.cancelOrder({ gasLimit }, counterId).signAndSend(sender, { signer: senderSigner }, transactionCallback);
+        await api.tx.dex.cancelOrder(counterId).signAndSend(sender, { signer: senderSigner }, transactionCallback);
     }
 
     async takeOrder(counterId: CounterId, callback: onFinalize): Promise<void> {
-        const contract = await this.contract();
-        const initialGasLimit = this.initialGasLimit(contract);
+        const api = await this.apiPromise();
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);
 
-        const { gasRequired } = await contract.query.takeOrder(sender, { gasLimit: initialGasLimit }, counterId);
-        const gasLimit = contract.registry.createType('WeightV2', gasRequired) as WeightV2;
-
-        await contract.tx.takeOrder({ gasLimit }, counterId).signAndSend(sender, { signer: senderSigner }, transactionCallback);
+        await api.tx.dex.takeOrder(counterId).signAndSend(sender, { signer: senderSigner }, transactionCallback);
     }
 
-    async contract() {
-        const wsProvider = new WsProvider(GGX_WSS_URL);
-        const api = await ApiPromise.create({ provider: wsProvider });
-        return new ContractPromise(api, GGxContractMetadata, GGX_CONTRACT_ADDRESS);
+    async apiPromise() {
+        if (this.api === undefined) {
+            const wsProvider = new WsProvider(GGX_WSS_URL);
+            this.api = await ApiPromise.create({ provider: wsProvider });
+        }
+
+        return this.api
+
     }
 
     async accountSigner(): Promise<[string, Signer]> {
@@ -175,25 +187,27 @@ export default class GGxContract implements ContractInterface {
         return [account.address, await wallet.signerFor(account.address)];
     }
 
-    initialGasLimit(contract: ContractPromise): WeightV2 {
-        return contract.registry.createType('WeightV2', {
-            proofSize: WASM_PROOF_LIMIT,
-            refTime: WASM_GAS_LIMIT,
-        });
-    }
-
     createAddress(address: string): Uint8Array {
         return decodeAddress(address);
     }
 
-    decodeAmount(amount: string): Amount {
-        return Number(amount)
-    }
-
-    transactionCallback(method: onFinalize): (_: ISubmittableResult) => void {
+    transactionCallback(callback: onFinalize): (_: ISubmittableResult) => void {
         return (result: ISubmittableResult) => {
             if (result.status.isFinalized) {
-                method();
+                if (result.dispatchError) {
+                    if (result.dispatchError.isModule) {
+                        // Dex pallet error
+                        const { method } = result.dispatchError.registry.findMetaError(result.dispatchError.asModule);
+
+                        callback(method);
+                    } else {
+                        // BadOrigin, Not enough balance, etc.
+                        callback(result.dispatchError.toString());
+                    }
+                } else {
+                    // Success
+                    callback(undefined);
+                }
             }
         }
     }

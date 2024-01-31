@@ -1,8 +1,11 @@
-import { Token } from "@/types";
+import TokenDecimals from "@/tokenDecimalsConverter";
+import { Amount, Token } from "@/types";
+import { BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
 
 export interface ListElement extends Token {
-    balance: number;
+    balance: Amount;
+    onChainBalance?: Amount;
     estimatedPrice: number;
     url: string;
 }
@@ -12,9 +15,10 @@ interface TokenListProperties {
     onClick?: (token: ListElement) => void;
     className?: string;
     selected?: ListElement;
+    onChain?: boolean;
 }
 
-export default function TokenList({ tokens, onClick, className, selected }: Readonly<TokenListProperties>) {
+export default function TokenList({ tokens, onClick, className, selected, onChain }: Readonly<TokenListProperties>) {
     const handleClick = (token: ListElement) => {
         if (onClick !== undefined) {
             onClick(token);
@@ -27,6 +31,10 @@ export default function TokenList({ tokens, onClick, className, selected }: Read
                 <tr className="bg-bg-gr-2/80">
                     <th className="rounded-l-lg text-left pl-16">Asset</th>
                     <th>Balance</th>
+                    {
+                        onChain &&
+                        <th>On chain balance</th>
+                    }
                     <th className="rounded-r-lg">Price</th>
                 </tr>
             </thead>
@@ -41,6 +49,7 @@ export default function TokenList({ tokens, onClick, className, selected }: Read
                 {
                     tokens.map((token) => {
                         const isSelected = token.id === selected?.id;
+                        const amountConverter = new TokenDecimals(token.decimals);
 
                         return (
                             <tr key={token.symbol} onClick={() => handleClick(token)} className={`text-center even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20 [&>td]:px-6 [&>td]:py-1 rounded-xl ${isSelected ? "filter backdrop-brightness-125" : ""} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}>
@@ -51,15 +60,16 @@ export default function TokenList({ tokens, onClick, className, selected }: Read
                                         <sup className="pl-1 opacity-80">{token.network}</sup>
                                     </div>
                                 </td>
+                                <td>
+                                    <Balance symbol={token.symbol} balance={amountConverter.BNToFloat(token.balance)} estimatedPrice={token.estimatedPrice} />
+                                </td>
                                 {
+                                    onChain &&
                                     <td>
-                                        {token.balance} {`${token.symbol.toUpperCase()} `}
-                                        <span className="text-sm opacity-50">
-                                            (${(token.balance * token.estimatedPrice).toFixed(2)})
-                                        </span>
+                                        <Balance symbol={token.symbol} balance={amountConverter.BNToFloat(token.onChainBalance ?? BN_ZERO)} estimatedPrice={token.estimatedPrice} />
                                     </td>
                                 }
-                                <td className="rounded-r-lg">${token.estimatedPrice.toFixed(2)}</td>
+                                <td className="rounded-r-lg">${token.estimatedPrice.toString()}</td>
                             </tr>
                         )
                     })
@@ -67,5 +77,28 @@ export default function TokenList({ tokens, onClick, className, selected }: Read
             </tbody>
         </table>)
 
+}
+
+interface BalanceProperties {
+    balance: number;
+    estimatedPrice: number;
+    symbol: string;
+}
+
+function Balance({ balance, estimatedPrice, symbol }: BalanceProperties) {
+    const estimatedPriceWithPrecision = balance * estimatedPrice;
+
+    return (
+        <div className="flex flex-col text-xs md:text-base text-center break-words">
+            {
+                <p className="mt-1">{balance.toString()} {`${symbol.toUpperCase()} `}</p>
+            }
+
+            <span className="opacity-50 mt-1">
+                (${estimatedPriceWithPrecision.toFixed(2)})
+            </span>
+
+        </div>
+    )
 }
 
