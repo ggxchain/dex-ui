@@ -9,15 +9,15 @@ import {
   IndexedTx,
   SigningStargateClient,
 } from "@cosmjs/stargate";
-import Select from "@/components/select";
+import Select from "@/components/common/select";
 import TokenList, { ListElement } from "@/components/tokenList";
 import GGXWallet, { Account } from "@/services/ggx";
 import ibcChains from "@/config/chains";
 import CexService from "@/services/cex";
 import { ibcHashToDenom } from "@/services/keplr";
-import Modal from "@/components/modal";
-import LoadingButton from "@/components/loadButton";
-import { InputWithPriceInfo, Input } from "@/components/input";
+import Modal from "@/components/common/modal";
+import LoadingButton from "@/components/common/loadButton";
+import { InputWithPriceInfo, Input } from "@/components/common/input";
 import { toast } from "react-toastify";
 import { BN, u8aToHex } from "@polkadot/util";
 import { Keyring } from '@polkadot/keyring';

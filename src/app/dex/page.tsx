@@ -4,14 +4,16 @@
 import { useEffect, useRef, useState } from "react";
 import Contract, { errorHandler } from "@/services/contract";
 import GGXWallet from "@/services/ggx";
-import Ruler from "@/components/ruler";
-import { Amount, DetailedOrder, Token } from "@/types";
+import Ruler from "@/components/common/ruler";
+import { Amount, DetailedOrder } from "@/types";
 import TokenSelector, { TokenWithPrice, useTokens } from "@/components/tokenSelector";
 import Pair from "@/pair";
 import { useRouter } from "next/navigation";
 import { BN_ZERO } from "@polkadot/util";
 import TokenDecimals from "@/tokenDecimalsConverter";
-import Order, { OrderUtils } from "@/order";
+import Order from "@/order";
+import OrderBook, { useOrderBookOrders } from "@/components/dex/orderBook";
+import OrdersList, { useUserOrders } from "@/components/dex/orderList";
 
 type TokenData = TokenWithPrice & {
   amount: Amount;
@@ -245,193 +247,4 @@ export default function Dex() {
 
     </div>
   )
-}
-
-interface OrderBookProps {
-  buyToken: Token;
-  sellToken: Token;
-  selectedOrder?: Order;
-  onChange: (order: Order) => void;
-  orders: DetailedOrder[];
-}
-
-type NormalizedOrder = DetailedOrder & {
-  amountRequestedNormalized: Amount;
-  amountOfferedNormalized: Amount;
-}
-
-function useOrderBookOrders(buyToken: Token | undefined, sellToken: Token | undefined, contract: Contract) {
-  const [orders, setOrders] = useState<DetailedOrder[]>([]);
-
-  useEffect(() => {
-    if (buyToken === undefined || sellToken === undefined) {
-      return;
-    }
-    const tokenPair = [sellToken.id, buyToken.id] as Pair;
-    contract.allOrders(tokenPair).then((orders) => {
-      setOrders(orders);
-    }).catch(errorHandler);
-  }, [buyToken, sellToken]);
-
-  return orders;
-
-}
-
-function OrderBook({ buyToken, sellToken, selectedOrder, onChange, orders }: Readonly<OrderBookProps>) {
-  const amountConverter = TokenDecimals.normalizedTokenDecimals(sellToken.decimals, buyToken.decimals);
-  const sortCmp = (a: NormalizedOrder, b: NormalizedOrder) => {
-    const aPrice = amountConverter.divWithPrecision(a.amountRequestedNormalized, a.amountOfferedNormalized);
-    const bPrice = amountConverter.divWithPrecision(b.amountRequestedNormalized, b.amountOfferedNormalized);
-    return aPrice - bPrice;
-  }
-
-  const normalizedOrders = orders.map((order: DetailedOrder) => {
-    const [desiredToken, ownedToken] = OrderUtils.desiredToken(order) === order.pair[0] ? [order.token1, order.token2] : [order.token2, order.token1];
-    return {
-      ...order,
-      amountRequestedNormalized: amountConverter.normalize(order.amoutRequested, desiredToken.decimals),
-      amountOfferedNormalized: amountConverter.normalize(order.amountOffered, ownedToken.decimals),
-    }
-  });
-
-  useEffect(() => {
-    const orders = normalizedOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(a, b));
-    onChange(orders[0]);
-  }, [orders])
-
-  const buyOrders = normalizedOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(a, b));
-  const sellOrders = normalizedOrders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => sortCmp(b, a));
-
-  const buyTotalVolume = buyOrders.reduce((acc, order) => order.amoutRequested.add(acc), BN_ZERO);
-  const sellTotalVolume = sellOrders.reduce((acc, order) => order.amountOffered.add(acc), BN_ZERO);
-
-  return (
-    <div className="flex flex-col text-xs">
-      <p className="text-base w-full text-center">Order book</p>
-      <table className="table-auto mt-2 md:mt-5 overflow-auto">
-        <thead>
-          <tr>
-            <th className="text-left pl-4">Price <span className="italic font-semibold uppercase">{buyToken.symbol}</span></th>
-            <th className="text-right">Volume <span className="italic font-semibold uppercase">{sellToken.symbol}</span></th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr>
-            <td className="font-bold">Asks</td>
-          </tr>
-          {
-            sellOrders.length === 0
-              ? <tr><td className="text-red-600">No asks found</td></tr>
-              : sellOrders.map((order) => {
-                const orderPrice = amountConverter.divWithPrecision(order.amountRequestedNormalized, order.amountOfferedNormalized);
-                // It's safe to not normalize the volume as it compared agains same denominator.
-                const percent = order.amountOffered.muln(100).div(sellTotalVolume).toNumber();
-                return (
-                  <tr key={order.counter} className="relative w-full text-red-600">
-                    <td className="p-1 pl-4 text-left font-bold">{orderPrice.toFixed(9)}</td>
-                    <td className="p-1 text-right text-white font-bold">
-                      {amountConverter.BNToFloat(order.amountOfferedNormalized).toFixed(9)}
-                      <div style={{ width: `${Math.round(percent)}%` }} className="absolute bg-red-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
-                    </td>
-                  </tr>
-                )
-              })
-          }
-          <tr>
-            <td className="font-bold mt-5">Bids</td>
-          </tr>
-          {
-            buyOrders.length === 0
-              ? <tr><td className="text-green-500">No bids found</td></tr>
-              : buyOrders.map((order) => {
-                const selected = order.counter === selectedOrder?.counter;
-                const percent = order.amoutRequested.muln(100).div(buyTotalVolume).toNumber();
-                const orderPrice = amountConverter.divWithPrecision(order.amountOfferedNormalized, order.amountRequestedNormalized);
-                return (
-                  <tr key={order.counter} className={`relative w-full cursor-pointer glow-on-hover rounded-l-md text-green-500 ${selected} `} onClick={() => onChange(order)}>
-                    <td className="p-1 relative text-left font-bold">
-                      {selected && <p className="absolute h-full left-0">↠</p>}
-                      <p className="pl-3">
-                        {orderPrice.toFixed(9)}
-                      </p>
-                    </td>
-                    <td className="p-1 text-right text-white font-bold">
-                      {amountConverter.BNToFloat(order.amountRequestedNormalized).toFixed(9)}
-                      <div style={{ width: `${Math.round(percent)}%` }} className="absolute bg-green-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
-                    </td>
-
-                  </tr>
-                )
-              })
-          }
-        </tbody >
-      </table >
-    </div >
-  );
-}
-
-const useUserOrders = (contract: Contract) => {
-  const [orders, setOrders] = useState<DetailedOrder[]>([]);
-
-  const updateOrders = () => {
-    contract.allUserOrders().then((orders: DetailedOrder[]) => {
-      setOrders(orders);
-    }).catch(errorHandler);
-  }
-
-  return [orders, updateOrders] as const;
-}
-
-interface UserOrderProps {
-  orders: DetailedOrder[];
-  cancelOrder: (order: DetailedOrder) => void;
-}
-
-function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
-  return <div className="w-full h-full flex flex-col p-5 text-xs md:text-base">
-    <p className="md:text-xl text-base text-center w-full">My orders</p>
-    <table className="table-fixed mt-2 md:mt-5 border-separate md:border-spacing-y-2 border-spacing-y-1 [&>td]:px-6 [&>td]:py-20`">
-      <thead>
-        <tr className="bg-bg-gr-2/80 p-1">
-          <th className="text-center rounded-l-xl">Buy</th>
-          <th className="text-center">Price</th>
-          <th className="text-center">Sell</th>
-          <th className="text-center rounded-r-xl">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {
-          orders.length === 0
-            ? <tr><td className="text-slate-100 opacity-50 text-center">No orders found</td></tr>
-            : orders.map((order) => {
-              const ownedToken = OrderUtils.ownedToken(order) === order.pair[0] ? order.token1 : order.token2;
-              const desiredToken = OrderUtils.desiredToken(order) === order.pair[0] ? order.token1 : order.token2;
-              const amountConverter = TokenDecimals.normalizedTokenDecimals(desiredToken.decimals, ownedToken.decimals);
-              const requested = amountConverter.normalize(order.amoutRequested, desiredToken.decimals);
-              const offered = amountConverter.normalize(order.amountOffered, ownedToken.decimals);
-              const price = amountConverter.divWithPrecision(requested, offered);
-              return (
-                <tr key={order.counter} className="h-full w-full even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20">
-
-                  {/*Buy*/}
-                  <td className="p-1 text-center rounded-l-xl">
-                    {amountConverter.BNToFloat(requested).toFixed(9)} {desiredToken.name}
-                  </td>
-                  {/*Price*/}
-                  <td className="p-1 text-center">{price.toFixed(9)} {desiredToken.name}</td>
-
-                  <td className="p-1 text-center text-white">
-                    {amountConverter.BNToFloat(offered).toFixed(9)} {ownedToken.name}
-                  </td>
-                  <td className="rounded-r-xl">
-                    <button onClick={() => onCancel(order)} className="md:p-1 p-[0.125rem] w-full grow-on-hover glow-on-hover rounded-xl border">Cancel</button>
-                  </td>
-                </tr>
-              )
-            })
-        }
-      </tbody>
-    </table>
-  </div>
 }

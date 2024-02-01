@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import ThreeDotsImage from "./threeDots";
+import ThreeDotsImage from "./common/threeDots";
 
 export default function HeaderWithNavbar() {
     const pathname = usePathname();
