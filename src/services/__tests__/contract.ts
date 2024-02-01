@@ -13,12 +13,10 @@ describe('Contract', () => {
         window.localStorage.clear();
         window.sessionStorage.clear();
         window.localStorage.setItem('ggx-wallet-selected-account', JSON.stringify({ address: "5G4Ug9EPQHqk5iJGjUFHeLHYCvX4JRPVrtxxFPmwuk9wj8GC" }));
+        Contract.setMocked(true);
 
         contract = new Contract();
-
-        if (!contract.isMocked()) {
-            contract.changeContract();
-        }
+        contract.changeContract();
     });
 
     const mockedTokenId = 0
