@@ -18,14 +18,18 @@ type TokenData = TokenWithPrice & {
 }
 
 export default function Dex() {
+  const contractRef = useRef<Contract>(new Contract());
+
   const [isMaker, setIsMaker] = useState<boolean>(false);
   const [sell, setSell] = useState<TokenData>();
   const [buy, setBuy] = useState<TokenData>();
   const [availableBalanceNormalized, setAvailableBalanceNormalized] = useState<Amount>(BN_ZERO);
   const [order, setOrder] = useState<Order>();
-  const [tokens, loadTokens] = useTokens();
-  const [userOrders, updateUserOrders] = useUserOrders();
+  const [tokens, loadTokens] = useTokens(contractRef.current);
+  const [userOrders, updateUserOrders] = useUserOrders(contractRef.current);
   const isConnected = useRef<boolean>();
+
+  const orderBookOrders = useOrderBookOrders(buy, sell, contractRef.current);
 
   const router = useRouter();
   const amountConverter = TokenDecimals.normalizedTokenDecimals(sell?.decimals ?? 1, buy?.decimals ?? 1)
@@ -42,7 +46,7 @@ export default function Dex() {
 
   useEffect(() => {
     if (sell !== undefined) {
-      const contract = new Contract();
+      const contract = contractRef.current;
       contract.balanceOf(sell.id).then((balance) => {
         setAvailableBalanceNormalized(amountConverter.normalize(balance, sell.decimals));
       }).catch(errorHandler)
@@ -92,7 +96,7 @@ export default function Dex() {
       return;
     }
     const pair = [sell.id, buy.id] as Pair;
-    const contract = new Contract();
+    const contract = contractRef.current;
     const callback = () => {
       updateUserOrders();
       onClear();
@@ -124,6 +128,12 @@ export default function Dex() {
       setOrder(undefined);
     }
     setBuy({ ...token, amount: amountConverter.floatToBN(amount) });
+  }
+
+  const onCancelOrder = (order: DetailedOrder) => {
+    contractRef.current.cancelOrder(order.counter, () => {
+      updateUserOrders();
+    }).catch(errorHandler);
   }
 
 
@@ -223,12 +233,12 @@ export default function Dex() {
               </div>
             </div>
           </div>
-          <OrdersList orders={userOrders} cancelOrder={() => updateUserOrders()} />
+          <OrdersList orders={userOrders} cancelOrder={onCancelOrder} />
         </div>
         {
           isTaker && !isTokenNotSelected && !isTokenSame &&
           <div className="md:has-[table]:py-14 md:py-5 px-5 md:has-[table]:w-[30%] has-[table]:w-full">
-            <OrderBook buyToken={buy} sellToken={sell} onChange={onOrderChange} selectedOrder={order} />
+            <OrderBook orders={orderBookOrders} buyToken={buy} sellToken={sell} onChange={onOrderChange} selectedOrder={order} />
           </div>
         }
       </div>
@@ -242,6 +252,7 @@ interface OrderBookProps {
   sellToken: Token;
   selectedOrder?: Order;
   onChange: (order: Order) => void;
+  orders: DetailedOrder[];
 }
 
 type NormalizedOrder = DetailedOrder & {
@@ -249,9 +260,24 @@ type NormalizedOrder = DetailedOrder & {
   amountOfferedNormalized: Amount;
 }
 
-function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<OrderBookProps>) {
-  const [orders, setOrders] = useState<NormalizedOrder[]>([]);
+function useOrderBookOrders(buyToken: Token | undefined, sellToken: Token | undefined, contract: Contract) {
+  const [orders, setOrders] = useState<DetailedOrder[]>([]);
 
+  useEffect(() => {
+    if (buyToken === undefined || sellToken === undefined) {
+      return;
+    }
+    const tokenPair = [sellToken.id, buyToken.id] as Pair;
+    contract.allOrders(tokenPair).then((orders) => {
+      setOrders(orders);
+    }).catch(errorHandler);
+  }, [buyToken, sellToken]);
+
+  return orders;
+
+}
+
+function OrderBook({ buyToken, sellToken, selectedOrder, onChange, orders }: Readonly<OrderBookProps>) {
   const amountConverter = TokenDecimals.normalizedTokenDecimals(sellToken.decimals, buyToken.decimals);
   const sortCmp = (a: NormalizedOrder, b: NormalizedOrder) => {
     const aPrice = amountConverter.divWithPrecision(a.amountRequestedNormalized, a.amountOfferedNormalized);
@@ -259,30 +285,22 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
     return aPrice - bPrice;
   }
 
-  useEffect(() => {
-    const contract = new Contract();
-    const tokenPair = [sellToken.id, buyToken.id] as Pair;
-    contract.allOrders(tokenPair).then((orders) => {
-      const wallet = new GGXWallet();
-      // Don't show him his own orders.
-      const filteredOrders = orders.filter((order: DetailedOrder) => order.pubkey !== wallet.pubkey()?.address).map((order: DetailedOrder) => {
-        const [desiredToken, ownedToken] = OrderUtils.desiredToken(order) === order.pair[0] ? [order.token1, order.token2] : [order.token2, order.token1];
-        return {
-          ...order,
-          amountRequestedNormalized: amountConverter.normalize(order.amoutRequested, desiredToken.decimals),
-          amountOfferedNormalized: amountConverter.normalize(order.amountOffered, ownedToken.decimals),
-        }
-      });
-      setOrders(filteredOrders);
-      if (orders.length > 0 && !selectedOrder) {
-        const orders = filteredOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(a, b));
-        onChange(orders[0]);
-      }
-    }).catch(errorHandler);
-  }, [buyToken, sellToken, onChange, selectedOrder]);
+  const normalizedOrders = orders.map((order: DetailedOrder) => {
+    const [desiredToken, ownedToken] = OrderUtils.desiredToken(order) === order.pair[0] ? [order.token1, order.token2] : [order.token2, order.token1];
+    return {
+      ...order,
+      amountRequestedNormalized: amountConverter.normalize(order.amoutRequested, desiredToken.decimals),
+      amountOfferedNormalized: amountConverter.normalize(order.amountOffered, ownedToken.decimals),
+    }
+  });
 
-  const buyOrders = orders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(a, b));
-  const sellOrders = orders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => sortCmp(b, a));
+  useEffect(() => {
+    const orders = normalizedOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(a, b));
+    onChange(orders[0]);
+  }, [orders])
+
+  const buyOrders = normalizedOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(a, b));
+  const sellOrders = normalizedOrders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => sortCmp(b, a));
 
   const buyTotalVolume = buyOrders.reduce((acc, order) => order.amoutRequested.add(acc), BN_ZERO);
   const sellTotalVolume = sellOrders.reduce((acc, order) => order.amountOffered.add(acc), BN_ZERO);
@@ -353,11 +371,10 @@ function OrderBook({ buyToken, sellToken, selectedOrder, onChange }: Readonly<Or
   );
 }
 
-const useUserOrders = () => {
+const useUserOrders = (contract: Contract) => {
   const [orders, setOrders] = useState<DetailedOrder[]>([]);
 
   const updateOrders = () => {
-    const contract = new Contract();
     contract.allUserOrders().then((orders: DetailedOrder[]) => {
       setOrders(orders);
     }).catch(errorHandler);
@@ -372,14 +389,6 @@ interface UserOrderProps {
 }
 
 function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
-
-  const onCancel = (order: DetailedOrder) => {
-    const contract = new Contract();
-    contract.cancelOrder(order.counter, () => {
-      cancelOrder(order);
-    }).catch(errorHandler);
-  }
-
   return <div className="w-full h-full flex flex-col p-5 text-xs md:text-base">
     <p className="md:text-xl text-base text-center w-full">My orders</p>
     <table className="table-fixed mt-2 md:mt-5 border-separate md:border-spacing-y-2 border-spacing-y-1 [&>td]:px-6 [&>td]:py-20`">

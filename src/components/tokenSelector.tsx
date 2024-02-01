@@ -17,11 +17,10 @@ interface TokenSelectorProps {
 
 export type TokenWithPrice = Token & { price: number };
 
-export function useTokens() {
+export function useTokens(contract: Contract) {
     const [tokenWithPrices, setTokenWithPrices] = useState<TokenWithPrice[]>([]);
 
     const loadTokens = () => {
-        const contract = new Contract();
         contract.allTokensWithInfo().then((tokens: Token[]) => {
             const cex = new CexService();
             cex.tokenPrices(tokens.map((token) => token.symbol)).then((prices) => {

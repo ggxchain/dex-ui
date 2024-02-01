@@ -37,48 +37,46 @@ export enum Errors {
 }
 export default class Contract {
     contract: ContractInterface;
-    wallet: GGXWallet = new GGXWallet();
-    mocked: boolean;
-
     tokenCache: Map<TokenId, Token> = new Map<TokenId, Token>();
     tokenList: TokenId[] = new Array<TokenId>();
     lastUpdated: number = 0;
 
     constructor() {
-        this.mocked = CONTRACT_MOCKED;
+        let mocked = CONTRACT_MOCKED;
         if (typeof window !== 'undefined' && window.localStorage) {
             // Get info from local storage
             const mockedValue = window.localStorage.getItem('mocked');
-            const tokenCache = window.localStorage.getItem('tokenCache');
-            const tokenList = window.localStorage.getItem('tokenList');
-            const lastUpdated = window.localStorage.getItem('lastUpdated');
             if (mockedValue !== null) {
-                this.mocked = mockedValue === 'true';
-            }
-            if (tokenCache !== null) {
-                this.tokenCache = new Map(JSON.parse(tokenCache));
-            }
-            if (tokenList !== null) {
-                this.tokenList = JSON.parse(tokenList);
-            }
-            if (lastUpdated !== null) {
-                this.lastUpdated = JSON.parse(lastUpdated);
+                mocked = mockedValue === 'true';
             }
         }
 
-        this.contract = this.mocked ? new ContractMock() : new GGxContract();
+        this.contract = mocked ? new ContractMock() : new GGxContract();
     }
 
     changeContract() {
-        this.mocked = !this.mocked;
-        if (typeof window !== 'undefined' && window.localStorage) {
-            window.localStorage.setItem('mocked', this.mocked.toString());
+        if (Contract.isMocked()) {
+            this.contract = new ContractMock();
+        } else {
+            this.contract = new ContractMock();
         }
-        this.contract = this.mocked ? new ContractMock() : new GGxContract();
+        this.tokenCache = new Map<TokenId, Token>();
+        this.tokenList = new Array<TokenId>();
+        this.lastUpdated = 0;
     }
 
-    isMocked(): boolean {
-        return this.mocked;
+    static isMocked(): boolean {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            const mockedValue = window.localStorage.getItem('mocked');
+            return mockedValue === 'true';
+        }
+        return CONTRACT_MOCKED
+    }
+
+    static setMocked(value: boolean) {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem('mocked', `${value}`);
+        }
     }
 
     async allTokens(): Promise<TokenId[]> {
@@ -86,10 +84,6 @@ export default class Contract {
         if (now - this.lastUpdated > TOKENS_LIST_TTL) {
             this.tokenList = await this.contract.tokens();
             this.lastUpdated = now;
-            if (typeof window !== 'undefined' && window.localStorage) {
-                window.localStorage.setItem('tokenList', JSON.stringify(this.tokenList));
-                window.localStorage.setItem('lastUpdated', JSON.stringify(this.lastUpdated));
-            }
         }
         return await Promise.resolve(this.tokenList);
     }
@@ -166,9 +160,6 @@ export default class Contract {
         }
         value = await this.contract.tokenInfo(tokenId)
         this.tokenCache.set(tokenId, value);
-        if (typeof window !== 'undefined' && window.localStorage) {
-            window.localStorage.setItem('tokenCache', JSON.stringify(Array.from(this.tokenCache.entries())));
-        }
         return value;
     }
 
@@ -232,7 +223,7 @@ export default class Contract {
     }
 
     walletAddress(): string {
-        const wallet = this.wallet.pubkey()?.address;
+        const wallet = new GGXWallet().pubkey()?.address;
         if (wallet === undefined) {
             throw new Error(Errors.WalletIsNotConnected);
         }
