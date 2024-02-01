@@ -109,13 +109,13 @@ export default class Contract {
     }
 
     async allOrders(pair: Pair): Promise<DetailedOrder[]> {
+        await this.validateTokenId(pair[0]);
+        await this.validateTokenId(pair[1]);
+
         const orders = await this.contract.pairOrders(pair);
         // TODO: We need to double check this logic after contract will be ready.
         // Currently we fetch both side tiker orders and then filter out duplicates.
         // But it's posible that we will need to fetch only one side of ticker orders.
-        await this.validateTokenId(pair[0]);
-        await this.validateTokenId(pair[1]);
-
         const reverseOrders = (await this.contract.pairOrders(PairUtils.reverse(pair))).reduce<Order[]>((acc, order) => {
             if (orders.findIndex((value) => value.counter === order.counter) === -1) {
                 acc.push({
@@ -129,14 +129,12 @@ export default class Contract {
 
         const [token1, token2] = await Promise.all([this.mapTokenIdToToken(pair[0]), this.mapTokenIdToToken(pair[1])]);
 
-        return await Promise.all([...orders, ...reverseOrders].map(async (value) => {
+        return [...orders, ...reverseOrders].map((value) => {
             return {
                 ...value,
                 token1, token2
             }
-        }));
-
-
+        });
     }
 
     async allUserOrders(): Promise<DetailedOrder[]> {
