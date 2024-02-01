@@ -208,7 +208,7 @@ export default function Transfer() {
       });
 
 
-      if (result.code == 0) {
+      if (result.code === 0) {
         console.log(
           "transfer success, height:" +
           result.height +

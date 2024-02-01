@@ -48,7 +48,7 @@ describe('Contract', () => {
         await expect(contract.allOrders([1, invalidTokenId])).rejects.toThrow(Errors.InvalidTokenId)
     });
 
-    it('should fail to deposit if amount is == 0', async () => {
+    it('should fail to deposit if amount is === 0', async () => {
         await expect(contract.deposit(mockedTokenId, BN_ZERO, () => { })).rejects.toThrow(Errors.AmountIsLessOrEqualToZero)
         await expect(contract.deposit(mockedTokenId, BN_ONE.neg(), () => { })).rejects.toThrow(Errors.AmountIsLessOrEqualToZero)
 

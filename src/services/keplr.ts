@@ -12,14 +12,14 @@ export function ibcHashToDenom(chainName: string, ibcHash: string) {
         return undefined
     }
 
-    const chainConnections = ibc.filter((info) => info.chain_1.chain_name === chainName || info.chain_2.chain_name == chainName);
+    const chainConnections = ibc.filter((info) => info.chain_1.chain_name === chainName || info.chain_2.chain_name === chainName);
     for (const connection of chainConnections) {
         const isFirstChain = connection.chain_1.chain_name === chainName;
         const otherChain = isFirstChain ? connection.chain_2 : connection.chain_1;
 
         const otherChannels = connection.channels.map((channel) => isFirstChain ? channel.chain_2 : channel.chain_1);
         const otherChainName = otherChain.chain_name;
-        const otherChainAssets = assets.find((asset) => asset.chain_name == otherChainName)?.assets;
+        const otherChainAssets = assets.find((asset) => asset.chain_name === otherChainName)?.assets;
         if (!otherChainAssets) {
             continue;
         }

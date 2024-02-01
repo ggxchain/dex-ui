@@ -3743,7 +3743,7 @@ declare module '@polkadot/api-base/types/submittable' {
        * is finished by the current block, the other will be treated as the new merged schedule,
        * unmodified.
        * 
-       * NOTE: If `schedule1_index == schedule2_index` this is a no-op.
+       * NOTE: If `schedule1_index === schedule2_index` this is a no-op.
        * NOTE: This will unlock all schedules through the current block prior to merging.
        * NOTE: If both schedules have ended by the current block, no new schedule will be created
        * and both will be removed.
