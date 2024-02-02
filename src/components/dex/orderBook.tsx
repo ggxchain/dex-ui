@@ -4,7 +4,7 @@ import Contract, { errorHandler } from "@/services/contract";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import { Amount, DetailedOrder, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export interface OrderBookProps {
     buyToken: Token;
@@ -44,25 +44,26 @@ export default function OrderBook({ buyToken, sellToken, selectedOrder, onChange
         return aPrice - bPrice;
     }
 
-    const normalizedOrders = orders.map((order: DetailedOrder) => {
+    const normalizedOrders = useMemo<NormalizedOrder[]>(() => orders.map((order: DetailedOrder) => {
         const [desiredToken, ownedToken] = OrderUtils.desiredToken(order) === order.pair[0] ? [order.token1, order.token2] : [order.token2, order.token1];
         return {
             ...order,
             amountRequestedNormalized: amountConverter.normalize(order.amoutRequested, desiredToken.decimals),
             amountOfferedNormalized: amountConverter.normalize(order.amountOffered, ownedToken.decimals),
         }
-    });
+    }), [orders]);
+
+    const buyOrders = useMemo<NormalizedOrder[]>(() => normalizedOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(a, b)), [normalizedOrders]);
+    const sellOrders = useMemo<NormalizedOrder[]>(() => normalizedOrders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => sortCmp(b, a)), [normalizedOrders]);
 
     useEffect(() => {
-        const orders = normalizedOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(a, b));
-        onChange(orders[0]);
-    }, [orders])
+        if (buyOrders.length > 0) {
+            onChange(buyOrders[0]);
+        }
+    }, [buyOrders])
 
-    const buyOrders = normalizedOrders.filter((order: Order) => order.orderType === "BUY").sort((a, b) => sortCmp(a, b));
-    const sellOrders = normalizedOrders.filter((order: Order) => order.orderType !== "BUY").sort((a, b) => sortCmp(b, a));
-
-    const buyTotalVolume = buyOrders.reduce((acc, order) => order.amoutRequested.add(acc), BN_ZERO);
-    const sellTotalVolume = sellOrders.reduce((acc, order) => order.amountOffered.add(acc), BN_ZERO);
+    const buyTotalVolume = useMemo<Amount>(() => buyOrders.reduce((acc, order) => order.amoutRequested.add(acc), BN_ZERO), [buyOrders]);
+    const sellTotalVolume = useMemo<Amount>(() => sellOrders.reduce((acc, order) => order.amountOffered.add(acc), BN_ZERO), [sellOrders]);
 
     return (
         <div className="flex flex-col text-xs">

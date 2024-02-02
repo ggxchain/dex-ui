@@ -277,8 +277,8 @@ export default function Transfer() {
       <div className="flex mt-1 justify-between w-full items-center">
         <h1 className="text-xl md:text-3xl break-words w-[40%]">${total.toFixed(2)}</h1>
         <div className="flex md:flex-row flex-col">
-          <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
-          <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
+          <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Transfer {selectedToken?.name ?? ""} to GGx</button>
+          <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""} from GGx</button>
         </div>
       </div>
 
