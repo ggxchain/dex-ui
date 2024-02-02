@@ -60,7 +60,7 @@ export default function OrderBook({ buyToken, sellToken, selectedOrder, onChange
         if (buyOrders.length > 0) {
             onChange(buyOrders[0]);
         }
-    }, [buyOrders])
+    }, [normalizedOrders])
 
     const buyTotalVolume = useMemo<Amount>(() => buyOrders.reduce((acc, order) => order.amoutRequested.add(acc), BN_ZERO), [buyOrders]);
     const sellTotalVolume = useMemo<Amount>(() => sellOrders.reduce((acc, order) => order.amountOffered.add(acc), BN_ZERO), [sellOrders]);

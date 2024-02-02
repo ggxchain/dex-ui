@@ -9,7 +9,7 @@ export function Input({ name, placeholder, wrapperClassName, className, ...props
 
     return (
         <div className={`relative w-full h-full ${wrapperClassName ?? ''}`}>
-            <input {...props} placeholder={inputPlaceholder} className={className} />
+            <input {...props} placeholder={inputPlaceholder} value={props.value || ""} className={className} />
             <p className={`absolute top-1/4 left-2 -translate-y-1/2 text-[75%] ${isValue ? "opacity-75" : "opacity-0"} transition-opacity ease-in-out delay-150 duration-300`}
                 style={{ lineHeight: "1", marginBlockStart: "0" }}>
                 {name}

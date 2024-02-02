@@ -34,7 +34,11 @@ export default class TokenDecimals {
         const integer = value.div(multiplier);
         const fractional = value.mod(multiplier);
 
-        return Number(`${integer}.${fractional.toString().padStart(this.decimalPlaces, '0')}`);
+        if (fractional.isZero()) {
+            return integer.toNumber();
+        }
+
+        return Number(`${integer}.${fractional.toString(10, this.decimalPlaces)}`);
     }
 
     BNtoDisplay(value: BN, symbol: string): string {
@@ -54,7 +58,6 @@ export default class TokenDecimals {
             extraPrecision = 3;
         }
         const converter = new TokenDecimals(this.decimalPlaces + extraPrecision);
-        // Removing 0s from the end of the number
         const result = converter.BNToFloat(value)
 
 

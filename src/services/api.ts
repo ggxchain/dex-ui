@@ -214,7 +214,7 @@ export default class Contract {
             throw new Error(Errors.NotEnoughBalance);
         }
 
-        wrapCallWithNotifications(curry(this.api.makeOrder, this.api, pair, orderType, amountOffered, amoutRequested), "Order", callback);
+        wrapCallWithNotifications(curry(this.api.makeOrder, this.api, pair, orderType, amountOffered, amoutRequested, 0), "Order", callback);
     }
 
     async takeOrder(counterId: CounterId, callback: onFinalize) {

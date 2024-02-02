@@ -181,7 +181,7 @@ export default class ContractMock implements ApiInterface {
         return orders.at(index);
     }
 
-    makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, callback: onFinalize): Promise<void> {
+    makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, timestamp: number, callback: onFinalize): Promise<void> {
         const counterId = (this.orders.at(-1)?.counter ?? 0) + 1;
         const order: Order = {
             pubkey: new GGXWallet().pubkey()?.address ?? "",

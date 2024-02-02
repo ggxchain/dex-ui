@@ -75,13 +75,13 @@ export default function Dex() {
   const orderRequested = amountConverter.normalize(order?.amoutRequested ?? BN_ZERO, sell?.decimals ?? 1);
   const orderOffered = amountConverter.normalize(order?.amountOffered ?? BN_ZERO, buy?.decimals ?? 1);
 
-  const sellAmount = isMaker && !isTokenNotSelected
-    ? sell.amount
-    : orderRequested;
+  const sellAmount = !isTokenNotSelected
+    ? isMaker ? sell.amount : orderRequested
+    : BN_ZERO;
 
-  const buyAmount = isMaker && !isTokenNotSelected
-    ? buy.amount
-    : orderOffered
+  const buyAmount = !isTokenNotSelected
+    ? isMaker ? buy.amount : orderOffered
+    : BN_ZERO;
 
   const isSellAmountZero = sellAmount.eq(BN_ZERO);
   const isUserBalanceNotEnough = !isWalletNotConnected && availableBalanceNormalized.lt(sellAmount);
