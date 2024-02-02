@@ -1,6 +1,6 @@
 import Order, { OrderUtils } from "@/order";
 import Pair from "@/pair";
-import Contract, { errorHandler } from "@/services/contract";
+import Contract, { errorHandler } from "@/services/api";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import { Amount, DetailedOrder, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
@@ -117,7 +117,7 @@ export default function OrderBook({ buyToken, sellToken, selectedOrder, onChange
                                             </p>
                                         </td>
                                         <td className="p-1 text-right text-white font-bold">
-                                            {amountConverter.BNToFloat(order.amountRequestedNormalized).toFixed(9)}
+                                            {amountConverter.BNtoDisplay(order.amountRequestedNormalized, '')}
                                             <div style={{ width: `${Math.round(percent)}%` }} className="absolute bg-green-500/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
                                         </td>
 

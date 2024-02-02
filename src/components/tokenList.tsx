@@ -61,12 +61,12 @@ export default function TokenList({ tokens, onClick, className, selected, onChai
                                     </div>
                                 </td>
                                 <td>
-                                    <Balance symbol={token.symbol} balance={amountConverter.BNToFloat(token.balance)} estimatedPrice={token.estimatedPrice} />
+                                    <Balance amountConverter={amountConverter} symbol={token.symbol} balance={token.balance} estimatedPrice={token.estimatedPrice} />
                                 </td>
                                 {
                                     onChain &&
                                     <td>
-                                        <Balance symbol={token.symbol} balance={amountConverter.BNToFloat(token.onChainBalance ?? BN_ZERO)} estimatedPrice={token.estimatedPrice} />
+                                        <Balance amountConverter={amountConverter} symbol={token.symbol} balance={token.onChainBalance ?? BN_ZERO} estimatedPrice={token.estimatedPrice} />
                                     </td>
                                 }
                                 <td className="rounded-r-lg">${token.estimatedPrice.toString()}</td>
@@ -80,18 +80,19 @@ export default function TokenList({ tokens, onClick, className, selected, onChai
 }
 
 interface BalanceProperties {
-    balance: number;
+    balance: Amount;
     estimatedPrice: number;
     symbol: string;
+    amountConverter: TokenDecimals;
 }
 
-function Balance({ balance, estimatedPrice, symbol }: BalanceProperties) {
-    const estimatedPriceWithPrecision = balance * estimatedPrice;
+function Balance({ balance, estimatedPrice, symbol, amountConverter }: BalanceProperties) {
+    const estimatedPriceWithPrecision = amountConverter.BNToFloat(balance) * estimatedPrice;
 
     return (
         <div className="flex flex-col text-xs md:text-base text-center break-words">
             {
-                <p className="mt-1">{balance.toString()} {`${symbol.toUpperCase()} `}</p>
+                <p className="mt-1">{amountConverter.BNtoDisplay(balance, symbol)}</p>
             }
 
             <span className="opacity-50 mt-1">

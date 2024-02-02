@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import Spinner from "./common/spinner";
-import Contract, { errorHandler } from "@/services/contract";
+import Contract, { errorHandler } from "@/services/api";
 import { Token } from "@/types";
 import CexService from "@/services/cex";
 import Select from "./common/select";

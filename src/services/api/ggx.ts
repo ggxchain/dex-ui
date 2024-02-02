@@ -10,10 +10,10 @@ import GGXWallet from "../ggx";
 
 import { BN_ZERO, hexToString } from "@polkadot/util";
 
-import { ContractInterface, onFinalize } from "../contract";
+import { ApiInterface, onFinalize } from "../api";
 import Order from "@/order";
 
-export default class GGxContract implements ContractInterface {
+export default class GGxNetwork implements ApiInterface {
     api: ApiPromise | undefined;
 
     constructor() { }
@@ -21,10 +21,20 @@ export default class GGxContract implements ContractInterface {
     async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
         const api = await this.apiPromise();
 
+        if (api.registry.chainSS58 === tokenId) {
+            return this.depositBalance(amount, callback);
+        }
+
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);
 
         await api.tx.dex.deposit(tokenId, amount).signAndSend(sender, { signer: senderSigner }, transactionCallback);
+    }
+
+    async depositBalance(amount: Amount, callback: onFinalize): Promise<void> {
+        // TODO: not implemented and blocked for now
+        console.log("Deposit balance not implemented");
+        callback(undefined);
     }
 
     async balanceOf(tokenId: TokenId, address: string): Promise<Amount> {
@@ -38,8 +48,23 @@ export default class GGxContract implements ContractInterface {
         return Promise.resolve(BN_ZERO);
     }
 
+    async userBalance(address: string): Promise<Amount> {
+        const api = await this.apiPromise();
+        const addressParam = this.createAddress(address);
+
+        const result = await api.query.system.account(addressParam);
+        if (result !== undefined) {
+            return Promise.resolve(result.data.free.toBn());
+        }
+        return Promise.resolve(BN_ZERO);
+    }
+
     async withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize) {
         const api = await this.apiPromise();
+
+        if (api.registry.chainSS58 === tokenId) {
+            return this.withdrawBalance(amount, callback);
+        }
 
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);
@@ -47,17 +72,33 @@ export default class GGxContract implements ContractInterface {
         await api.tx.dex.withdraw(tokenId, amount).signAndSend(sender, { signer: senderSigner }, transactionCallback);
     }
 
+    async withdrawBalance(amount: Amount, callback: onFinalize) {
+        //TODO: not implemented and blocked for now
+        console.log("Withdraw balance not implemented");
+        callback(undefined);
+    }
+
     async tokens(): Promise<TokenId[]> {
         const api = await this.apiPromise();
         const output = await api.query.dex.tokenInfoes();
         if (output !== undefined) {
-            return output.map((tokenId) => tokenId.toNumber());
+            const tokenIds = output.map((tokenId) => tokenId.toNumber());
+            if (api.registry.chainSS58 !== undefined) {
+                return [api.registry.chainSS58, ...tokenIds];
+            }
+            return tokenIds;
         }
         return Promise.resolve([])
     }
 
     async tokenInfo(tokenId: TokenId): Promise<Token> {
         const api = await this.apiPromise();
+        // Let's reserve chain prefix as GGx token id
+        if (api.registry.chainSS58 === tokenId) {
+            return this.ggxTokenInfo();
+        }
+
+
         const metadata = await api.query.assets.metadata(tokenId);
 
         return {
@@ -66,6 +107,18 @@ export default class GGxContract implements ContractInterface {
             symbol: hexToString(metadata.symbol.toString()),
             network: "GGx",
             decimals: metadata.decimals.toNumber()
+        }
+    }
+
+    async ggxTokenInfo(): Promise<Token> {
+        const api = await this.apiPromise();
+
+        return {
+            id: api.registry.chainSS58 ?? 0,
+            name: api.registry.chainTokens[0],
+            symbol: api.registry.chainTokens[0],
+            network: "GGx",
+            decimals: api.registry.chainDecimals[0]
         }
     }
 
@@ -82,6 +135,10 @@ export default class GGxContract implements ContractInterface {
     async onChainBalanceOf(tokenId: TokenId, address: string): Promise<Amount> {
         const api = await this.apiPromise();
         const addressParam = this.createAddress(address);
+
+        if (api.registry.chainSS58 === tokenId) {
+            return this.userBalance(address);
+        }
 
         const result = await api.query.assets.account(tokenId, addressParam);
         if (result !== undefined && result.isSome) {
@@ -144,7 +201,7 @@ export default class GGxContract implements ContractInterface {
         return Promise.reject([]);
     }
 
-    async makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, callback: onFinalize): Promise<void> {
+    async makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, _expireTimestamp: number, callback: onFinalize): Promise<void> {
         const api = await this.apiPromise();
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);

@@ -1,7 +1,7 @@
 "use client"
 
 import CexService from "@/services/cex";
-import Contract, { errorHandler } from "@/services/contract";
+import Contract, { errorHandler } from "@/services/api";
 import GGXWallet, { Account } from "@/services/ggx";
 import { Token, Amount, TokenId } from "@/types";
 import { ChangeEvent, useEffect, useRef, useState } from "react";

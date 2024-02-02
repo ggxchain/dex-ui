@@ -1,7 +1,7 @@
 import mockedTokens from "@/mock";
 import { TokenId, CounterId, Amount, PubKey, OrderType, Token } from "@/types";
 import Pair, { PairUtils } from "@/pair";
-import { ContractInterface, onFinalize } from "../contract";
+import { ApiInterface, onFinalize } from "../api";
 import GGXWallet from "../ggx";
 import Order, { OrderUtils } from "@/order";
 
@@ -13,7 +13,7 @@ type TokenDepositMock = {
     amount: Amount
 }
 
-export default class ContractMock implements ContractInterface {
+export default class ContractMock implements ApiInterface {
     deposits: Map<PubKey, TokenDepositMock[]> = new Map<PubKey, TokenDepositMock[]>();
     orders: Order[] = new Array<Order>();
     ordersByUser: Map<PubKey, CounterId[]> = new Map<PubKey, CounterId[]>();

@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react";
-import Contract, { errorHandler } from "@/services/contract";
+import Contract, { errorHandler } from "@/services/api";
 import GGXWallet from "@/services/ggx";
 import Ruler from "@/components/common/ruler";
 import { Amount, DetailedOrder } from "@/types";
@@ -172,7 +172,7 @@ export default function Dex() {
               <p>Sell</p>
               <div className="flex">
                 <p className="text-opacity-75 font-thin">Available for swaps:</p>
-                <p className="font-normal mx-5">{amountConverter.BNToFloat(availableBalanceNormalized)}</p>
+                <p className="font-normal mx-5">{amountConverter.BNtoDisplay(availableBalanceNormalized, sell?.symbol ?? "")}</p>
               </div>
             </div>
             <TokenSelector token={sell} tokens={tokens} lockedAmount={isTaker} amount={amountConverter.BNToFloat(sellAmount)} onChange={onSellChange} />

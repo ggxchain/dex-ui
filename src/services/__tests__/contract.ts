@@ -1,5 +1,5 @@
 
-import Contract, { Errors } from '../contract';
+import Contract, { Errors } from '../api';
 
 import '@/__utils__/localstore.mock'
 import { BN_ONE, BN_ZERO } from "@polkadot/util"

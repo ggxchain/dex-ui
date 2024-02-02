@@ -1,5 +1,5 @@
 import { OrderUtils } from "@/order";
-import Contract, { errorHandler } from "@/services/contract";
+import Contract, { errorHandler } from "@/services/api";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import { DetailedOrder } from "@/types";
 import { useState } from "react";
@@ -49,13 +49,13 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
 
                                     {/*Buy*/}
                                     <td className="p-1 text-center rounded-l-xl">
-                                        {amountConverter.BNToFloat(requested).toFixed(9)} {desiredToken.name}
+                                        {amountConverter.BNtoDisplay(requested, desiredToken.symbol)}
                                     </td>
                                     {/*Price*/}
-                                    <td className="p-1 text-center">{price.toFixed(9)} {desiredToken.name}</td>
+                                    <td className="p-1 text-center">{price.toFixed(9)} {desiredToken.symbol}</td>
 
                                     <td className="p-1 text-center text-white">
-                                        {amountConverter.BNToFloat(offered).toFixed(9)} {ownedToken.name}
+                                        {amountConverter.BNtoDisplay(offered, ownedToken.symbol)}
                                     </td>
                                     <td className="rounded-r-xl">
                                         <button onClick={() => cancelOrder(order)} className="md:p-1 p-[0.125rem] w-full grow-on-hover glow-on-hover rounded-xl border">Cancel</button>
