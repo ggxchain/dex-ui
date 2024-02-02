@@ -1,7 +1,7 @@
 "use client";
 
 import type { AccountData, ChainInfo } from "@keplr-wallet/types";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   assertIsDeliverTxSuccess,
   Coin,
@@ -261,7 +261,7 @@ export default function Transfer() {
     }
   }
 
-  const tokens = balances?.map((balance, index) => mapToken(balance, index)) ?? [];
+  const tokens = useMemo<ListElement[]>(() => balances?.map((balance, index) => mapToken(balance, index)) ?? [], [balances]);
 
   const walletIsNotInitialized = !account?.address || !client;
   const isGGxWalletNotConnected = modalGGxAccount === undefined;
