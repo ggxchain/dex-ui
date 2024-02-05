@@ -370,6 +370,8 @@ declare module '@polkadot/api-base/types/events' {
     };
     dex: {
       Deposited: AugmentedEvent<ApiType, [assetId: u32, amount: u128], { assetId: u32, amount: u128 }>;
+      NativeDeposited: AugmentedEvent<ApiType, [amount: u128], { amount: u128 }>;
+      NativeWithdrawed: AugmentedEvent<ApiType, [amount: u128], { amount: u128 }>;
       OrderCanceled: AugmentedEvent<ApiType, [orderIndex: u64], { orderIndex: u64 }>;
       OrderCreated: AugmentedEvent<ApiType, [orderIndex: u64, order: PalletDexOrder], { orderIndex: u64, order: PalletDexOrder }>;
       OrderTaken: AugmentedEvent<ApiType, [account: AccountId32, orderIndex: u64, order: PalletDexOrder], { account: AccountId32, orderIndex: u64, order: PalletDexOrder }>;

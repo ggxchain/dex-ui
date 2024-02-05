@@ -14,6 +14,7 @@ import TokenDecimals from "@/tokenDecimalsConverter";
 import Order from "@/order";
 import OrderBook, { useOrderBookOrders } from "@/components/dex/orderBook";
 import OrdersList, { useUserOrders } from "@/components/dex/orderList";
+import OrderExpireSelect, { useExpire } from "@/components/dex/orderExpireSelect";
 
 type TokenData = TokenWithPrice & {
   amount: Amount;
@@ -29,6 +30,7 @@ export default function Dex() {
   const [order, setOrder] = useState<Order>();
   const [tokens, loadTokens] = useTokens(contractRef.current);
   const [userOrders, updateUserOrders] = useUserOrders(contractRef.current);
+  const [expireNumber, expireUnit, convertToSeconds, setExpiration] = useExpire();
   const isConnected = useRef<boolean>();
 
   const orderBookOrders = useOrderBookOrders(buy, sell, contractRef.current);
@@ -59,6 +61,7 @@ export default function Dex() {
     setSell(undefined);
     setBuy(undefined);
     setOrder(undefined);
+    setExpiration(0, "Minutes");
   }
 
   const onLogin = () => {
@@ -86,12 +89,13 @@ export default function Dex() {
   const isSellAmountZero = sellAmount.eq(BN_ZERO);
   const isUserBalanceNotEnough = !isWalletNotConnected && availableBalanceNormalized.lt(sellAmount);
   const isAmountZero = isSellAmountZero || buyAmount.eq(BN_ZERO);
+  const isExpirationZero = isMaker && expireNumber === 0;
 
   const rate = !isTokenNotSelected && !buyAmount.eq(BN_ZERO) && !sellAmount.eq(BN_ZERO)
     ? amountConverter.divWithPrecision(buyAmount, sellAmount)
     : 0;
 
-  const isFormHasErrors = isTokenNotSelected || isTokenSame || isAmountZero || isWalletNotConnected || isUserBalanceNotEnough || (isTaker && isOrderNotChosen);
+  const isFormHasErrors = isExpirationZero || isTokenNotSelected || isTokenSame || isAmountZero || isWalletNotConnected || isUserBalanceNotEnough || (isTaker && isOrderNotChosen);
 
   const onSwap = () => {
     if (isFormHasErrors) {
@@ -108,7 +112,8 @@ export default function Dex() {
       // Basically, we need to send the amount of tokens that we want to sell but we need to convert it to the decimals of the token.
       const sellTokenAmount = amountConverter.denormalize(sellAmount, sell.decimals);
       const buyTokenAmount = amountConverter.denormalize(buyAmount, buy.decimals);
-      contract.makeOrder(pair, sellTokenAmount, buyTokenAmount, "SELL", callback).catch(errorHandler);
+      const expiration = Date.now() + convertToSeconds();
+      contract.makeOrder(pair, sellTokenAmount, buyTokenAmount, "SELL", expiration, callback).catch(errorHandler);
     } else if (!isOrderNotChosen) {
       contract.takeOrder(order.counter, callback).catch(errorHandler);
     }
@@ -193,9 +198,15 @@ export default function Dex() {
                 </div>
               }
             </div>
-
             <p className="text-sm mt-2">Buy</p>
             <TokenSelector token={buy} tokens={tokens} lockedAmount={isTaker} amount={amountConverter.BNToFloat(buyAmount)} onChange={onBuyChange} />
+
+            {isMaker &&
+              <div>
+                <p className="text-sm mt-2">Expiration</p>
+                <OrderExpireSelect number={expireNumber} unit={expireUnit} onChange={setExpiration} />
+              </div>
+            }
 
             <Ruler />
 

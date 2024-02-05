@@ -22,7 +22,7 @@ export default class GGxNetwork implements ApiInterface {
         const api = await this.apiPromise();
 
         if (api.registry.chainSS58 === tokenId) {
-            return this.depositBalance(amount, callback);
+            return this.depositBalance(api, amount, callback);
         }
 
         const [sender, senderSigner] = await this.accountSigner();
@@ -31,10 +31,10 @@ export default class GGxNetwork implements ApiInterface {
         await api.tx.dex.deposit(tokenId, amount).signAndSend(sender, { signer: senderSigner }, transactionCallback);
     }
 
-    async depositBalance(amount: Amount, callback: onFinalize): Promise<void> {
-        // TODO: not implemented and blocked for now
-        console.log("Deposit balance not implemented");
-        callback(undefined);
+    async depositBalance(api: ApiPromise, amount: Amount, callback: onFinalize): Promise<void> {
+        const [sender, senderSigner] = await this.accountSigner();
+
+        await api.tx.dex.depositNative(amount).signAndSend(sender, { signer: senderSigner }, this.transactionCallback(callback));
     }
 
     async balanceOf(tokenId: TokenId, address: string): Promise<Amount> {
@@ -63,7 +63,7 @@ export default class GGxNetwork implements ApiInterface {
         const api = await this.apiPromise();
 
         if (api.registry.chainSS58 === tokenId) {
-            return this.withdrawBalance(amount, callback);
+            return this.withdrawBalance(api, amount, callback);
         }
 
         const [sender, senderSigner] = await this.accountSigner();
@@ -72,10 +72,10 @@ export default class GGxNetwork implements ApiInterface {
         await api.tx.dex.withdraw(tokenId, amount).signAndSend(sender, { signer: senderSigner }, transactionCallback);
     }
 
-    async withdrawBalance(amount: Amount, callback: onFinalize) {
-        //TODO: not implemented and blocked for now
-        console.log("Withdraw balance not implemented");
-        callback(undefined);
+    async withdrawBalance(api: ApiPromise, amount: Amount, callback: onFinalize) {
+        const [sender, senderSigner] = await this.accountSigner();
+
+        await api.tx.dex.withdrawNative(amount).signAndSend(sender, { signer: senderSigner }, this.transactionCallback(callback));
     }
 
     async tokens(): Promise<TokenId[]> {

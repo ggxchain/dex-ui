@@ -13,7 +13,6 @@ export type onFinalize = (error: string | undefined) => void;
 export interface ApiInterface {
     // On dex interactions
     deposit(tokenId: TokenId, amount: Amount, callback: onFinalize): Promise<void>;
-    depositBalance(amount: Amount, callback: onFinalize): Promise<void>;
     balanceOf(tokenId: TokenId, address: string): Promise<Amount>;
     withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize): Promise<void>;
     tokens(): Promise<TokenId[]>;
@@ -200,7 +199,7 @@ export default class Contract {
         wrapCallWithNotifications(curry(this.api.cancelOrder, this.api, counterId), "Cancel order", callback);
     }
 
-    async makeOrder(pair: Pair, amountOffered: Amount, amoutRequested: Amount, orderType: OrderType, callback: onFinalize) {
+    async makeOrder(pair: Pair, amountOffered: Amount, amoutRequested: Amount, orderType: OrderType, endTime: number, callback: onFinalize) {
         const _ = this.walletAddress(); // Check if wallet is initialized
         await this.validateTokenId(pair[0]);
         await this.validateTokenId(pair[1]);
@@ -214,7 +213,7 @@ export default class Contract {
             throw new Error(Errors.NotEnoughBalance);
         }
 
-        wrapCallWithNotifications(curry(this.api.makeOrder, this.api, pair, orderType, amountOffered, amoutRequested, 0), "Order", callback);
+        wrapCallWithNotifications(curry(this.api.makeOrder, this.api, pair, orderType, amountOffered, amoutRequested, endTime), "Order", callback);
     }
 
     async takeOrder(counterId: CounterId, callback: onFinalize) {

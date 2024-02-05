@@ -1114,9 +1114,11 @@ declare module '@polkadot/api-base/types/submittable' {
     dex: {
       cancelOrder: AugmentedSubmittable<(orderIndex: u64 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u64]>;
       deposit: AugmentedSubmittable<(assetId: u32 | AnyNumber | Uint8Array, amount: u128 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u32, u128]>;
+      depositNative: AugmentedSubmittable<(amount: u128 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u128]>;
       makeOrder: AugmentedSubmittable<(assetId1: u32 | AnyNumber | Uint8Array, assetId2: u32 | AnyNumber | Uint8Array, offeredAmount: u128 | AnyNumber | Uint8Array, requestedAmount: u128 | AnyNumber | Uint8Array, orderType: PalletDexOrderType | 'BUY' | 'SELL' | number | Uint8Array) => SubmittableExtrinsic<ApiType>, [u32, u32, u128, u128, PalletDexOrderType]>;
       takeOrder: AugmentedSubmittable<(orderIndex: u64 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u64]>;
       withdraw: AugmentedSubmittable<(assetId: u32 | AnyNumber | Uint8Array, amount: u128 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u32, u128]>;
+      withdrawNative: AugmentedSubmittable<(amount: u128 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u128]>;
       /**
        * Generic tx
        **/
@@ -3743,7 +3745,7 @@ declare module '@polkadot/api-base/types/submittable' {
        * is finished by the current block, the other will be treated as the new merged schedule,
        * unmodified.
        * 
-       * NOTE: If `schedule1_index === schedule2_index` this is a no-op.
+       * NOTE: If `schedule1_index == schedule2_index` this is a no-op.
        * NOTE: This will unlock all schedules through the current block prior to merging.
        * NOTE: If both schedules have ended by the current block, no new schedule will be created
        * and both will be removed.
