@@ -6,7 +6,7 @@ import Contract, { errorHandler } from "@/services/api";
 import GGXWallet from "@/services/ggx";
 import Ruler from "@/components/common/ruler";
 import { Amount, DetailedOrder } from "@/types";
-import TokenSelector, { TokenWithPrice, useTokens } from "@/components/tokenSelector";
+import TokenSelector, { TokenWithPrice, useTokens } from "@/components/dex/tokenSelector";
 import Pair from "@/pair";
 import { useRouter } from "next/navigation";
 import { BN_ZERO } from "@polkadot/util";

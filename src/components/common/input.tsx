@@ -33,6 +33,9 @@ export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
             type="number"
             value={value.toString()}
         />
-        <p className="absolute bottom-0 opacity-50 right-2 top-1/2 -translate-y-1/2">{props.symbol} <span className="text-sm">(${props.price.toFixed(2)})</span></p>
+        <div className="flex items-center space-x-1 scale-80 md:scale-100 absolute bottom-0 opacity-50 right-2 top-1/2 -translate-y-1/2">
+            <p className="hidden md:block">{props.symbol}</p>
+            <span className="text-sm">(${props.price.toFixed(2)})</span>
+        </div>
     </div>)
 }

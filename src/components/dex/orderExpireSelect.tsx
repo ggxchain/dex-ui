@@ -57,13 +57,13 @@ export default function OrderExpireSelect(props: Props) {
                 wrapperClassName="w-full h-full"
                 childFormatter={(option: Option) => {
                     return (
-                        <option className="flex items-center p-2.5 text-slate-100 w-full grow-on-hover border-white md:text-lg text-base ">
-                            <p className="font-bold ">{option.string}</p>
+                        <option className="flex p-3 md:p-2.5 items-center text-slate-100 w-full border-white md:text-lg text-base grow-on-hover">
+                            <p className="font-bold">{option.string}</p>
                         </option>
                     );
                 }}
             />
-            <Input wrapperClassName="basis-3/5" name={props.unit.string} value={props.number.toString()} className=" border border-l-0 bg-transparent p-3.5 rounded-r-[1rem] pr-2 w-full text-left" type="number" onChange={onInput} />
+            <Input wrapperClassName="basis-4/6" name={props.unit.string} value={props.number.toString()} className=" border border-l-0 bg-transparent p-3.5 rounded-r-[1rem] w-full text-left" type="number" onChange={onInput} />
         </div>
     );
 };
