@@ -1,4 +1,4 @@
-import { GGX_WSS_URL } from "@/consts";
+import { GGX_WSS_URL, NATIVE_TOKEN_ID_RESERVED } from "@/consts";
 
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Signer } from '@polkadot/api/types';
@@ -21,7 +21,7 @@ export default class GGxNetwork implements ApiInterface {
     async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
         const api = await this.apiPromise();
 
-        if (api.registry.chainSS58 === tokenId) {
+        if (NATIVE_TOKEN_ID_RESERVED === tokenId) {
             return this.depositBalance(api, amount, callback);
         }
 
@@ -62,7 +62,7 @@ export default class GGxNetwork implements ApiInterface {
     async withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize) {
         const api = await this.apiPromise();
 
-        if (api.registry.chainSS58 === tokenId) {
+        if (NATIVE_TOKEN_ID_RESERVED === tokenId) {
             return this.withdrawBalance(api, amount, callback);
         }
 
@@ -82,11 +82,8 @@ export default class GGxNetwork implements ApiInterface {
         const api = await this.apiPromise();
         const output = await api.query.dex.tokenInfoes();
         if (output !== undefined) {
-            const tokenIds = output.map((tokenId) => tokenId.toNumber());
-            if (api.registry.chainSS58 !== undefined) {
-                return [api.registry.chainSS58, ...tokenIds];
-            }
-            return tokenIds;
+
+            return output.map((tokenId) => tokenId.toNumber());
         }
         return Promise.resolve([])
     }
@@ -94,7 +91,7 @@ export default class GGxNetwork implements ApiInterface {
     async tokenInfo(tokenId: TokenId): Promise<Token> {
         const api = await this.apiPromise();
         // Let's reserve chain prefix as GGx token id
-        if (api.registry.chainSS58 === tokenId) {
+        if (NATIVE_TOKEN_ID_RESERVED === tokenId) {
             return this.ggxTokenInfo();
         }
 
@@ -114,7 +111,7 @@ export default class GGxNetwork implements ApiInterface {
         const api = await this.apiPromise();
 
         return {
-            id: api.registry.chainSS58 ?? 0,
+            id: NATIVE_TOKEN_ID_RESERVED,
             name: api.registry.chainTokens[0],
             symbol: api.registry.chainTokens[0],
             network: "GGx",
@@ -136,7 +133,7 @@ export default class GGxNetwork implements ApiInterface {
         const api = await this.apiPromise();
         const addressParam = this.createAddress(address);
 
-        if (api.registry.chainSS58 === tokenId) {
+        if (NATIVE_TOKEN_ID_RESERVED === tokenId) {
             return this.userBalance(address);
         }
 
