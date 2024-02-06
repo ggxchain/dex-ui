@@ -1,11 +1,11 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import Spinner from "./spinner";
+import Spinner from "./common/spinner";
 import Contract, { errorHandler } from "@/services/contract";
 import { Token } from "@/types";
 import CexService from "@/services/cex";
-import Select from "./select";
+import Select from "./common/select";
 import Image from "next/image";
-import { Input } from "./input";
+import { Input } from "./common/input";
 
 interface TokenSelectorProps {
     token?: TokenWithPrice;
@@ -17,11 +17,10 @@ interface TokenSelectorProps {
 
 export type TokenWithPrice = Token & { price: number };
 
-export function useTokens() {
+export function useTokens(contract: Contract) {
     const [tokenWithPrices, setTokenWithPrices] = useState<TokenWithPrice[]>([]);
 
     const loadTokens = () => {
-        const contract = new Contract();
         contract.allTokensWithInfo().then((tokens: Token[]) => {
             const cex = new CexService();
             cex.tokenPrices(tokens.map((token) => token.symbol)).then((prices) => {

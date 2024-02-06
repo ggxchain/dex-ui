@@ -5,11 +5,11 @@ import Contract, { errorHandler } from "@/services/contract";
 import GGXWallet, { Account } from "@/services/ggx";
 import { Token, Amount, TokenId } from "@/types";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import Select from "@/components/select";
+import Select from "@/components/common/select";
 import TokenList from "@/components/tokenList";
-import Modal from "@/components/modal";
-import LoadingButton from "@/components/loadButton";
-import { InputWithPriceInfo } from "@/components/input";
+import Modal from "@/components/common/modal";
+import LoadingButton from "@/components/common/loadButton";
+import { InputWithPriceInfo } from "@/components/common/input";
 import { BN, BN_ZERO } from "@polkadot/util";
 import TokenDecimals from "@/tokenDecimalsConverter";
 
@@ -18,13 +18,12 @@ type InteractType = "Deposit" | "Withdraw";
 type FetchUserTokenId = () => Promise<TokenId[]>;
 type FetchBalance = (tokenId: TokenId) => Promise<Amount>;
 
-const useOwnedTokens = (fetchUserTokens: FetchUserTokenId, fetchUserBalance: FetchBalance) => {
+const useOwnedTokens = (fetchUserTokens: FetchUserTokenId, fetchUserBalance: FetchBalance, contract: Contract) => {
     const [tokens, setTokens] = useState<TokenId[]>([]);
     const [balances, setBalances] = useState<Map<TokenId, Amount>>(new Map<TokenId, Amount>());
 
 
     const refreshBalances = async () => {
-        const contract = new Contract();
         const tokens = await fetchUserTokens.call(contract).catch(errorHandler);
         if (tokens === undefined) {
             return;
@@ -46,8 +45,10 @@ const useOwnedTokens = (fetchUserTokens: FetchUserTokenId, fetchUserBalance: Fet
 }
 
 export default function Wallet() {
-    const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(Contract.prototype.allTokensOfOwner, Contract.prototype.balanceOf);
-    const [_, chainBalances, refreshChainBalances] = useOwnedTokens(Contract.prototype.allTokens, Contract.prototype.onChainBalanceOf);
+    const [contract, setContract] = useState<Contract>(new Contract());
+
+    const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(Contract.prototype.allTokensOfOwner, Contract.prototype.balanceOf, contract);
+    const [_, chainBalances, refreshChainBalances] = useOwnedTokens(Contract.prototype.allTokens, Contract.prototype.onChainBalanceOf, contract);
     const [tokenMap, setTokenMap] = useState<Map<TokenId, Token>>(new Map<TokenId, Token>());
     const [tokens, setTokens] = useState<Token[]>([]);
     const [search, setSearch] = useState<string>("");
@@ -68,7 +69,7 @@ export default function Wallet() {
     }
 
     useEffect(() => {
-        const contract = new Contract();
+        setTokens([]);
         contract.allTokensWithInfo().then((tokens) => {
             setTokens(tokens);
             setTokenMap(new Map(tokens.map((token) => [token.id, token])));
@@ -93,7 +94,7 @@ export default function Wallet() {
             setGGXAccounts(accounts);
             setSelectedAccount(ggx.pubkey());
         });
-    }, []);
+    }, [contract]);
 
     useEffect(() => {
         refreshBalances()
@@ -133,7 +134,6 @@ export default function Wallet() {
         if (isTokenNotSelected || modalAmount <= 0) {
             return;
         }
-        const contract = new Contract();
 
         let method = modalTitle.current === "Deposit" ? contract.deposit : contract.withdraw;
         setModalLoading(true);
@@ -195,6 +195,11 @@ export default function Wallet() {
         setSelectedToken(token);
     }
 
+    const onContractTypeChange = () => {
+        Contract.setMocked(!Contract.isMocked());
+        setContract(new Contract());
+    }
+
     const selectedTokenPrice = selectedToken ? tokenPrices.get(selectedToken.id) ?? 0 : 0;
     const amountPrice = modalAmount * selectedTokenPrice;
     const selectedTokenBalance = selectedToken ? new BN(dexBalances.get(selectedToken.id) ?? 0) : BN_ZERO;
@@ -207,6 +212,14 @@ export default function Wallet() {
                     <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
                     <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected || selectedTokenBalance.lte(BN_ZERO)} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
                 </div>
+            </div>
+
+            <div className="flex w-full justify-end mt-5">
+                <label className="inline-flex relative items-center cursor-pointer ">
+                    <input type="checkbox" checked={!Contract.isMocked()} onChange={onContractTypeChange} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-bg-gr-2"></div>
+                    <span className="ms-3 text-sm font-medium text-slate-100 dark:text-gray-300">Contract</span>
+                </label>
             </div>
 
             <div className="flex justify-between md:mt-10 mt-1 items-center">
