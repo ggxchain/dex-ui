@@ -61,7 +61,7 @@ export default function Dex() {
     setSell(undefined);
     setBuy(undefined);
     setOrder(undefined);
-    setExpiration(0, "Minutes");
+    setExpiration(0, { string: "Minutes" });
   }
 
   const onLogin = () => {

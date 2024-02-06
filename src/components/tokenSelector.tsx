@@ -5,7 +5,7 @@ import { Token } from "@/types";
 import CexService from "@/services/cex";
 import Select from "./common/select";
 import Image from "next/image";
-import { Input } from "./common/input";
+import { Input, InputWithPriceInfo } from "./common/input";
 
 interface TokenSelectorProps {
     token?: TokenWithPrice;
@@ -77,7 +77,7 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
 
     return (
         <div>
-            <div className="flex items-center justify-between [&>*]:text-slate-100">
+            <div className="flex items-center justify-between[&>*]:text-slate-100">
                 <Select<TokenWithPrice>
                     value={token}
                     onChange={handleSelectChange}
@@ -85,7 +85,7 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
                     className="w-full h-full"
                     childFormatter={(token: Token) => {
                         return (
-                            <div className="flex items-center text-slate-100 w-full grow-on-hover border-white md:text-lg text-base ">
+                            <div className="flex items-center text-slate-100 w-full border-white md:text-lg text-base grow-on-hover">
                                 <Image width={0} height={0} src={`/svg/${token.symbol.toLowerCase()}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
                                 <p className="font-bold">{token.name}</p>
                                 <sup className="pl-1 opacity-90">{token.network}</sup>
@@ -93,10 +93,7 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
                         );
                     }}
                 />
-                <div className="h-full [&>*]:bg-transparent border no-wrap border-l-0 w-24 md:w-32 text-right p-2.5 md:p-1.5 pr-2 rounded-r-[1rem] flex flex-col md:text-base text-xs">
-                    <Input name="Amount" value={amount?.toString()} step="2" className="bg-transparent w-full text-right disabled:text-gray-400 disabled:cursor-not-allowed" type="number" placeholder="0.00" disabled={lockedAmount} onChange={handleAmountChange} />
-                    <p className="text-xs whitespace-nowrap">~= {price.toFixed(2)}$</p>
-                </div>
+                <InputWithPriceInfo wrapperClassName="basis-3/5" price={price} symbol={token.symbol} name="Amount" value={amount?.toString()} step="2" className="w-full border border-l-0 bg-transparent p-3.5 rounded-r-[1rem] text-left disabled:text-gray-400 disabled:cursor-not-allowed" type="number" placeholder="0.00" disabled={lockedAmount} onChange={handleAmountChange} />
             </div>
         </div>
     );
