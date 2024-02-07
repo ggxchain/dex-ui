@@ -21,7 +21,7 @@ export default class GGxNetwork implements ApiInterface {
     async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
         const api = await this.apiPromise();
 
-        if (NATIVE_TOKEN_ID_RESERVED === tokenId) {
+        if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
             return this.depositBalance(api, amount, callback);
         }
 
@@ -62,7 +62,7 @@ export default class GGxNetwork implements ApiInterface {
     async withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize) {
         const api = await this.apiPromise();
 
-        if (NATIVE_TOKEN_ID_RESERVED === tokenId) {
+        if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
             return this.withdrawBalance(api, amount, callback);
         }
 
@@ -91,7 +91,7 @@ export default class GGxNetwork implements ApiInterface {
     async tokenInfo(tokenId: TokenId): Promise<Token> {
         const api = await this.apiPromise();
         // Let's reserve chain prefix as GGx token id
-        if (NATIVE_TOKEN_ID_RESERVED === tokenId) {
+        if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
             return this.ggxTokenInfo();
         }
 
@@ -133,7 +133,7 @@ export default class GGxNetwork implements ApiInterface {
         const api = await this.apiPromise();
         const addressParam = this.createAddress(address);
 
-        if (NATIVE_TOKEN_ID_RESERVED === tokenId) {
+        if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
             return this.userBalance(address);
         }
 
