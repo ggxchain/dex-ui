@@ -1,4 +1,4 @@
-import { GGX_WSS_URL } from "@/consts";
+import { GGX_WSS_URL, NATIVE_TOKEN_ID_RESERVED } from "@/consts";
 
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Signer } from '@polkadot/api/types';
@@ -10,10 +10,10 @@ import GGXWallet from "../ggx";
 
 import { BN_ZERO, hexToString } from "@polkadot/util";
 
-import { ContractInterface, onFinalize } from "../contract";
+import { ApiInterface, onFinalize } from "../api";
 import Order from "@/order";
 
-export default class GGxContract implements ContractInterface {
+export default class GGxNetwork implements ApiInterface {
     api: ApiPromise | undefined;
 
     constructor() { }
@@ -21,10 +21,20 @@ export default class GGxContract implements ContractInterface {
     async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
         const api = await this.apiPromise();
 
+        if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
+            return this.depositBalance(api, amount, callback);
+        }
+
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);
 
         await api.tx.dex.deposit(tokenId, amount).signAndSend(sender, { signer: senderSigner }, transactionCallback);
+    }
+
+    async depositBalance(api: ApiPromise, amount: Amount, callback: onFinalize): Promise<void> {
+        const [sender, senderSigner] = await this.accountSigner();
+
+        await api.tx.dex.depositNative(amount).signAndSend(sender, { signer: senderSigner }, this.transactionCallback(callback));
     }
 
     async balanceOf(tokenId: TokenId, address: string): Promise<Amount> {
@@ -38,8 +48,23 @@ export default class GGxContract implements ContractInterface {
         return Promise.resolve(BN_ZERO);
     }
 
+    async userBalance(address: string): Promise<Amount> {
+        const api = await this.apiPromise();
+        const addressParam = this.createAddress(address);
+
+        const result = await api.query.system.account(addressParam);
+        if (result !== undefined) {
+            return Promise.resolve(result.data.free.toBn());
+        }
+        return Promise.resolve(BN_ZERO);
+    }
+
     async withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize) {
         const api = await this.apiPromise();
+
+        if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
+            return this.withdrawBalance(api, amount, callback);
+        }
 
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);
@@ -47,10 +72,17 @@ export default class GGxContract implements ContractInterface {
         await api.tx.dex.withdraw(tokenId, amount).signAndSend(sender, { signer: senderSigner }, transactionCallback);
     }
 
+    async withdrawBalance(api: ApiPromise, amount: Amount, callback: onFinalize) {
+        const [sender, senderSigner] = await this.accountSigner();
+
+        await api.tx.dex.withdrawNative(amount).signAndSend(sender, { signer: senderSigner }, this.transactionCallback(callback));
+    }
+
     async tokens(): Promise<TokenId[]> {
         const api = await this.apiPromise();
         const output = await api.query.dex.tokenInfoes();
         if (output !== undefined) {
+
             return output.map((tokenId) => tokenId.toNumber());
         }
         return Promise.resolve([])
@@ -58,6 +90,12 @@ export default class GGxContract implements ContractInterface {
 
     async tokenInfo(tokenId: TokenId): Promise<Token> {
         const api = await this.apiPromise();
+        // Let's reserve chain prefix as GGx token id
+        if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
+            return this.ggxTokenInfo();
+        }
+
+
         const metadata = await api.query.assets.metadata(tokenId);
 
         return {
@@ -66,6 +104,18 @@ export default class GGxContract implements ContractInterface {
             symbol: hexToString(metadata.symbol.toString()),
             network: "GGx",
             decimals: metadata.decimals.toNumber()
+        }
+    }
+
+    async ggxTokenInfo(): Promise<Token> {
+        const api = await this.apiPromise();
+
+        return {
+            id: NATIVE_TOKEN_ID_RESERVED,
+            name: api.registry.chainTokens[0],
+            symbol: api.registry.chainTokens[0],
+            network: "GGx",
+            decimals: api.registry.chainDecimals[0]
         }
     }
 
@@ -82,6 +132,10 @@ export default class GGxContract implements ContractInterface {
     async onChainBalanceOf(tokenId: TokenId, address: string): Promise<Amount> {
         const api = await this.apiPromise();
         const addressParam = this.createAddress(address);
+
+        if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
+            return this.userBalance(address);
+        }
 
         const result = await api.query.assets.account(tokenId, addressParam);
         if (result !== undefined && result.isSome) {
@@ -144,7 +198,7 @@ export default class GGxContract implements ContractInterface {
         return Promise.reject([]);
     }
 
-    async makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, callback: onFinalize): Promise<void> {
+    async makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, _expireTimestamp: number, callback: onFinalize): Promise<void> {
         const api = await this.apiPromise();
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);

@@ -4,3 +4,4 @@ export const GGX_WSS_URL = "ws://localhost:9944";
 //TODO: We need to define it more precisely
 export const CONTRACT_MOCKED = false;
 export const CALCULATION_PRECISION = 3;
+export const NATIVE_TOKEN_ID_RESERVED = 8888;

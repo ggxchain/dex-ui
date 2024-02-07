@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "cp -r ./node_modules/cryptocurrency-icons/svg/color ./public/svg && next build",
-    "generate:defs": "npx tsx node_modules/.bin/polkadot-types-from-defs --input ./src/interfaces --endpoint ./ggx.json --package @types/src/interfaces",
-    "generate:types": "npx tsx node_modules/.bin/polkadot-types-from-chain --endpoint ./ggx.json --output ./src/interfaces --package ggx/typegen",
+    "build": "cp ./node_modules/cryptocurrency-icons/svg/color/* ./public/our_svg/* ./public/svg && next build",
+    "generate:defs": "npx tsx node_modules/.bin/polkadot-types-from-defs --input ./src/interfaces --package @types/src/interfaces",
+    "generate:types": "npx tsx node_modules/.bin/polkadot-types-from-chain --endpoint ws://127.0.0.1:9944 --output ./src/interfaces --package ggx/typegen",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",

@@ -15,7 +15,7 @@ interface SelectProps<Type> {
     disabled?: boolean;
 }
 
-export default function Select<Type>({ value, onChange, options, childFormatter, className, name, wrapperClassName, ...props}: Readonly<SelectProps<Type>>) {
+export default function Select<Type>({ value, onChange, options, childFormatter, className, name, wrapperClassName, ...props }: Readonly<SelectProps<Type>>) {
     const disabled = props.disabled ?? false;
     const onChangeValue = (e: SingleValue<Type>) => {
         if (e === null) {
@@ -60,9 +60,7 @@ export default function Select<Type>({ value, onChange, options, childFormatter,
                     }),
                 }}
 
-                formatOptionLabel={(token) => {
-                    return childFormatter(token)
-                }}
+                formatOptionLabel={childFormatter}
             />
             <p className="absolute top-1/4 left-2 -translate-y-1/2 text-[75%] opacity-75" style={{ lineHeight: "1", marginBlockStart: "0" }}>
                 {name}

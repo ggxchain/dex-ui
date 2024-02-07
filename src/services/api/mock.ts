@@ -1,7 +1,7 @@
 import mockedTokens from "@/mock";
 import { TokenId, CounterId, Amount, PubKey, OrderType, Token } from "@/types";
 import Pair, { PairUtils } from "@/pair";
-import { ContractInterface, onFinalize } from "../contract";
+import { ApiInterface, onFinalize } from "../api";
 import GGXWallet from "../ggx";
 import Order, { OrderUtils } from "@/order";
 
@@ -13,7 +13,7 @@ type TokenDepositMock = {
     amount: Amount
 }
 
-export default class ContractMock implements ContractInterface {
+export default class ContractMock implements ApiInterface {
     deposits: Map<PubKey, TokenDepositMock[]> = new Map<PubKey, TokenDepositMock[]>();
     orders: Order[] = new Array<Order>();
     ordersByUser: Map<PubKey, CounterId[]> = new Map<PubKey, CounterId[]>();
@@ -181,7 +181,7 @@ export default class ContractMock implements ContractInterface {
         return orders.at(index);
     }
 
-    makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, callback: onFinalize): Promise<void> {
+    makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, timestamp: number, callback: onFinalize): Promise<void> {
         const counterId = (this.orders.at(-1)?.counter ?? 0) + 1;
         const order: Order = {
             pubkey: new GGXWallet().pubkey()?.address ?? "",

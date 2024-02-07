@@ -671,6 +671,7 @@ declare module '@polkadot/api-base/types/errors' {
       AssetIdNotInTokenInfoes: AugmentedError<ApiType>;
       InsufficientBalance: AugmentedError<ApiType>;
       InvalidOrderIndex: AugmentedError<ApiType>;
+      NotEnoughBalance: AugmentedError<ApiType>;
       NotOwner: AugmentedError<ApiType>;
       OrderIndexOverflow: AugmentedError<ApiType>;
       PairAssetIdMustNotEqual: AugmentedError<ApiType>;

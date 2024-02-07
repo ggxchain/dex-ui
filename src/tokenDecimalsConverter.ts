@@ -26,7 +26,6 @@ export default class TokenDecimals {
         const fractionalMultiplied = new BN(Math.ceil(fractional * (10 ** min)));;
         const fractionalBN = (this.decimalPlaces - min) > 0 ? fractionalMultiplied.mul(BN_TEN.pow(new BN(this.decimalPlaces - min))) : fractionalMultiplied;
 
-
         return multiplier.muln(integer).add(fractionalBN);
     }
 
@@ -35,8 +34,34 @@ export default class TokenDecimals {
         const integer = value.div(multiplier);
         const fractional = value.mod(multiplier);
 
-        const result = Number(`${integer}.${fractional.toString().padStart(this.decimalPlaces, '0')}`);
-        return result
+        if (fractional.isZero()) {
+            return integer.toNumber();
+        }
+
+        return Number(`${integer}.${fractional.toString(10, this.decimalPlaces)}`);
+    }
+
+    BNtoDisplay(value: BN, symbol: string): string {
+        const multiplier = new BN(10).pow(new BN(this.decimalPlaces));
+        let integer = value.div(multiplier).toNumber();
+
+        let prefix = '';
+        let extraPrecision = 0;
+        if (integer / 1_000_000_000 > 1) {
+            prefix = 'B';
+            extraPrecision = 9;
+        } else if (integer / 1_000_000 > 1) {
+            prefix = 'M';
+            extraPrecision = 6;
+        } else if (integer / 1_000 > 1) {
+            prefix = 'K';
+            extraPrecision = 3;
+        }
+        const converter = new TokenDecimals(this.decimalPlaces + extraPrecision);
+        const result = converter.BNToFloat(value)
+
+
+        return `${result} ${prefix}${symbol}`;
     }
 
     normalize(value: BN, oldDecimals: number): BN {

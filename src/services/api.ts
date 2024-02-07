@@ -2,15 +2,15 @@ import GGXWallet from "./ggx";
 import { Token, TokenId, CounterId, Amount, PubKey, DetailedOrder, OrderType } from "@/types";
 import Pair, { PairUtils } from "@/pair";
 
-import GGxContract from "./contract/ggx";
-import ContractMock from "./contract/mock"
+import GGxNetwork from "./api/ggx";
+import ContractMock from "./api/mock"
 import { CONTRACT_MOCKED, TOKENS_LIST_TTL } from "@/consts";
 import { toast } from "react-toastify";
 import Order from "@/order";
 
 export type onFinalize = (error: string | undefined) => void;
 
-export interface ContractInterface {
+export interface ApiInterface {
     // On dex interactions
     deposit(tokenId: TokenId, amount: Amount, callback: onFinalize): Promise<void>;
     balanceOf(tokenId: TokenId, address: string): Promise<Amount>;
@@ -19,7 +19,7 @@ export interface ContractInterface {
     ownersTokens(address: string): Promise<TokenId[]>;
     pairOrders(pair: Pair): Promise<Order[]>;
     userOrders(user: PubKey): Promise<Order[]>;
-    makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, callback: onFinalize): Promise<void>;
+    makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, expireTimestamp: number, callback: onFinalize): Promise<void>;
     cancelOrder(counterId: CounterId, callback: onFinalize): Promise<void>;
     takeOrder(counterId: CounterId, callback: onFinalize): Promise<void>;
 
@@ -36,7 +36,7 @@ export enum Errors {
     InvalidTokenId = "Invalid token id",
 }
 export default class Contract {
-    contract: ContractInterface;
+    api: ApiInterface;
     tokenCache: Map<TokenId, Token> = new Map<TokenId, Token>();
     tokenList: TokenId[] = new Array<TokenId>();
     lastUpdated: number = 0;
@@ -51,14 +51,14 @@ export default class Contract {
             }
         }
 
-        this.contract = mocked ? new ContractMock() : new GGxContract();
+        this.api = mocked ? new ContractMock() : new GGxNetwork();
     }
 
     changeContract() {
         if (Contract.isMocked()) {
-            this.contract = new ContractMock();
+            this.api = new ContractMock();
         } else {
-            this.contract = new ContractMock();
+            this.api = new ContractMock();
         }
         this.tokenCache = new Map<TokenId, Token>();
         this.tokenList = new Array<TokenId>();
@@ -82,7 +82,7 @@ export default class Contract {
     async allTokens(): Promise<TokenId[]> {
         const now = new Date().getTime();
         if (now - this.lastUpdated > TOKENS_LIST_TTL) {
-            this.tokenList = await this.contract.tokens();
+            this.tokenList = await this.api.tokens();
             this.lastUpdated = now;
         }
         return await Promise.resolve(this.tokenList);
@@ -100,23 +100,23 @@ export default class Contract {
 
     async allTokensOfOwner(): Promise<TokenId[]> {
         const address = this.walletAddress();
-        return await this.contract.ownersTokens(address);
+        return await this.api.ownersTokens(address);
     }
 
     async onChainBalanceOf(tokenId: TokenId): Promise<Amount> {
         const address = this.walletAddress();
-        return await this.contract.onChainBalanceOf(tokenId, address);
+        return await this.api.onChainBalanceOf(tokenId, address);
     }
 
     async allOrders(pair: Pair): Promise<DetailedOrder[]> {
         await this.validateTokenId(pair[0]);
         await this.validateTokenId(pair[1]);
 
-        const orders = await this.contract.pairOrders(pair);
+        const orders = await this.api.pairOrders(pair);
         // TODO: We need to double check this logic after contract will be ready.
         // Currently we fetch both side tiker orders and then filter out duplicates.
         // But it's posible that we will need to fetch only one side of ticker orders.
-        const reverseOrders = (await this.contract.pairOrders(PairUtils.reverse(pair))).reduce<Order[]>((acc, order) => {
+        const reverseOrders = (await this.api.pairOrders(PairUtils.reverse(pair))).reduce<Order[]>((acc, order) => {
             if (orders.findIndex((value) => value.counter === order.counter) === -1) {
                 acc.push({
                     ...order,
@@ -139,7 +139,7 @@ export default class Contract {
 
     async allUserOrders(): Promise<DetailedOrder[]> {
         const address = this.walletAddress();
-        const orders = await this.contract.userOrders(address);
+        const orders = await this.api.userOrders(address);
         return await Promise.all(orders.map(async (value) => {
             return {
                 ...value,
@@ -156,7 +156,8 @@ export default class Contract {
             // Token info shouldn't expire, so we can use cached value.
             return value;
         }
-        value = await this.contract.tokenInfo(tokenId)
+
+        value = await this.api.tokenInfo(tokenId)
         this.tokenCache.set(tokenId, value);
         return value;
     }
@@ -165,7 +166,7 @@ export default class Contract {
         const address = this.walletAddress();
         await this.validateTokenId(tokenId);
 
-        return this.contract.balanceOf(tokenId, address);
+        return this.api.balanceOf(tokenId, address);
     }
 
     async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
@@ -175,7 +176,7 @@ export default class Contract {
         }
         await this.validateTokenId(tokenId);
 
-        wrapCallWithNotifications(curry(this.contract.deposit, this.contract, tokenId, amount), "Deposit", callback);
+        wrapCallWithNotifications(curry(this.api.deposit, this.api, tokenId, amount), "Deposit", callback);
     }
 
     async withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize) {
@@ -190,15 +191,15 @@ export default class Contract {
             throw new Error(Errors.NotEnoughBalance);
         }
 
-        wrapCallWithNotifications(curry(this.contract.withdraw, this.contract, tokenId, amount), "Withdraw", callback);
+        wrapCallWithNotifications(curry(this.api.withdraw, this.api, tokenId, amount), "Withdraw", callback);
     }
 
     async cancelOrder(counterId: CounterId, callback: onFinalize) {
         const _ = this.walletAddress(); // Check if wallet is initialized
-        wrapCallWithNotifications(curry(this.contract.cancelOrder, this.contract, counterId), "Cancel order", callback);
+        wrapCallWithNotifications(curry(this.api.cancelOrder, this.api, counterId), "Cancel order", callback);
     }
 
-    async makeOrder(pair: Pair, amountOffered: Amount, amoutRequested: Amount, orderType: OrderType, callback: onFinalize) {
+    async makeOrder(pair: Pair, amountOffered: Amount, amoutRequested: Amount, orderType: OrderType, endTime: number, callback: onFinalize) {
         const _ = this.walletAddress(); // Check if wallet is initialized
         await this.validateTokenId(pair[0]);
         await this.validateTokenId(pair[1]);
@@ -212,12 +213,12 @@ export default class Contract {
             throw new Error(Errors.NotEnoughBalance);
         }
 
-        wrapCallWithNotifications(curry(this.contract.makeOrder, this.contract, pair, orderType, amountOffered, amoutRequested), "Order", callback);
+        wrapCallWithNotifications(curry(this.api.makeOrder, this.api, pair, orderType, amountOffered, amoutRequested, endTime), "Order", callback);
     }
 
     async takeOrder(counterId: CounterId, callback: onFinalize) {
         const _ = this.walletAddress(); // Check if wallet is initialized
-        wrapCallWithNotifications(curry(this.contract.takeOrder, this.contract, counterId), "Order", callback);
+        wrapCallWithNotifications(curry(this.api.takeOrder, this.api, counterId), "Order", callback);
     }
 
     walletAddress(): string {
@@ -245,7 +246,7 @@ export function errorHandler(error: Errors): undefined {
 
 type WrapCall<T> = (_: onFinalize) => Promise<T>;
 
-function curry<T>(f: Function, _this: ContractInterface, ...args: any[]): WrapCall<T> {
+function curry<T>(f: Function, _this: ApiInterface, ...args: any[]): WrapCall<T> {
     return (onFinalize: onFinalize) => f.call(_this, ...args, onFinalize);
 }
 
