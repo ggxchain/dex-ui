@@ -669,6 +669,7 @@ declare module '@polkadot/api-base/types/errors' {
     dex: {
       AssetIdNotInTokenIndex: AugmentedError<ApiType>;
       AssetIdNotInTokenInfoes: AugmentedError<ApiType>;
+      ExpirationMustBeInFuture: AugmentedError<ApiType>;
       InsufficientBalance: AugmentedError<ApiType>;
       InvalidOrderIndex: AugmentedError<ApiType>;
       NotEnoughBalance: AugmentedError<ApiType>;

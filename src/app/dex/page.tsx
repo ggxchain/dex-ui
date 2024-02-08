@@ -30,7 +30,7 @@ export default function Dex() {
   const [order, setOrder] = useState<Order>();
   const [tokens, loadTokens] = useTokens(contractRef.current);
   const [userOrders, updateUserOrders] = useUserOrders(contractRef.current);
-  const [expireNumber, expireUnit, convertToSeconds, setExpiration] = useExpire();
+  const [expireNumber, expireUnit, convertToMillis, setExpiration] = useExpire();
   const isConnected = useRef<boolean>();
 
   const orderBookOrders = useOrderBookOrders(buy, sell, contractRef.current);
@@ -61,6 +61,7 @@ export default function Dex() {
     setSell(undefined);
     setBuy(undefined);
     setOrder(undefined);
+    setAvailableBalanceNormalized(BN_ZERO);
     setExpiration(0, { string: "Minutes" });
   }
 
@@ -112,8 +113,7 @@ export default function Dex() {
       // Basically, we need to send the amount of tokens that we want to sell but we need to convert it to the decimals of the token.
       const sellTokenAmount = amountConverter.denormalize(sellAmount, sell.decimals);
       const buyTokenAmount = amountConverter.denormalize(buyAmount, buy.decimals);
-      const expiration = Date.now() + convertToSeconds();
-      contract.makeOrder(pair, sellTokenAmount, buyTokenAmount, "SELL", expiration, callback).catch(errorHandler);
+      contract.makeOrder(pair, sellTokenAmount, buyTokenAmount, "SELL", convertToMillis(), callback).catch(errorHandler);
     } else if (!isOrderNotChosen) {
       contract.takeOrder(order.counter, callback).catch(errorHandler);
     }

@@ -5,3 +5,4 @@ export const GGX_WSS_URL = "ws://localhost:9944";
 export const CONTRACT_MOCKED = false;
 export const CALCULATION_PRECISION = 3;
 export const NATIVE_TOKEN_ID_RESERVED = 8888;
+export const BLOCK_TIME_IN_MILLIS = 2000;

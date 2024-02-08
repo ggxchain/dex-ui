@@ -22,18 +22,18 @@ export function useExpire() {
         setUnit(unit);
     }
 
-    const convertToSeconds = () => {
+    const convertToMillis = () => {
         switch (unit.string) {
             case "Minutes":
-                return number * 60;
+                return number * 60_000;
             case "Hours":
-                return number * 3600;
+                return number * 3600_000;
             case "Days":
-                return number * 86400;
+                return number * 86400_000;
         }
     }
 
-    return [number, unit, convertToSeconds, onChange] as const;
+    return [number, unit, convertToMillis, onChange] as const;
 
 }
 
@@ -57,9 +57,9 @@ export default function OrderExpireSelect(props: Props) {
                 wrapperClassName="w-full h-full"
                 childFormatter={(option: Option) => {
                     return (
-                        <option className="flex p-3 md:p-2.5 items-center text-slate-100 w-full border-white md:text-lg text-base grow-on-hover">
+                        <div className="flex p-3 md:p-2.5 items-center text-slate-100 w-full border-white md:text-lg text-base grow-on-hover">
                             <p className="font-bold">{option.string}</p>
-                        </option>
+                        </div>
                     );
                 }}
             />

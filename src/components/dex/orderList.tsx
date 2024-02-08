@@ -30,6 +30,7 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
                     <th className="text-center rounded-l-xl">Buy</th>
                     <th className="text-center">Price</th>
                     <th className="text-center">Sell</th>
+                    <th className="text-center">Expire in</th>
                     <th className="text-center rounded-r-xl">Actions</th>
                 </tr>
             </thead>
@@ -57,6 +58,9 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
                                     <td className="p-1 text-center text-white">
                                         {amountConverter.BNtoDisplay(offered, ownedToken.symbol)}
                                     </td>
+                                    <td className="p-1 text-center">
+                                        {expirationFormat(order.expiration)}
+                                    </td>
                                     <td className="rounded-r-xl">
                                         <button onClick={() => cancelOrder(order)} className="md:p-1 p-[0.125rem] w-full grow-on-hover glow-on-hover rounded-xl border">Cancel</button>
                                     </td>
@@ -67,4 +71,28 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
             </tbody>
         </table>
     </div>
+}
+
+function expirationFormat(expiration: number) {
+    const now = Date.now();
+    const timeLeft = expiration - now;
+    const seconds = Math.floor((timeLeft / 1000) % 60);
+    const minutes = Math.floor((timeLeft / (1000 * 60)) % 60);
+    const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
+    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+
+    let result = '';
+    if (days > 0) {
+        result += `${days} Days `;
+    }
+    if (hours > 0) {
+        result += `${hours} Hours `;
+    }
+    if (minutes > 0) {
+        result += `${minutes} Minutes `;
+    }
+    if (seconds > 0) {
+        result += `${seconds} Seconds `;
+    }
+    return result;
 }
