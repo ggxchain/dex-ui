@@ -2,7 +2,7 @@ import { OrderUtils } from "@/order";
 import Contract, { errorHandler } from "@/services/api";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import { DetailedOrder } from "@/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const useUserOrders = (contract: Contract) => {
     const [orders, setOrders] = useState<DetailedOrder[]>([]);
@@ -22,6 +22,16 @@ interface UserOrderProps {
 }
 
 export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderProps>) {
+    const [now, setNow] = useState(Date.now());
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setNow(Date.now());
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [orders])
+
     return <div className="w-full h-full flex flex-col p-5 text-xs md:text-base">
         <p className="md:text-xl text-base text-center w-full">My orders</p>
         <table className="table-fixed mt-2 md:mt-5 border-separate md:border-spacing-y-2 border-spacing-y-1 [&>td]:px-6 [&>td]:py-20`">
@@ -45,6 +55,9 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
                             const requested = amountConverter.normalize(order.amoutRequested, desiredToken.decimals);
                             const offered = amountConverter.normalize(order.amountOffered, ownedToken.decimals);
                             const price = amountConverter.divWithPrecision(requested, offered);
+
+                            const expiration = order.expiration - now;
+                            const expiredText = expiration < 0 ? 'Expired' : expirationFormat(expiration);
                             return (
                                 <tr key={order.counter} className="h-full w-full even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20">
 
@@ -59,7 +72,7 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
                                         {amountConverter.BNtoDisplay(offered, ownedToken.symbol)}
                                     </td>
                                     <td className="p-1 text-center">
-                                        {expirationFormat(order.expiration)}
+                                        {expiredText}
                                     </td>
                                     <td className="rounded-r-xl">
                                         <button onClick={() => cancelOrder(order)} className="md:p-1 p-[0.125rem] w-full grow-on-hover glow-on-hover rounded-xl border">Cancel</button>
@@ -70,12 +83,10 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
                 }
             </tbody>
         </table>
-    </div>
+    </div >
 }
 
-function expirationFormat(expiration: number) {
-    const now = Date.now();
-    const timeLeft = expiration - now;
+function expirationFormat(timeLeft: number) {
     const seconds = Math.floor((timeLeft / 1000) % 60);
     const minutes = Math.floor((timeLeft / (1000 * 60)) % 60);
     const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
@@ -91,8 +102,6 @@ function expirationFormat(expiration: number) {
     if (minutes > 0) {
         result += `${minutes} Minutes `;
     }
-    if (seconds > 0) {
-        result += `${seconds} Seconds `;
-    }
+    result += `${seconds} Seconds `;
     return result;
 }
