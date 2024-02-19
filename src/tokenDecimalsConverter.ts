@@ -42,8 +42,6 @@ export default class TokenDecimals {
     }
 
     BNtoDisplay(value: BN, symbol: string): string {
-        console.log('BNtoDisplay', value.toString(), symbol);
-        console.log(this.decimalPlaces);
         const multiplier = new BN(10).pow(new BN(this.decimalPlaces));
         let integer = value.div(multiplier).toNumber();
 
