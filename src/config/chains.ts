@@ -12,11 +12,11 @@ const cosmos = ((): ChainInfo => {
     return chainRegistryChainToKeplr(chain!, assets);
 })();
 
-const localhost = {
-    chainId: "earth-0",
-    chainName: "monkey",
-    rpc: "http://127.0.0.1:26657",
-    rest: "http://127.0.0.1:1317",
+const ggxCosmosTestnet = {
+    chainId: "ggx-chain",
+    chainName: "ggx-chain",
+    rpc: "https://cosmos-rpc.dev.ggxchain.io",
+    rest: "http://144.217.10.28:3331",
     bip44: {
         coinType: 118,
     },
@@ -63,6 +63,6 @@ const localhost = {
     features: ["stargate", "ibc-transfer", "no-legacy-stdTx"],
 }
 
-const ibcChains = [cosmos, axelar, localhost]
+const ibcChains = [cosmos, axelar, ggxCosmosTestnet] as const
 
 export default ibcChains

@@ -19,10 +19,12 @@ import Modal from "@/components/common/modal";
 import LoadingButton from "@/components/common/loadButton";
 import { InputWithPriceInfo, Input } from "@/components/common/input";
 import { toast } from "react-toastify";
-import { BN, u8aToHex } from "@polkadot/util";
+import { BN, BN_ZERO, u8aToHex } from "@polkadot/util";
 import { Keyring } from '@polkadot/keyring';
 
 import TokenDecimals from "@/tokenDecimalsConverter";
+import Contract from "@/services/api";
+import { Amount } from "@/types";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -33,11 +35,13 @@ export default function Transfer() {
   const [account, setAccount] = useState<AccountData>();
   const [accounts, setAccounts] = useState<readonly AccountData[]>([]);
   const [balances, setBalances] = useState<readonly Coin[]>();
+  const [onChainBalances, setOnChainBalances] = useState<readonly Amount[]>();
   const [prices, setPrices] = useState<Map<string, number>>(new Map());
   const [selectedToken, setSelectedToken] = useState<ListElement>();
   const [GGxAccounts, setGGxAccounts] = useState<Account[]>([]);
   const [tx, setTx] = useState<string>();
   const [txRes, setTxRes] = useState<IndexedTx>();
+  const polkadot = useRef<Contract>(new Contract());
 
   // Modal related states
   const [modal, setModal] = useState<boolean>(false);
@@ -110,11 +114,14 @@ export default function Transfer() {
     const token = chain.currencies.find((currency) => currency.coinMinimalDenom === balance.denom);
     const url = token?.coinImageUrl ?? `/svg/${token?.coinDenom}.svg`;
     const symbol = token?.coinDenom ?? balance.denom;
+    const onChainBalance = onChainBalances?.[index] ?? BN_ZERO;
+
     return {
       name: token?.coinDenom ?? balance.denom,
       balance: new BN(balance.amount),
       symbol,
       estimatedPrice: prices.get(symbol) ?? 0,
+      onChainBalance,
       id: index,
       url,
       network: "",
@@ -125,6 +132,7 @@ export default function Transfer() {
   const getBalances = async () => {
     if (client && account?.address) {
       const balances = await client.getAllBalances(account.address);
+      console.log(balances);
       const filtered = balances.reduce<Coin[]>((acc, value) => {
         if (value.denom.includes("ibc/")) {
           const info = ibcHashToDenom(chain.chainName, value.denom);
@@ -139,7 +147,11 @@ export default function Transfer() {
         return acc
       }, []);
 
+      const tokenIds = await Promise.all(filtered.map((balance, index) => polkadot.current.tokenNameToId(mapToken(balance, index).symbol)));
+      const onChainBalances = await Promise.all(tokenIds.map((id) => polkadot.current.onChainBalanceOf(id)));
       setBalances(filtered);
+      setOnChainBalances(onChainBalances);
+
       if (filtered.length > 0) {
         setSelectedToken(mapToken(filtered[0], 0));
         refreshEstimatePrice(filtered);
@@ -265,9 +277,11 @@ export default function Transfer() {
 
   const walletIsNotInitialized = !account?.address || !client;
   const isGGxWalletNotConnected = modalGGxAccount === undefined;
-  const total = tokens.reduce((acc, token) => {
+
+  const total = tokens.reduce((acc, token, index) => {
     const balance = new TokenDecimals(token.decimals).BNToFloat(token.balance);
-    return acc + balance * (prices.get(token.symbol) ?? 0);
+    const onChainBalance = new TokenDecimals(token.decimals).BNToFloat(onChainBalances?.[index] ?? BN_ZERO);
+    return acc + (balance + onChainBalance) * (prices.get(token.symbol) ?? 0);
   }, 0);
   const amountPrice = modalAmount * (selectedToken ? prices.get(selectedToken.symbol) ?? 0 : 0);
 
@@ -291,7 +305,7 @@ export default function Transfer() {
           }}
           />
         </div>
-        <TokenList selected={selectedToken} onClick={setSelectedToken} className={`w-full mt-2 ${walletIsNotInitialized ? "opacity-50" : "opacity-100"}`} tokens={tokens} />
+        <TokenList onChain={true} selected={selectedToken} onClick={setSelectedToken} className={`w-full mt-2 ${walletIsNotInitialized ? "opacity-50" : "opacity-100"}`} tokens={tokens} />
       </div>
 
       <Modal isOpen={modal} modalTitle={`${selectedToken?.symbol ?? ""} IBC ${modalTitle.current} `} onClose={() => { setModal(false) }} >

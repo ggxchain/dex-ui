@@ -27,6 +27,9 @@ export interface ApiInterface {
     tokenInfo(tokenId: TokenId): Promise<Token>;
     // Sadly we can't fetch all tokens owned by user, so we have to fetch all tokens and then filter them.
     onChainBalanceOf(tokenId: TokenId, address: string): Promise<Amount>;
+
+    // For IBC
+    ibcTokenNameToId(tokenName: string): Promise<TokenId>;
 }
 
 export enum Errors {
@@ -77,6 +80,10 @@ export default class Contract {
         if (typeof window !== 'undefined' && window.localStorage) {
             window.localStorage.setItem('mocked', `${value}`);
         }
+    }
+
+    async tokenNameToId(tokenName: string): Promise<TokenId> {
+        return await this.api.ibcTokenNameToId(tokenName);
     }
 
     async allTokens(): Promise<TokenId[]> {

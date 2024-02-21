@@ -204,6 +204,16 @@ export default class GGxNetwork implements ApiInterface {
         return Promise.reject([]);
     }
 
+
+    async ibcTokenNameToId(tokenName: string): Promise<TokenId> {
+        const api = await this.apiPromise();
+        const tokenInfo = await api.query.ics20Transfer.assetIdByName(tokenName);
+        if (tokenInfo !== undefined) {
+            return Promise.resolve(tokenInfo.toNumber());
+        }
+        return Promise.reject("Token not found");
+    }
+
     async makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, expirationInMillis: number, callback: onFinalize): Promise<void> {
         const api = await this.apiPromise();
         const [sender, senderSigner] = await this.accountSigner();
