@@ -33,7 +33,7 @@ export default function TokenList({ tokens, onClick, className, selected, onChai
                     <th>Balance</th>
                     {
                         onChain &&
-                        <th>On chain balance</th>
+                        <th>On GGx balance</th>
                     }
                     <th className="rounded-r-lg">Price</th>
                 </tr>

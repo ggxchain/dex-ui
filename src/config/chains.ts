@@ -16,7 +16,7 @@ const ggxCosmosTestnet = {
     chainId: "ggx-chain",
     chainName: "ggx-chain",
     rpc: "https://cosmos-rpc.dev.ggxchain.io",
-    rest: "http://144.217.10.28:3331",
+    rest: "https://cosmos-rpc.dev.ggxchain.io:1200",
     bip44: {
         coinType: 118,
     },
