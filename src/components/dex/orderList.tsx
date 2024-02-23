@@ -25,6 +25,8 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
     const [now, setNow] = useState(Date.now());
 
     useEffect(() => {
+        // TODO: JS timers slow down when you leave the page, and in a few hours they became not accurate at all.
+        // Ideally, we could reset the interval at some periods of time and check it.
         const interval = setInterval(() => {
             setNow(Date.now());
         }, 1000);
