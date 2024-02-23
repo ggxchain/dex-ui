@@ -3778,12 +3778,19 @@ export default {
         offeredAmount: 'u128',
         requestedAmount: 'u128',
         orderType: 'PalletDexOrderType',
+        expirationBlock: 'u32',
       },
       cancel_order: {
         orderIndex: 'u64',
       },
       take_order: {
-        orderIndex: 'u64'
+        orderIndex: 'u64',
+      },
+      deposit_native: {
+        amount: 'u128',
+      },
+      withdraw_native: {
+        amount: 'u128'
       }
     }
   },
@@ -5316,18 +5323,24 @@ export default {
       },
       Withdrawed: {
         assetId: 'u32',
+        amount: 'u128',
+      },
+      NativeDeposited: {
+        amount: 'u128',
+      },
+      NativeWithdrawed: {
         amount: 'u128'
       }
     }
   },
   /**
-   * Lookup544: pallet_dex::Order<sp_core::crypto::AccountId32>
+   * Lookup544: pallet_dex::Order<sp_core::crypto::AccountId32, Balance, BlockNumber>
    **/
   PalletDexOrder: {
     counter: 'u64',
     address: 'AccountId32',
     pair: '(u32,u32)',
-    timestamp: 'u64',
+    expirationBlock: 'u32',
     orderType: 'PalletDexOrderType',
     amountOffered: 'u128',
     amoutRequested: 'u128'
@@ -6822,17 +6835,17 @@ export default {
     _enum: ['InsufficientLiquidity', 'InsufficientDeposit', 'TooMuchRepay', 'InsufficientCollateral', 'LiquidatorIsBorrower', 'DepositsAreNotCollateral', 'InsufficientShortfall', 'InsufficientReserves', 'InvalidRateModelParam', 'MarketNotActivated', 'InvalidLendTokenId', 'MarketDoesNotExist', 'MarketAlreadyActivated', 'MarketAlreadyExists', 'NewMarketMustHavePendingState', 'SupplyCapacityExceeded', 'BorrowCapacityExceeded', 'InsufficientCash', 'InvalidFactor', 'InvalidSupplyCap', 'InvalidExchangeRate', 'InvalidAmount', 'DepositAllCollateralFailed', 'WithdrawAllCollateralFailed', 'TokensAlreadyLocked', 'LockedTokensCannotBeRedeemed']
   },
   /**
-   * Lookup868: pallet_dex::TokenInfo
+   * Lookup868: pallet_dex::TokenInfo<Balance>
    **/
   PalletDexTokenInfo: {
-    assetId: 'u32',
-    amount: 'u128'
+    amount: 'u128',
+    reserved: 'u128'
   },
   /**
    * Lookup873: pallet_dex::pallet::Error<T>
    **/
   PalletDexError: {
-    _enum: ['OrderIndexOverflow', 'InvalidOrderIndex', 'InsufficientBalance', 'NotOwner', 'AssetIdNotInTokenIndex', 'AssetIdNotInTokenInfoes', 'TokenBalanceOverflow', 'WithdrawBalanceMustKeepOrderSellAmount', 'UserAssetNotExist', 'PairOrderNotFound', 'PairAssetIdMustNotEqual']
+    _enum: ['OrderIndexOverflow', 'InvalidOrderIndex', 'InsufficientBalance', 'NotOwner', 'AssetIdNotInTokenIndex', 'AssetIdNotInTokenInfoes', 'TokenBalanceOverflow', 'WithdrawBalanceMustKeepOrderSellAmount', 'UserAssetNotExist', 'PairOrderNotFound', 'PairAssetIdMustNotEqual', 'NotEnoughBalance', 'ExpirationMustBeInFuture']
   },
   /**
    * Lookup875: sp_runtime::MultiSignature

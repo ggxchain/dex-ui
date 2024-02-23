@@ -1,4 +1,4 @@
-import { GGX_WSS_URL, NATIVE_TOKEN_ID_RESERVED } from "@/consts";
+import { BLOCK_TIME_IN_MILLIS, GGX_WSS_URL, NATIVE_TOKEN_ID_RESERVED } from "@/consts";
 
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Signer } from '@polkadot/api/types';
@@ -147,7 +147,9 @@ export default class GGxNetwork implements ApiInterface {
     async pairOrders(pair: Pair): Promise<Order[]> {
         const api = await this.apiPromise();
 
-        const orderList = await api.query.dex.pairOrders(pair);
+        const blockNumberPromise = api.query.system.number();
+        const orderListPromise = api.query.dex.pairOrders(pair);
+        const [blockNumber, orderList] = await Promise.all([blockNumberPromise, orderListPromise]);
         const ordersOpt = await Promise.all(orderList.map((number) => api.query.dex.orders(number)));
 
         if (ordersOpt !== undefined) {
@@ -156,11 +158,12 @@ export default class GGxNetwork implements ApiInterface {
                     return acc;
                 }
                 const order = orderOpt.unwrap();
+                const expiration = Date.now() + (order.expirationBlock.toNumber() - blockNumber.toNumber()) * BLOCK_TIME_IN_MILLIS
                 acc.push({
                     pubkey: order.address.toString(),
                     pair: [order.pair[0].toNumber(), order.pair[1].toNumber()],
                     counter: order.counter.toNumber(),
-                    timestamp: order.timestamp.toNumber(),
+                    expiration,
                     orderType: order.orderType.toString() as OrderType,
                     amountOffered: order.amountOffered.toBn(),
                     amoutRequested: order.amoutRequested.toBn()
@@ -174,7 +177,9 @@ export default class GGxNetwork implements ApiInterface {
     async userOrders(address: string): Promise<Order[]> {
         const api = await this.apiPromise();
 
-        const orderList = await api.query.dex.userOrders.entries(address);
+        const blockNumberPromise = api.query.system.number();
+        const orderListPromise = await api.query.dex.userOrders.entries(address);
+        const [blockNumber, orderList] = await Promise.all([blockNumberPromise, orderListPromise]);
         const ordersOpt = await Promise.all(orderList.map(([storageKey]) => api.query.dex.orders(storageKey.args[1])));
 
         if (ordersOpt !== undefined) {
@@ -183,11 +188,12 @@ export default class GGxNetwork implements ApiInterface {
                     return acc;
                 }
                 const order = orderOpt.unwrap();
+                const expiration = Date.now() + (order.expirationBlock.toNumber() - blockNumber.toNumber()) * BLOCK_TIME_IN_MILLIS
                 acc.push({
                     pubkey: order.address.toString(),
                     pair: [order.pair[0].toNumber(), order.pair[1].toNumber()],
                     counter: order.counter.toNumber(),
-                    timestamp: order.timestamp.toNumber(),
+                    expiration,
                     orderType: order.orderType.toString() as OrderType,
                     amountOffered: order.amountOffered.toBn(),
                     amoutRequested: order.amoutRequested.toBn()
@@ -198,12 +204,14 @@ export default class GGxNetwork implements ApiInterface {
         return Promise.reject([]);
     }
 
-    async makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, _expireTimestamp: number, callback: onFinalize): Promise<void> {
+    async makeOrder(pair: Pair, orderType: OrderType, amountOffered: Amount, amoutRequested: Amount, expirationInMillis: number, callback: onFinalize): Promise<void> {
         const api = await this.apiPromise();
         const [sender, senderSigner] = await this.accountSigner();
         const transactionCallback = this.transactionCallback(callback);
+        const curentBlock = await api.query.system.number();
+        const expirationBlock = curentBlock.addn(Math.ceil(expirationInMillis / BLOCK_TIME_IN_MILLIS));
 
-        await api.tx.dex.makeOrder(...pair, amountOffered, amoutRequested, orderType).signAndSend(sender, { signer: senderSigner }, transactionCallback);
+        await api.tx.dex.makeOrder(...pair, amountOffered, amoutRequested, orderType, expirationBlock).signAndSend(sender, { signer: senderSigner }, transactionCallback);
     }
 
     async cancelOrder(counterId: CounterId, callback: onFinalize): Promise<void> {

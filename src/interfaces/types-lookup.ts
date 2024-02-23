@@ -3970,6 +3970,7 @@ declare module '@polkadot/types/lookup' {
       readonly offeredAmount: u128;
       readonly requestedAmount: u128;
       readonly orderType: PalletDexOrderType;
+      readonly expirationBlock: u32;
     } & Struct;
     readonly isCancelOrder: boolean;
     readonly asCancelOrder: {
@@ -3979,7 +3980,15 @@ declare module '@polkadot/types/lookup' {
     readonly asTakeOrder: {
       readonly orderIndex: u64;
     } & Struct;
-    readonly type: 'Deposit' | 'Withdraw' | 'MakeOrder' | 'CancelOrder' | 'TakeOrder';
+    readonly isDepositNative: boolean;
+    readonly asDepositNative: {
+      readonly amount: u128;
+    } & Struct;
+    readonly isWithdrawNative: boolean;
+    readonly asWithdrawNative: {
+      readonly amount: u128;
+    } & Struct;
+    readonly type: 'Deposit' | 'Withdraw' | 'MakeOrder' | 'CancelOrder' | 'TakeOrder' | 'DepositNative' | 'WithdrawNative';
   }
 
   /** @name PalletDexOrderType (422) */
@@ -5590,7 +5599,15 @@ declare module '@polkadot/types/lookup' {
       readonly assetId: u32;
       readonly amount: u128;
     } & Struct;
-    readonly type: 'SubmitProcessedReceipts' | 'OrderCreated' | 'OrderTaken' | 'OrderCanceled' | 'Deposited' | 'Withdrawed';
+    readonly isNativeDeposited: boolean;
+    readonly asNativeDeposited: {
+      readonly amount: u128;
+    } & Struct;
+    readonly isNativeWithdrawed: boolean;
+    readonly asNativeWithdrawed: {
+      readonly amount: u128;
+    } & Struct;
+    readonly type: 'SubmitProcessedReceipts' | 'OrderCreated' | 'OrderTaken' | 'OrderCanceled' | 'Deposited' | 'Withdrawed' | 'NativeDeposited' | 'NativeWithdrawed';
   }
 
   /** @name PalletDexOrder (544) */
@@ -5598,7 +5615,7 @@ declare module '@polkadot/types/lookup' {
     readonly counter: u64;
     readonly address: AccountId32;
     readonly pair: ITuple<[u32, u32]>;
-    readonly timestamp: u64;
+    readonly expirationBlock: u32;
     readonly orderType: PalletDexOrderType;
     readonly amountOffered: u128;
     readonly amoutRequested: u128;
@@ -7470,8 +7487,8 @@ declare module '@polkadot/types/lookup' {
 
   /** @name PalletDexTokenInfo (868) */
   interface PalletDexTokenInfo extends Struct {
-    readonly assetId: u32;
     readonly amount: u128;
+    readonly reserved: u128;
   }
 
   /** @name PalletDexError (873) */
@@ -7487,7 +7504,9 @@ declare module '@polkadot/types/lookup' {
     readonly isUserAssetNotExist: boolean;
     readonly isPairOrderNotFound: boolean;
     readonly isPairAssetIdMustNotEqual: boolean;
-    readonly type: 'OrderIndexOverflow' | 'InvalidOrderIndex' | 'InsufficientBalance' | 'NotOwner' | 'AssetIdNotInTokenIndex' | 'AssetIdNotInTokenInfoes' | 'TokenBalanceOverflow' | 'WithdrawBalanceMustKeepOrderSellAmount' | 'UserAssetNotExist' | 'PairOrderNotFound' | 'PairAssetIdMustNotEqual';
+    readonly isNotEnoughBalance: boolean;
+    readonly isExpirationMustBeInFuture: boolean;
+    readonly type: 'OrderIndexOverflow' | 'InvalidOrderIndex' | 'InsufficientBalance' | 'NotOwner' | 'AssetIdNotInTokenIndex' | 'AssetIdNotInTokenInfoes' | 'TokenBalanceOverflow' | 'WithdrawBalanceMustKeepOrderSellAmount' | 'UserAssetNotExist' | 'PairOrderNotFound' | 'PairAssetIdMustNotEqual' | 'NotEnoughBalance' | 'ExpirationMustBeInFuture';
   }
 
   /** @name SpRuntimeMultiSignature (875) */

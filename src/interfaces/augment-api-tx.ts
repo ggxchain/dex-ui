@@ -1115,7 +1115,7 @@ declare module '@polkadot/api-base/types/submittable' {
       cancelOrder: AugmentedSubmittable<(orderIndex: u64 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u64]>;
       deposit: AugmentedSubmittable<(assetId: u32 | AnyNumber | Uint8Array, amount: u128 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u32, u128]>;
       depositNative: AugmentedSubmittable<(amount: u128 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u128]>;
-      makeOrder: AugmentedSubmittable<(assetId1: u32 | AnyNumber | Uint8Array, assetId2: u32 | AnyNumber | Uint8Array, offeredAmount: u128 | AnyNumber | Uint8Array, requestedAmount: u128 | AnyNumber | Uint8Array, orderType: PalletDexOrderType | 'BUY' | 'SELL' | number | Uint8Array) => SubmittableExtrinsic<ApiType>, [u32, u32, u128, u128, PalletDexOrderType]>;
+      makeOrder: AugmentedSubmittable<(assetId1: u32 | AnyNumber | Uint8Array, assetId2: u32 | AnyNumber | Uint8Array, offeredAmount: u128 | AnyNumber | Uint8Array, requestedAmount: u128 | AnyNumber | Uint8Array, orderType: PalletDexOrderType | 'BUY' | 'SELL' | number | Uint8Array, expirationBlock: u32 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u32, u32, u128, u128, PalletDexOrderType, u32]>;
       takeOrder: AugmentedSubmittable<(orderIndex: u64 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u64]>;
       withdraw: AugmentedSubmittable<(assetId: u32 | AnyNumber | Uint8Array, amount: u128 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u32, u128]>;
       withdrawNative: AugmentedSubmittable<(amount: u128 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u128]>;

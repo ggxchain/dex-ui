@@ -187,7 +187,7 @@ export default class ContractMock implements ApiInterface {
             pubkey: new GGXWallet().pubkey()?.address ?? "",
             pair,
             counter: counterId,
-            timestamp: Date.now(),
+            expiration: Date.now() + 24 * 3600,
             orderType: orderType,
             amountOffered,
             amoutRequested
