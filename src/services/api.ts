@@ -30,6 +30,7 @@ export interface ApiInterface {
 
     // For IBC
     ibcTokenNameToId(tokenName: string): Promise<TokenId>;
+    ibcWithdraw(channel: string, denom: string, amount: string, receiver: string, callback: onFinalize): Promise<void>;
 }
 
 export enum Errors {
@@ -199,6 +200,11 @@ export default class Contract {
         }
 
         wrapCallWithNotifications(curry(this.api.withdraw, this.api, tokenId, amount), "Withdraw", callback);
+    }
+
+    async ibcWithdraw(channel: string, denom: string, amount: string, receiver: string, callback: onFinalize) {
+        const _ = this.walletAddress(); // Check if wallet is initialized
+        wrapCallWithNotifications(curry(this.api.ibcWithdraw, this.api, channel, denom, amount, receiver), "IBC Withdraw", callback);
     }
 
     async cancelOrder(counterId: CounterId, callback: onFinalize) {

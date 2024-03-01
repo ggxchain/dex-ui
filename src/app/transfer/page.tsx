@@ -266,7 +266,14 @@ export default function Transfer() {
         })
         break;
       case "Withdraw":
-        console.error("not implemented");
+        const amount = new TokenDecimals(selectedToken.decimals).floatToBN(modalAmount);
+        const acccountAddress = account?.address;
+        if (!acccountAddress) return;
+        polkadot.current.ibcWithdraw(modalSourceChannel, selectedToken.symbol, amount.toString(), acccountAddress, () => {
+          setModal(false);
+          getBalances()
+        });
+
         setModal(false);
 
         break;

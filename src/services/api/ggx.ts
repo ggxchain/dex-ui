@@ -8,10 +8,16 @@ import { Amount, CounterId, OrderType, Token, TokenId } from "@/types";
 import Pair from "@/pair";
 import GGXWallet from "../ggx";
 
-import { BN_ZERO, hexToString } from "@polkadot/util";
+import { BN, BN_ZERO, hexToString } from "@polkadot/util";
 
 import { ApiInterface, onFinalize } from "../api";
 import Order from "@/order";
+import { Root, Type } from "protobufjs";
+
+
+const protobuf = require('protobufjs');
+
+const protoPath = '/ibc.proto';
 
 export default class GGxNetwork implements ApiInterface {
     api: ApiPromise | undefined;
@@ -172,6 +178,53 @@ export default class GGxNetwork implements ApiInterface {
             }, []);
         }
         return Promise.reject([]);
+    }
+
+    async ibcWithdraw(channel: string, denom: string, amount: string, receiver: string, callback: onFinalize) {
+        const api = await this.apiPromise();
+
+        const [sender, senderSigner] = await this.accountSigner();
+
+
+        let type_url = "/ibc.applications.transfer.v1.MsgTransfer";
+        let sourcePort = "transfer";
+
+        await protobuf.load(protoPath, async (err, root: Root) => {
+            console.log(err)
+            if (err) {
+                return undefined;
+            }
+            console.log(root)
+
+            let MsgTransfer = root.lookupType("MsgTransfer");
+            let message = MsgTransfer.create({
+                sourcePort,
+                sourceChannel: channel,
+                token: {
+                    denom,
+                    amount,
+                },
+                sender,
+                receiver,
+                timeoutTimestamp: 360 * 1000 * 100000,
+            })
+
+            const errMsg = MsgTransfer.verify(message);
+            if (errMsg) {
+                console.error(errMsg);
+                return undefined;
+            }
+
+
+            const buffer = MsgTransfer.encode(message).finish();
+            console.log(buffer.length);
+            let tx = api.tx.ics20Transfer.rawTransfer([
+                buffer
+            ]);
+
+
+            await tx.signAndSend(sender, { signer: senderSigner }, this.transactionCallback(callback));
+        });
     }
 
     async userOrders(address: string): Promise<Order[]> {
