@@ -12,6 +12,8 @@ import LoadingButton from "@/components/common/loadButton";
 import { InputWithPriceInfo } from "@/components/common/input";
 import { BN, BN_ZERO } from "@polkadot/util";
 import TokenDecimals from "@/tokenDecimalsConverter";
+import { Button } from "@/components/common/button";
+import Ruler from "@/components/common/ruler";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -207,11 +209,20 @@ export default function Wallet() {
     return (
         <div className="w-full h-full flex flex-col">
             <div className="flex w-full justify-between items-center">
-                <h1 className="text-xl md:text-3xl break-words w-[40%]">${total.toFixed(2)}</h1>
-                <div className="flex md:flex-row flex-col">
-                    <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Deposit {selectedToken?.name ?? ""}</button>
-                    <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected || selectedTokenBalance.lte(BN_ZERO)} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""}</button>
+                <h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow">${total.toFixed(2)}</h1>
+                <div className="flex md:flex-row flex-col gap-5">
+                    <Button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="w-1/4">
+                        Deposit {selectedToken?.name ?? ""}
+                    </Button>
+                    <Button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected || selectedTokenBalance.lte(BN_ZERO)} className="w-1/4">
+                        Withdraw {selectedToken?.name ?? ""}
+                    </Button>
                 </div>
+            </div>
+
+
+            <div className="mt-5">
+                <Ruler />
             </div>
 
             <div className="flex w-full justify-end mt-5">
@@ -223,7 +234,7 @@ export default function Wallet() {
             </div>
 
             <div className="flex justify-between md:mt-10 mt-1 items-center">
-                <input type="text" placeholder="Search..." onChange={onSearch} className="md:w-[30%] w-[45%] p-3 rounded-xl bg-bg-gr-2/20 text-slate-100" />
+                <input type="text" placeholder="Search..." onChange={onSearch} className="md:w-[30%] w-[45%] px-[15px] py-[16px] rounded-md bg-GGx-black2 text-slate-100" />
                 <div className="w-[45%] md:w-[30%] md:max-w-96 max-w-48">
                     {
                         walletIsNotInitialized
@@ -241,17 +252,17 @@ export default function Wallet() {
             <TokenList onChain={true} className={`${walletIsNotInitialized ? "opacity-50" : "opacity-100"} w-full`} tokens={displayTokens} onClick={onTokenSelect} />
 
             <Modal modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`} isOpen={modal} onClose={() => setModal(false)}>
-                <div className="flex flex-col w-full px-5">
+                <div className="flex flex-col w-full">
                     <InputWithPriceInfo
                         name="Amount"
-                        className="mt-1 rounded-2xl border pl-5 p-3 basis-1/4 bg-transparent w-full"
+                        className="mt-1 rounded-[4px] border p-3 basis-1/4 bg-transparent text-GGx-gray border-GGx-gray w-full"
                         value={modalAmount.toString()}
                         onChange={(e) => setModalAmount(Number(e.target.value))}
                         symbol={selectedToken?.name ?? ""}
                         price={amountPrice}
                     />
                     <div className="flex w-full justify-center">
-                        <LoadingButton loading={modalLoading} disabled={modalAmount === 0} className="disabled:opacity-50 text-lg md:w-1/2 mt-5 w-3/4 p-3 grow-on-hover glow-on-hover border border-white rounded-xl" onClick={omModalSubmit}>
+                        <LoadingButton loading={modalLoading} disabled={modalAmount === 0} className="disabled:opacity-90 text-lg md:w-1/2 mt-5 w-3/4 bg-GGx-dark border-GGx-dark" onClick={omModalSubmit}>
                             <p>{modalTitle.current}</p>
                         </LoadingButton>
                     </div>

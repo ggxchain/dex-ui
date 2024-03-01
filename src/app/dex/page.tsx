@@ -160,13 +160,13 @@ export default function Dex() {
   return (
     <div className="text-slate-100 flex flex-col w-full items-center">
       <div className="flex w-full justify-center md:flex-row flex-col">
-        <div className="flex flex-col md:w-[70%] w-full max-w-[600px]">
-          <div className="flex text-md justify-between">
+        <div className="flex flex-col w-full">
+          <div className="flex text-xl justify-between">
             <button onClick={() => setIsMaker(false)}>
-              <p className={isMaker ? "text-slate-500" : ""}>Taker order</p>
+              <p className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}>Taker order</p>
             </button>
             <button onClick={() => setIsMaker(true)}>
-              <p className={isMaker ? "" : "text-slate-500"}>Maker order</p>
+              <p className={isMaker ? "text-GGx-yellow" : "text-GGx-gray"}>Maker order</p>
             </button>
           </div>
 

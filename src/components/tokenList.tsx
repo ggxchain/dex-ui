@@ -26,23 +26,23 @@ export default function TokenList({ tokens, onClick, className, selected, onChai
     }
 
     return (
-        <table className={`table-fixed border-separate border-spacing-y-2 rounded-xl md:text-base text-sm [&>td]:px-6 [&>td]:py-20 ${className}`}>
+        <table className={`table-fixed border-separate border-spacing-y-2 rounded-xl md:text-base text-sm mt-[50px] [&>td]:px-6 [&>td]:py-20 ${className}`}>
             <thead>
-                <tr className="bg-bg-gr-2/80">
-                    <th className="rounded-l-lg text-left pl-16">Asset</th>
+                <tr className="text-GGx-gray text-left [&>th]:py-2 [&>th]:border-GGx-gray [&>th]:border-b-[1px] [&>th]:px-6 [&>th]:text-[16px] [&>th]:font-medium">
+                    <th>Asset</th>
                     <th>Balance</th>
                     {
                         onChain &&
                         <th>On chain balance</th>
                     }
-                    <th className="rounded-r-lg">Price</th>
+                    <th>Price</th>
                 </tr>
             </thead>
             <tbody>
                 {
                     tokens.length === 0 &&
                     <tr>
-                        <td className="text-center w-=">No tokens found</td>
+                        <td className="text-center">No tokens found</td>
                     </tr>
                 }
 
@@ -52,12 +52,12 @@ export default function TokenList({ tokens, onClick, className, selected, onChai
                         const amountConverter = new TokenDecimals(token.decimals);
 
                         return (
-                            <tr key={token.symbol} onClick={() => handleClick(token)} className={`text-center even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20 [&>td]:px-6 [&>td]:py-1 rounded-xl ${isSelected ? "filter backdrop-brightness-125" : ""} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}>
-                                <td className="rounded-l-lg">
+                            <tr key={token.symbol} onClick={() => handleClick(token)} className={`text-left font-medium text-[18px] text-GGx-light even:bg-GGx-black2 even:bg-opacity-70 [&>td]:px-6 [&>td]:py-1 ${isSelected ? "filter backdrop-brightness-125" : ""} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}>
+                                <td>
                                     <div className="flex items-center w-full">
-                                        <Image width={0} height={0} src={token.url} className="md:w-10 md:h-10 w-5 h-5 my-1 mr-2" alt={`${token.name} icon`} />
+                                        <Image width={0} height={0} src={token.url} className="md:w-6 md:h-6 w-5 h-5 my-1 mr-2" alt={`${token.name} icon`} />
                                         <p className="font-bold">{token.name}</p>
-                                        <sup className="pl-1 opacity-80">{token.network}</sup>
+                                        <sup className="pl-1 font-normal text-[10px]">{token.network}</sup>
                                     </div>
                                 </td>
                                 <td>
@@ -69,7 +69,7 @@ export default function TokenList({ tokens, onClick, className, selected, onChai
                                         <Balance amountConverter={amountConverter} symbol={token.symbol} balance={token.onChainBalance ?? BN_ZERO} estimatedPrice={token.estimatedPrice} />
                                     </td>
                                 }
-                                <td className="rounded-r-lg">${token.estimatedPrice.toString()}</td>
+                                <td>${token.estimatedPrice.toString()}</td>
                             </tr>
                         )
                     })
@@ -90,15 +90,10 @@ function Balance({ balance, estimatedPrice, symbol, amountConverter }: BalancePr
     const estimatedPriceWithPrecision = amountConverter.BNToFloat(balance) * estimatedPrice;
 
     return (
-        <div className="flex flex-col text-xs md:text-base text-center break-words">
-            {
-                <p className="mt-1">{amountConverter.BNtoDisplay(balance, symbol)}</p>
-            }
-
-            <span className="opacity-50 mt-1">
-                (${estimatedPriceWithPrecision.toFixed(2)})
-            </span>
-
+        <div className="text-[18px] font-medium text-left break-words">
+            <p className="mt-1">{amountConverter.BNtoDisplay(balance, symbol)}
+                <sup className="ml-1 font- text-[10px]">(${estimatedPriceWithPrecision.toFixed(2)})</sup>
+            </p>
         </div>
     )
 }

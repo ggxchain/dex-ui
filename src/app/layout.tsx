@@ -20,7 +20,7 @@ export default function Layout({
 }>) {
   return (
     <html lang="en">
-      <body className={`inter.className min-h-dvh`}>
+      <body className={`inter.className relative min-h-dvh`}>
         <main className='h-dvh flex flex-col'>
           <ToastContainer position='top-right' closeOnClick theme='colored' />
 
