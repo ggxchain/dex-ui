@@ -5,7 +5,7 @@ import Contract, { errorHandler } from "@/services/api";
 import GGXWallet, { Account } from "@/services/ggx";
 import { Token, Amount, TokenId } from "@/types";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import Select from "@/components/common/select";
+import Select, { SelectAccount } from "@/components/common/select";
 import TokenList from "@/components/tokenList";
 import Modal from "@/components/common/modal";
 import LoadingButton from "@/components/common/loadButton";
@@ -239,9 +239,9 @@ export default function Wallet() {
                     {
                         walletIsNotInitialized
                             ? <button onClick={connectWallet} className="text-center text-slate-100 secondary-gradient rounded-2xl text-wrap w-full h-full md:text-base text-sm p-3 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
-                            : <Select<Account> name="Account" onChange={handleSelectChange} options={ggxAccounts} value={selectedAccount} className="w-full h-full" wrapperClassName="pt-1"
+                            : <SelectAccount<Account> name="Account" onChange={handleSelectChange} options={ggxAccounts} value={selectedAccount} className="w-full h-full"
                                 childFormatter={(account) => {
-                                    return (<div className="w-full p-3 m-0 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                                    return (<div className="w-full p-3 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
                                         <span className="text-base">{account.name ? account.name : `Account ${ggxAccounts.findIndex((acc) => acc.address === account.address)}`}</span>
                                     </div>)
                                 }}
