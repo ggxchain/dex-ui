@@ -61,9 +61,7 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background-image: url('../../public/menu.png');
-    background-position: center;
-    background-repeat: no-repeat;
+    background: linear-gradient(180deg, #292e36, #0000);
     background-size: cover;
     opacity: 80%;
     z-index: -1;
