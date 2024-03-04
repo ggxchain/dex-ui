@@ -158,7 +158,7 @@ export default function Dex() {
     : 0;
 
   return (
-    <div className="text-slate-100 flex flex-col w-full items-center">
+    <div className="text-GGx-light flex flex-col w-full items-center">
       <div className="flex w-full justify-center md:flex-row flex-col">
         <div className="flex flex-col w-full">
           <div className="flex text-xl justify-between">

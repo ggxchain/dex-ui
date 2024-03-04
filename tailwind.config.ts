@@ -19,6 +19,10 @@ const config: Config = {
         'GGx-dark': "#191D21",
         'GGx-light': "#DFDDCD",
         'GGx-black2': "#11100C",
+      },
+      fontFamily: {
+        'telegraf': ['PP Telegraf', 'sans-serif'],
+        'main': ['DM Sans', 'sans-serif'],
       }
     },
   },

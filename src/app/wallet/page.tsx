@@ -5,7 +5,7 @@ import Contract, { errorHandler } from "@/services/api";
 import GGXWallet, { Account } from "@/services/ggx";
 import { Token, Amount, TokenId } from "@/types";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import Select, { SelectAccount } from "@/components/common/select";
+import SelectLight, { SelectDark } from "@/components/common/select";
 import TokenList from "@/components/tokenList";
 import Modal from "@/components/common/modal";
 import LoadingButton from "@/components/common/loadButton";
@@ -209,7 +209,7 @@ export default function Wallet() {
     return (
         <div className="w-full h-full flex flex-col">
             <div className="flex w-full justify-between items-center">
-                <h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow">${total.toFixed(2)}</h1>
+                <h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">${total.toFixed(2)}</h1>
                 <div className="flex md:flex-row flex-col gap-5">
                     <Button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="w-1/4">
                         Deposit {selectedToken?.name ?? ""}
@@ -229,23 +229,26 @@ export default function Wallet() {
                 <label className="inline-flex relative items-center cursor-pointer ">
                     <input type="checkbox" checked={!Contract.isMocked()} onChange={onContractTypeChange} className="sr-only peer" />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-bg-gr-2"></div>
-                    <span className="ms-3 text-sm font-medium text-slate-100 dark:text-gray-300">Contract</span>
+                    <span className="ms-3 text-sm font-medium text-GGx-light dark:text-gray-300">Contract</span>
                 </label>
             </div>
 
             <div className="flex justify-between md:mt-10 mt-1 items-center">
-                <input type="text" placeholder="Search..." onChange={onSearch} className="md:w-[30%] w-[45%] px-[15px] py-[16px] rounded-md bg-GGx-black2 text-slate-100" />
+                <input type="text" placeholder="Search..." onChange={onSearch} className="md:w-[30%] w-[45%] px-[15px] py-[16px] rounded-md bg-GGx-black2 text-GGx-light" />
                 <div className="w-[45%] md:w-[30%] md:max-w-96 max-w-48">
                     {
                         walletIsNotInitialized
-                            ? <button onClick={connectWallet} className="text-center text-slate-100 secondary-gradient rounded-2xl text-wrap w-full h-full md:text-base text-sm p-3 m-1 grow-on-hover glow-on-hover">Connect the wallet</button>
-                            : <SelectAccount<Account> name="Account" onChange={handleSelectChange} options={ggxAccounts} value={selectedAccount} className="w-full h-full"
-                                childFormatter={(account) => {
-                                    return (<div className="w-full p-3 h-full text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
-                                        <span className="text-base">{account.name ? account.name : `Account ${ggxAccounts.findIndex((acc) => acc.address === account.address)}`}</span>
-                                    </div>)
-                                }}
-                            />
+                            ? <Button onClick={connectWallet} className="w-full h-full">Connect the wallet</Button>
+                            : <div className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]" >
+                                <p className="h-full p-4 text-[14px] text-GGx-gray">Account</p>
+                                <SelectDark<Account> onChange={handleSelectChange} options={ggxAccounts} value={selectedAccount} className="w-full h-full"
+                                    childFormatter={(account) => {
+                                        return (<div className="w-full p-3 h-full text-GGx-light rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                                            <span className="text-base">{account.name ? account.name : `Account ${ggxAccounts.findIndex((acc) => acc.address === account.address)}`}</span>
+                                        </div>)
+                                    }}
+                                />
+                            </div>
                     }
                 </div>
             </div>

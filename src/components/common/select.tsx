@@ -10,12 +10,10 @@ interface SelectProps<Type> {
     options: readonly Type[];
     childFormatter: (value: Type) => ReactNode;
     className?: string;
-    name?: string;
-    wrapperClassName?: string;
     disabled?: boolean;
 }
 
-export default function Select<Type>({ value, onChange, options, childFormatter, className, name, wrapperClassName, ...props }: Readonly<SelectProps<Type>>) {
+export default function SelectLight<Type>({ value, onChange, options, childFormatter, className, ...props }: Readonly<SelectProps<Type>>) {
     const disabled = props.disabled ?? false;
     const onChangeValue = (e: SingleValue<Type>) => {
         if (e === null) {
@@ -25,51 +23,49 @@ export default function Select<Type>({ value, onChange, options, childFormatter,
     }
 
     return (
-        <div className={"relative w-full h-full ".concat(wrapperClassName ?? "")}>
-            <ReactSelect
-                isDisabled={disabled}
-                instanceId={`react-select`}
-                value={value}
-                onChange={onChangeValue}
-                options={options}
-                className={className}
-                theme={(theme) => ({
-                    ...theme,
-                    borderRadius: 16
-                })}
-                styles={{
-                    control: (baseStyles, state) => ({
-                        ...baseStyles,
-                        backgroundColor: 'transparent',
-                        borderRadius: '0px',
-                        borderTopLeftRadius: '1rem',
-                        borderBottomLeftRadius: '1rem'
-                    }),
-                    option: (baseStyles, state) => ({
-                        ...baseStyles,
-                        borderRadius: '16px',
-                        marginBottom: '1px',
-                    }),
-                    menu: (baseStyles, state) => ({
-                        ...baseStyles,
-                        backgroundColor: 'transparent',
-                        boxShadow: 'none',
-                    }),
-                    menuList: (baseStyles, state) => ({
-                        ...baseStyles,
-                    }),
-                }}
+        <ReactSelect
+            isDisabled={disabled}
+            instanceId={`react-select`}
+            value={value}
+            onChange={onChangeValue}
+            options={options}
+            className={className}
+            theme={(theme) => ({
+                ...theme,
+                borderRadius: 16
+            })}
+            styles={{
+                control: (baseStyles, state) => ({
+                    ...baseStyles,
+                    backgroundColor: '#DFDDCD',
+                    borderColor: '#78776D',
+                    borderRadius: '4px',
+                }),
+                option: (baseStyles, state) => ({
+                    ...baseStyles,
+                    borderRadius: '16px',
+                    borderColor: '#78776D',
+                    backgroundColor: '#DFDDCD',
+                }),
+                menu: (baseStyles, state) => ({
+                    ...baseStyles,
+                    borderColor: '#78776D',
+                    backgroundColor: '#DFDDCD',
+                    boxShadow: 'none',
+                }),
+                menuList: (baseStyles, state) => ({
+                    ...baseStyles,
+                    backgroundColor: '#DFDDCD',
+                    borderRadius: '0px',
+                }),
+            }}
 
-                formatOptionLabel={childFormatter}
-            />
-            <p className="absolute top-1/4 left-2 -translate-y-1/2 text-[75%] opacity-75" style={{ lineHeight: "1", marginBlockStart: "0" }}>
-                {name}
-            </p>
-        </div>
+            formatOptionLabel={childFormatter}
+        />
     )
 }
 
-export function SelectAccount<Type>({ value, onChange, options, childFormatter, className, name, wrapperClassName, ...props }: Readonly<SelectProps<Type>>) {
+export function SelectDark<Type>({ value, onChange, options, childFormatter, className, ...props }: Readonly<SelectProps<Type>>) {
     const disabled = props.disabled ?? false;
     const onChangeValue = (e: SingleValue<Type>) => {
         if (e === null) {
@@ -79,50 +75,45 @@ export function SelectAccount<Type>({ value, onChange, options, childFormatter, 
     }
 
     return (
-        <div className={"relative flex w-full h-full border-GGx-black2 border-2 rounded-[4px] ".concat(wrapperClassName ?? "")}>
-            <div className="h-full p-4 text-[14px] text-GGx-gray">
-                {name}
-            </div>
-            <ReactSelect
-                isDisabled={disabled}
-                instanceId={`react-select`}
-                value={value}
-                onChange={onChangeValue}
-                options={options}
-                className={className}
-                theme={(theme) => ({
-                    ...theme,
-                    borderRadius: 16
-                })}
-                styles={{
-                    control: (baseStyles, state) => ({
-                        ...baseStyles,
-                        backgroundColor: '#11100C',
-                        borderColor: '#11100C',
-                        borderRadius: '0px',
-                    }),
-                    option: (baseStyles, state) => ({
-                        ...baseStyles,
-                        borderRadius: '16px',
-                        borderColor: '#11100C',
-                        backgroundColor: '#11100C',
-                    }),
-                    menu: (baseStyles, state) => ({
-                        ...baseStyles,
-                        borderColor: '#11100C',
-                        backgroundColor: '#11100C',
-                        boxShadow: 'none',
-                    }),
-                    menuList: (baseStyles, state) => ({
-                        ...baseStyles,
-                        borderColor: '#11100C',
-                        backgroundColor: '#11100C',
-                        borderRadius: '0px',
-                    }),
-                }}
+        <ReactSelect
+            isDisabled={disabled}
+            instanceId={`react-select`}
+            value={value}
+            onChange={onChangeValue}
+            options={options}
+            className={className}
+            theme={(theme) => ({
+                ...theme,
+                borderRadius: 16
+            })}
+            styles={{
+                control: (baseStyles, state) => ({
+                    ...baseStyles,
+                    backgroundColor: '#11100C',
+                    borderColor: '#11100C',
+                    borderRadius: '0px',
+                }),
+                option: (baseStyles, state) => ({
+                    ...baseStyles,
+                    borderRadius: '16px',
+                    borderColor: '#11100C',
+                    backgroundColor: '#11100C',
+                }),
+                menu: (baseStyles, state) => ({
+                    ...baseStyles,
+                    borderColor: '#11100C',
+                    backgroundColor: '#11100C',
+                    boxShadow: 'none',
+                }),
+                menuList: (baseStyles, state) => ({
+                    ...baseStyles,
+                    borderColor: '#11100C',
+                    backgroundColor: '#11100C',
+                    borderRadius: '0px',
+                }),
+            }}
 
-                formatOptionLabel={childFormatter}
-            />
-        </div>
+            formatOptionLabel={childFormatter}
+        />
     )
 }

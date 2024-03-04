@@ -3,7 +3,7 @@ import Spinner from "../common/spinner";
 import Contract, { errorHandler } from "@/services/api";
 import { Token } from "@/types";
 import CexService from "@/services/cex";
-import Select from "../common/select";
+import SelectLight from "../common/select";
 import Image from "next/image";
 import { Input, InputWithPriceInfo } from "../common/input";
 
@@ -76,15 +76,15 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
     const price = (amount ?? 0) * token.price;
 
     return (
-        <div className="flex items-center justify-between[&>*]:text-slate-100">
-            <Select<TokenWithPrice>
+        <div className="flex items-center justify-between[&>*]:text-GGx-light">
+            <SelectLight<TokenWithPrice>
                 value={token}
                 onChange={handleSelectChange}
                 options={tokens}
                 className="w-full h-full"
                 childFormatter={(token: Token) => {
                     return (
-                        <div className="flex items-center text-slate-100 w-full border-white md:text-lg text-base grow-on-hover">
+                        <div className="flex items-center text-GGx-light w-full border-white md:text-lg text-base grow-on-hover">
                             <Image width={0} height={0} src={`/svg/${token.symbol.toLowerCase()}.svg`} className="w-10 h-10 my-1 mr-2" alt={`${token.name} icon`} />
                             <p className="font-bold">{token.name}</p>
                             <sup className="pl-1 opacity-90">{token.network}</sup>

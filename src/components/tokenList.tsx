@@ -26,7 +26,7 @@ export default function TokenList({ tokens, onClick, className, selected, onChai
     }
 
     return (
-        <table className={`table-fixed border-separate border-spacing-y-2 rounded-xl md:text-base text-sm mt-[50px] [&>td]:px-6 [&>td]:py-20 ${className}`}>
+        <table className={`font-main table-fixed border-separate border-spacing-y-2 rounded-xl md:text-base text-sm mt-[25px] [&>td]:px-6 [&>td]:py-20 ${className}`}>
             <thead>
                 <tr className="text-GGx-gray text-left [&>th]:py-2 [&>th]:border-GGx-gray [&>th]:border-b-[1px] [&>th]:px-6 [&>th]:text-[16px] [&>th]:font-medium">
                     <th>Asset</th>

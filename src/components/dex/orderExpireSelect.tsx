@@ -1,6 +1,6 @@
 import React, { ChangeEvent, useMemo, useState } from 'react';
 import { Input } from '../common/input';
-import Select from '../common/select';
+import SelectLight from '../common/select';
 
 interface Props {
     onChange: (number: number, unit: Option) => void;
@@ -49,15 +49,15 @@ export default function OrderExpireSelect(props: Props) {
     }
 
     return (
-        <div className="flex items-center justify-between [&>*]:text-slate-100">
-            <Select<Option>
+        <div className="flex items-center justify-between [&>*]:text-GGx-light">
+            <SelectLight<Option>
                 value={props.unit}
                 onChange={onSelectChange}
                 options={values}
                 wrapperClassName="w-full h-full"
                 childFormatter={(option: Option) => {
                     return (
-                        <div className="flex p-3 md:p-2.5 items-center text-slate-100 w-full border-white md:text-lg text-base grow-on-hover">
+                        <div className="flex p-3 md:p-2.5 items-center text-GGx-light w-full border-white md:text-lg text-base grow-on-hover">
                             <p className="font-bold">{option.string}</p>
                         </div>
                     );

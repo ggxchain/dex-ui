@@ -49,7 +49,7 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
             <tbody>
                 {
                     orders.length === 0
-                        ? <tr><td className="text-slate-100 opacity-50 text-center">No orders found</td></tr>
+                        ? <tr><td className="text-GGx-light opacity-50 text-center">No orders found</td></tr>
                         : orders.map((order) => {
                             const ownedToken = OrderUtils.ownedToken(order) === order.pair[0] ? order.token1 : order.token2;
                             const desiredToken = OrderUtils.desiredToken(order) === order.pair[0] ? order.token1 : order.token2;
