@@ -32,7 +32,11 @@ export default function SelectLight<Type>({ value, onChange, options, childForma
             className={className}
             theme={(theme) => ({
                 ...theme,
-                borderRadius: 16
+                colors: {
+                    ...theme.colors,
+                    primary: '#DFDDCD',
+                },
+                borderRadius: 16,
             })}
             styles={{
                 control: (baseStyles, state) => ({
@@ -84,6 +88,10 @@ export function SelectDark<Type>({ value, onChange, options, childFormatter, cla
             className={className}
             theme={(theme) => ({
                 ...theme,
+                colors: {
+                    ...theme.colors,
+                    primary: '11100C',
+                },
                 borderRadius: 16
             })}
             styles={{
