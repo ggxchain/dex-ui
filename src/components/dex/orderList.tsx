@@ -3,6 +3,7 @@ import Contract, { errorHandler } from "@/services/api";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import { DetailedOrder } from "@/types";
 import { useEffect, useState } from "react";
+import Ruler from "../common/ruler";
 
 export const useUserOrders = (contract: Contract) => {
     const [orders, setOrders] = useState<DetailedOrder[]>([]);
@@ -34,16 +35,18 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
         return () => clearInterval(interval);
     }, [orders])
 
-    return <div className="w-full h-full flex flex-col p-5 text-xs md:text-base">
-        <p className="md:text-xl text-base text-center w-full">My orders</p>
+    return <div className="w-full h-full flex flex-col text-xs md:text-base">
+        <p className="md:text-[30px] text-base w-full text-GGx-yellow pb-[16px]">My orders</p>
+        <Ruler />
         <table className="table-fixed mt-2 md:mt-5 border-separate md:border-spacing-y-2 border-spacing-y-1 [&>td]:px-6 [&>td]:py-20`">
             <thead>
-                <tr className="bg-bg-gr-2/80 p-1">
-                    <th className="text-center rounded-l-xl">Buy</th>
-                    <th className="text-center">Price</th>
-                    <th className="text-center">Sell</th>
-                    <th className="text-center">Expire in</th>
-                    <th className="text-center rounded-r-xl">Actions</th>
+                <tr className="[&>th]:text-left [&th]:text-GGx-gray p-1">
+                    <th >Order</th>
+                    <th >Buy</th>
+                    <th >Price</th>
+                    <th >Sell</th>
+                    <th >Expire in</th>
+                    <th >Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -62,6 +65,9 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
                             const expiredText = expiration < 0 ? 'Expired' : expirationFormat(expiration);
                             return (
                                 <tr key={order.counter} className="h-full w-full even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20">
+                                    <td>
+
+                                    </td>
 
                                     {/*Buy*/}
                                     <td className="p-1 text-center rounded-l-xl">

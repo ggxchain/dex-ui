@@ -98,8 +98,10 @@ export function SelectDark<Type>({ value, onChange, options, childFormatter, cla
                 control: (baseStyles, state) => ({
                     ...baseStyles,
                     backgroundColor: '#11100C',
-                    borderColor: '#11100C',
+                    borderColor: '#78776D',
                     borderRadius: '0px',
+                    borderTopLeftRadius: '4px',
+                    borderBottomLeftRadius: '4px',
                 }),
                 option: (baseStyles, state) => ({
                     ...baseStyles,

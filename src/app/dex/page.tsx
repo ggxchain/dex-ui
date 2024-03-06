@@ -15,6 +15,8 @@ import Order from "@/order";
 import OrderBook, { useOrderBookOrders } from "@/components/dex/orderBook";
 import OrdersList, { useUserOrders } from "@/components/dex/orderList";
 import OrderExpireSelect, { useExpire } from "@/components/dex/orderExpireSelect";
+import { GrayButton, YellowButton } from "@/components/common/button";
+import { Rule } from "postcss";
 
 type TokenData = TokenWithPrice & {
   amount: Amount;
@@ -158,26 +160,27 @@ export default function Dex() {
     : 0;
 
   return (
-    <div className="text-GGx-light flex flex-col w-full items-center">
-      <div className="flex w-full justify-center md:flex-row flex-col">
-        <div className="flex flex-col w-full">
-          <div className="flex text-xl justify-between">
-            <button onClick={() => setIsMaker(false)}>
-              <p className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}>Taker order</p>
-            </button>
-            <button onClick={() => setIsMaker(true)}>
-              <p className={isMaker ? "text-GGx-yellow" : "text-GGx-gray"}>Maker order</p>
-            </button>
-          </div>
+    <div className="text-GGx-gray flex flex-col w-full items-center">
+      <div className="flex flex-col w-full">
+        <div className="flex text-xl justify-between text-[30px] pb-[10px]">
+          <button onClick={() => setIsMaker(false)}>
+            <p className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}>Taker order</p>
+          </button>
+          <button onClick={() => setIsMaker(true)}>
+            <p className={isMaker ? "text-GGx-yellow" : "text-GGx-gray"}>Maker order</p>
+          </button>
+        </div>
 
-          <Ruler />
+        <Ruler />
 
-          <div className="flex w-full flex-col rounded-3xl secondary-gradient p-5 mt-5">
-            <div className="flex justify-between text-sm">
-              <p>Sell</p>
+        <div className="flex w-full">
+          <div className="flex flex-col rounded-3xl secondary-gradient mt-5 basis-3/5">
+            <div className="flex justify-between text-[18px]">
+              <p className="font-medium">Sell</p>
               <div className="flex">
-                <p className="text-opacity-75 font-thin">Available for swaps:</p>
-                <p className="font-normal mx-5">{amountConverter.BNtoDisplay(availableBalanceNormalized, sell?.symbol ?? "")}</p>
+                <p>Available:
+                  <span className="font-bold"> {amountConverter.BNtoDisplay(availableBalanceNormalized, sell?.symbol ?? "")}</span>
+                </p>
               </div>
             </div>
             <TokenSelector token={sell} tokens={tokens} lockedAmount={isTaker} amount={amountConverter.BNToFloat(sellAmount)} onChange={onSellChange} />
@@ -198,64 +201,72 @@ export default function Dex() {
                 </div>
               }
             </div>
-            <p className="text-sm mt-2">Buy</p>
+            <p className="text-[18px] font-medium mt-5">Buy</p>
             <TokenSelector token={buy} tokens={tokens} lockedAmount={isTaker} amount={amountConverter.BNToFloat(buyAmount)} onChange={onBuyChange} />
 
             {isMaker &&
               <div>
-                <p className="text-sm mt-2">Expiration</p>
+                <p className="text-[18px] font-medium mt-5">Expiration</p>
                 <OrderExpireSelect number={expireNumber} unit={expireUnit} onChange={setExpiration} />
               </div>
             }
 
-            <Ruler />
 
-            <div className="mt-4">
-              <div className="flex justify-between items-center">
-                <p className="font-semibold">Rate:</p>
+            <div className="pt-[18px]">
+              <Ruler />
+
+              <div className="flex justify-between pt-[10px]">
+                <p className="font-semibold">RATE:</p>
                 {rate > 0 && !isTokenNotSelected && !isTokenSame
-                  ? <div className="flex flex-col">
+                  ? <div className="flex flex-col text-GGx-light">
                     <p className="font-semibold">
                       1 {sell.name} = {rate.toFixed(3)} {buy.name} ≈ ${buyPriceRate.toFixed(2)}
                     </p>
-                    <p className="text-xs text-right opacity-75">
+                    <p className="text-base text-right text-GGx-gray">
                       1 {buy.name} = {reverseRate.toFixed(3)} {sell.name} ≈ ${sellPriceRate.toFixed(2)}
                     </p>
                   </div>
-                  : <p>0.00</p>
+                  : <p className="text-GGx-light">0.00</p>
                 }
               </div>
 
               <div className="flex justify-between ">
-                <p className="font-semibold">Compared to CEx:</p>
-                <p className={`${comparedToMarket < 0 ? "text-red-500" : comparedToMarket > 0 ? "text-green-500" : ""}`}>{Math.abs(comparedToMarket).toFixed(1)}%</p>
+                <p className="font-semibold">COMPARED TO CEX:</p>
+                <p className={`${comparedToMarket < 0 ? "text-GGx-red" : comparedToMarket > 0 ? "text-GGx-green" : ""}`}>{Math.abs(comparedToMarket).toFixed(1)}%</p>
               </div>
 
               <div className="flex justify-between">
-                <p className="font-semibold">Total fee:</p>
+                <p className="font-semibold">TOTAL FEE:</p>
                 <p>0.00</p>
               </div>
 
-              <div className="flex justify-around mt-5">
-                <button className="rounded-2xl border p-2 m-2 basis-1/4 grow-on-hover glow-on-hover" onClick={onClear}>Clear</button>
+              <div className="w-full mt-5 mb-5">
+                <Ruler />
+              </div>
+
+
+              <div className="flex w-3/5 gap-4 pt-[18px]">
                 {
                   isWalletNotConnected
-                    ? <button className="basis-3/4 rounded-2xl border p-2 m-2 grow-on-hover" onClick={onLogin}>Connect wallet</button>
-                    : <button className="basis-3/4 rounded-2xl border p-2 m-2 enabled:grow-on-hover enabled:glow-on-hover disabled:opacity-50" disabled={isFormHasErrors} onClick={onSwap}>{isTaker ? "Take order" : "Make order"}</button>
+                    ? <YellowButton onClick={onLogin}>Connect wallet</YellowButton>
+                    : <YellowButton disabled={isFormHasErrors} onClick={onSwap}>{isTaker ? "Take order" : "Make order"}</YellowButton>
                 }
+                <GrayButton className="basis-1/5" onClick={onClear}>Clear</GrayButton>
               </div>
             </div>
           </div>
-          <OrdersList orders={userOrders} cancelOrder={onCancelOrder} />
-        </div>
-        {
-          isTaker && !isTokenNotSelected && !isTokenSame &&
-          <div className="md:has-[table]:py-14 md:py-5 px-5 md:has-[table]:w-[30%] has-[table]:w-full">
+          <div className="md:has-[table]:py-12 md:py-5 pl-5 basis-2/5">
             <OrderBook orders={orderBookOrders} buyToken={buy} sellToken={sell} onChange={onOrderChange} selectedOrder={order} />
           </div>
-        }
+
+        </div>
+
+      </div>
+      <div className="py-[75px] w-full ">
+        <OrdersList orders={userOrders} cancelOrder={onCancelOrder} />
       </div>
 
     </div>
+
   )
 }

@@ -25,8 +25,8 @@ export default function Layout({
           <ToastContainer position='top-right' closeOnClick theme='colored' />
 
           <HeaderWithNavbar />
-          <div className="flex h-dvh flex-col items-center justify-between md:ml-64">
-            <div className="text-GGx-light flex md:h-[80vh] w-[90%] p-5 md:mt-10 md:p-10 md:rounded-2xl">
+          <div className="flex h-dvh flex-col items-center justify-between md:ml-80">
+            <div className="text-GGx-light flex md:h-[80vh] w-[90%] p-5 md:mt-10">
               {children}
             </div>
           </div>

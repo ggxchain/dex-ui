@@ -1,18 +1,20 @@
 type InputProps = React.ComponentPropsWithRef<'input'> & {
-    name: string;
+    name?: string;
     wrapperClassName?: string;
 };
 
 export function Input({ name, placeholder, wrapperClassName, className, ...props }: InputProps) {
-    const isValue = props.value !== undefined && props.value !== null && props.value !== "";
     const inputPlaceholder = placeholder ?? name;
 
     return (
+
         <div className={`w-full h-full ${wrapperClassName ?? ''}`}>
-            <p className={`text-GGx-gray text-[14px]`}
-                style={{ lineHeight: "1", marginBlockStart: "0" }}>
-                {name}
-            </p>
+            {name &&
+                <p className={`text-GGx-gray text-[14px]`}
+                    style={{ lineHeight: "1", marginBlockStart: "0" }}>
+                    {name}
+                </p>
+            }
             <input {...props} placeholder={inputPlaceholder} value={props.value || ""} className={className} />
         </div>
     );
@@ -21,6 +23,7 @@ export function Input({ name, placeholder, wrapperClassName, className, ...props
 type InputWithPriceInfoProps = InputProps & {
     symbol: string;
     price: number;
+    suffixStyle?: string;
 };
 
 export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
@@ -33,7 +36,7 @@ export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
             type="number"
             value={value.toString()}
         />
-        <div className="flex text-GGx-gray text-14px items-center space-x-1 absolute bottom-0 right-2 top-1/2 -translate-y-1/4">
+        <div className={`flex text-14px items-center space-x-1 absolute bottom-1/2 right-2 top-1/2 -translate-y-1/4 ${props.suffixStyle}`}>
             <p className="hidden md:block">{props.symbol}</p>
             <span className="text-sm">(${props.price.toFixed(2)})</span>
         </div>
