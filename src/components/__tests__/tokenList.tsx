@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import OrdersList, { ListElement } from "../tokenList";
 import { BN_TEN } from "@polkadot/util";
-import TokenList from "../tokenList";
+import TokenList, { ListElement } from "../tokenList";
 
 describe("OrdersList", () => {
     const tokens: ListElement[] = [
@@ -26,6 +25,17 @@ describe("OrdersList", () => {
             estimatedPrice: 1,
             url: "/svg/usdt.svg",
             onChainBalance: BN_TEN,
+        },
+        {
+            id: 2,
+            name: "USDC",
+            symbol: "USDC",
+            network: "ETH",
+            decimals: 6,
+            balance: BN_TEN,
+            estimatedPrice: 1,
+            url: "/svg/usdc.svg",
+            onChainBalance: BN_TEN,
         }
     ]
 
@@ -40,9 +50,10 @@ describe("OrdersList", () => {
         expect(screen.queryByText("On-chain balance")).toBeNull();
         expect(screen.getByAltText("ETH icon")).toBeInTheDocument();
         expect(screen.getByAltText("USDT icon")).toBeInTheDocument();
+        expect(screen.getByAltText("USDC icon")).toBeInTheDocument();
 
         const rows = screen.getAllByRole("row");
-        expect(rows.length).toBe(3); // 2 tokens + header
+        expect(rows.length).toBe(4); // 3 tokens + header
     });
 
     test("render correctly with onchaindata", () => {
@@ -51,9 +62,10 @@ describe("OrdersList", () => {
         expect(screen.getByText("On chain balance")).toBeInTheDocument();
         expect(screen.getByAltText("ETH icon")).toBeInTheDocument();
         expect(screen.getByAltText("USDT icon")).toBeInTheDocument();
+        expect(screen.getByAltText("USDC icon")).toBeInTheDocument();
 
         const rows = screen.getAllByRole("row");
-        expect(rows.length).toBe(3); // 2 tokens + header
+        expect(rows.length).toBe(4); // 3 tokens + header
     });
 
 });

@@ -49,7 +49,7 @@ export default function OrderExpireSelect(props: Props) {
     }
 
     return (
-        <div className="flex items-center justify-between [&>*]:text-GGx-light">
+        <div data-testid="expireSelect" className="flex items-center justify-between [&>*]:text-GGx-light">
             <SelectDark<Option>
                 value={props.unit}
                 onChange={onSelectChange}
