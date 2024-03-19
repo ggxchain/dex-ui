@@ -9,7 +9,7 @@ import {
   IndexedTx,
   SigningStargateClient,
 } from "@cosmjs/stargate";
-import Select from "@/components/common/select";
+import SelectLight, { SelectDark } from "@/components/common/select";
 import TokenList, { ListElement } from "@/components/tokenList";
 import GGXWallet, { Account } from "@/services/ggx";
 import ibcChains from "@/config/chains";
@@ -23,6 +23,8 @@ import { BN, u8aToHex } from "@polkadot/util";
 import { Keyring } from '@polkadot/keyring';
 
 import TokenDecimals from "@/tokenDecimalsConverter";
+import { Button } from "@/components/common/button";
+import Ruler from "@/components/common/ruler";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -273,23 +275,35 @@ export default function Transfer() {
 
 
   return (
-    <div className="text-slate-100 flex flex-col w-full items-center h-full">
-      <div className="flex mt-1 justify-between w-full items-center">
-        <h1 className="text-xl md:text-3xl break-words w-[40%]">${total.toFixed(2)}</h1>
-        <div className="flex md:flex-row flex-col">
-          <button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Transfer {selectedToken?.name ?? ""} to GGx</button>
-          <button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || selectedToken === undefined} className="disabled:opacity-50 md:text-base text-sm p-2 md:p-4 m-1 md:w-64 w-32 bg-bg-gr-2/80 rounded-2xl grow-on-hover glow-on-hover">Withdraw {selectedToken?.name ?? ""} from GGx</button>
+    <div className="flex flex-col w-full items-center h-full">
+      <div className="flex w-full justify-between items-center">
+        <h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">${total.toFixed(2)}</h1>
+        <div className="flex md:flex-row flex-col gap-5">
+          <Button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || selectedToken === undefined} className="w-1/4">
+            Deposit {selectedToken?.name ?? ""}
+          </Button>
+          <Button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || selectedToken === undefined} className="w-1/4">
+            Withdraw {selectedToken?.name ?? ""}
+          </Button>
         </div>
       </div>
+      <div className="w-full mt-5">
+        <Ruler />
+      </div>
+
 
       <div className="mt-10 flex flex-col items-end w-full">
         <div className="w-full h-full md:max-w-96 max-w-48">
-          <Select<ChainInfo> name="Chain" onChange={(chain) => setChain(chain)} options={chains} value={chain} className="w-full h-full" wrapperClassName="pt-1" childFormatter={(chain) => {
-            return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
-              <span className="text-base truncate">{chain.chainName}</span>
-            </div>)
-          }}
-          />
+          <div className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]" >
+            <p className="h-full p-4 text-[14px] text-GGx-gray">Chain</p>
+            <SelectDark<ChainInfo> onChange={(chain) => setChain(chain)} options={chains} value={chain} className="w-full h-full"
+              childFormatter={(chain) => {
+                return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                  <span className="text-base truncate">{chain.chainName}</span>
+                </div>)
+              }}
+            />
+          </div>
         </div>
         <TokenList selected={selectedToken} onClick={setSelectedToken} className={`w-full mt-2 ${walletIsNotInitialized ? "opacity-50" : "opacity-100"}`} tokens={tokens} />
       </div>
@@ -298,29 +312,36 @@ export default function Transfer() {
         <div className="px-5 flex flex-col w-full">
           {
             walletIsNotInitialized
-              ? <button onClick={connectWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-3 mt-2 grow-on-hover glow-on-hover">Connect Keplr wallet</button>
-              : <Select<AccountData> disabled={true} name="Source account (extension managed)" onChange={(account) => (setAccount(account))} options={accounts} value={account} className="mt-1 w-full h-full" wrapperClassName="mt-2 opacity-60"
+              ? <Button onClick={connectWallet} className="w-full h-full">Connect Keplr wallet</Button>
+              : <div>
+                <p className="text-GGx-gray text-[14px]">Source account (extension managed)</p>
+                <SelectLight<AccountData> disabled={true} onChange={(account) => (setAccount(account))} options={accounts} value={account} className="w-full h-full"
+                  childFormatter={(account) => {
+                    return (<div className="w-full p-3 h-full overflow-hidden text-GGx-gray rounded-2xl md:text-base text-sm">
+                      <span className="text-base truncate">{account.address}</span>
+                    </div>)
+                  }}
+                />
+              </div>
+          }
+          {isGGxWalletNotConnected
+            ? <Button onClick={connectGGxWallet} className="w-full h-full">Connect GGx wallet</Button>
+            :
+            <div className="mt-2">
+              <p className="text-GGx-gray text-[14px]">Destination account</p>
+              <SelectLight<Account> onChange={ggxOnSelect} options={GGxAccounts} value={modalGGxAccount} className="w-full h-full"
                 childFormatter={(account) => {
-                  return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm">
-                    <span className="text-base truncate">{account.address}</span>
+                  return (<div className="w-full p-3 h-full overflow-hidden text-GGx-gray rounded-2xl md:text-base text-sm">
+                    <span className="text-base truncate">{account.name ? account.name : account.address}</span>
                   </div>)
                 }}
               />
-          }
-          {isGGxWalletNotConnected
-            ? <button onClick={connectGGxWallet} className="border text-center text-slate-100 rounded-2xl text-wrap w-full h-full md:text-base text-sm p-3 mt-2 grow-on-hover glow-on-hover">Connect GGx wallet</button>
-            : <Select<Account> name="Destination account" onChange={ggxOnSelect} options={GGxAccounts} value={modalGGxAccount} className="mt-1 w-full h-full" wrapperClassName="mt-2"
-              childFormatter={(account) => {
-                return (<div className="w-full p-3 h-full overflow-hidden text-slate-100 rounded-2xl md:text-base text-sm">
-                  <span className="text-base truncate">{account.name ? account.name : account.address}</span>
-                </div>)
-              }}
-            />
+            </div>
           }
 
           <Input name="Channel"
             type="text"
-            className="mt-1 rounded-2xl border pl-5 p-3 basis-1/4 bg-transparent w-full"
+            className="mt-1 rounded-[4px] border pl-5 p-3 basis-1/4 bg-transparent text-GGx-gray border-GGx-gray w-full"
             wrapperClassName="mt-2"
             value={modalSourceChannel}
             onChange={(e) => setModalSourceChannel(e.target.value)}
@@ -328,7 +349,7 @@ export default function Transfer() {
 
           <InputWithPriceInfo
             name="Amount"
-            className="mt-1 rounded-2xl border pl-5 p-3 basis-1/4 bg-transparent w-full"
+            className="mt-1 rounded-[4px] border pl-5 p-3 basis-1/4 text-GGx-gray border-GGx-gray bg-transparent w-full"
             wrapperClassName="mt-2"
             value={modalAmount}
             onChange={(e) => setModalAmount(Number(e.target.value))}
@@ -338,7 +359,7 @@ export default function Transfer() {
 
           <div className="w-full flex justify-center mt-2">
             <LoadingButton disabled={modalAmount <= 0 || isGGxWalletNotConnected || walletIsNotInitialized} loading={modalLoading}
-              className="disabled:opacity-50 rounded-2xl border p-3 m-2 basis-2/5 grow-on-hover"
+              className="disabled:opacity-90 bg-GGx-black2 rounded-2xl border p-3 m-2 basis-2/5 grow-on-hover"
               onClick={onModalSubmit}>
               IBC {modalTitle.current}
             </LoadingButton>

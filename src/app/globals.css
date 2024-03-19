@@ -11,24 +11,64 @@
   }
 
   body {
-    @apply primary-gradient;
+    position: relative;
+    background: #191D21;
+  }
+
+  body::before {
+    content: '';
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    transform: rotate(180deg);
+    background-image: url('../../public/stars.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    z-index: -1;
+    background-blend-mode: lighten;
+    opacity: 40%;
+  }
+
+  main {
+    background: url(/sun.png) no-repeat bottom center;
+    background-size: 100%;
   }
 }
 
 @layer components {
+
+  /*
+  I dunno how to do a sun 
+  */
+  .sun {
+    background: #fff;
+  }
+
   .grow-on-hover {
     @apply scale-95 hover:scale-100 transition-all duration-500;
   }
 
-  .secondary-gradient {
-    @apply bg-gradient-to-t from-indigo-600 to-blue-900;
-  }
-
-  .primary-gradient {
-    @apply from-bg-gr-1 to-bg-gr-2 bg-gradient-to-b;
-  }
-
   .glow-on-hover {
     @apply hover:filter hover:backdrop-brightness-150;
+  }
+
+  .menu {
+    position: relative;
+  }
+
+  .menu::before {
+    content: ' ';
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #292e36, #292e3699, #0000, #0000);
+    background-size: cover;
+    opacity: 80%;
+    z-index: -1;
   }
 }

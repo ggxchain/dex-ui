@@ -1,5 +1,6 @@
 import { ReactNode } from "react"
 import Spinner from "./spinner"
+import { Button } from "./button";
 
 interface ButtonProps {
     children: ReactNode,
@@ -15,11 +16,11 @@ export default function LoadingButton(props: Readonly<ButtonProps>) {
     const disabled = props.disabled ?? false;
 
     return (
-        <button className={`relative ${className}`} onClick={props.onClick} disabled={disabled} >
+        <Button className={`relative ${className}`} onClick={props.onClick} disabled={disabled} >
             <div className={`absolute left-1 top-1/2 h-1/2 -translate-y-1/2 ${loading ? "" : "hidden"}`}>
                 <Spinner />
             </div>
             {props.children}
-        </button >
+        </Button >
     )
 };
