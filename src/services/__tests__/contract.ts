@@ -39,8 +39,8 @@ describe('Contract', () => {
         const invalidTokenId = 100000;
         await expect(contract.deposit(invalidTokenId, BN_ONE, () => { })).rejects.toThrow(Errors.InvalidTokenId)
         await expect(contract.withdraw(invalidTokenId, BN_ONE, () => { })).rejects.toThrow(Errors.InvalidTokenId)
-        await expect(contract.makeOrder([invalidTokenId, 1], BN_ONE, BN_ONE, "BUY", () => { })).rejects.toThrow(Errors.InvalidTokenId)
-        await expect(contract.makeOrder([0, invalidTokenId], BN_ONE, BN_ONE, "BUY", () => { })).rejects.toThrow(Errors.InvalidTokenId)
+        await expect(contract.makeOrder([invalidTokenId, 1], BN_ONE, BN_ONE, "BUY", 1, () => { })).rejects.toThrow(Errors.InvalidTokenId)
+        await expect(contract.makeOrder([0, invalidTokenId], BN_ONE, BN_ONE, "BUY", 1, () => { })).rejects.toThrow(Errors.InvalidTokenId)
         await expect(contract.balanceOf(invalidTokenId)).rejects.toThrow(Errors.InvalidTokenId)
         await expect(contract.allOrders([invalidTokenId, 1])).rejects.toThrow(Errors.InvalidTokenId)
         await expect(contract.allOrders([1, invalidTokenId])).rejects.toThrow(Errors.InvalidTokenId)
