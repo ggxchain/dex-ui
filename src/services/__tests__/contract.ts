@@ -28,7 +28,7 @@ describe('Contract', () => {
 
         await expect(contract.deposit(mockedTokenId, BN_ONE, () => { })).rejects.toThrow(Errors.WalletIsNotConnected)
         await expect(contract.withdraw(mockedTokenId, BN_ONE, () => { })).rejects.toThrow(Errors.WalletIsNotConnected)
-        await expect(contract.makeOrder([0, 1], BN_ONE, BN_ONE, "BUY", () => { })).rejects.toThrow(Errors.WalletIsNotConnected)
+        await expect(contract.makeOrder([0, 1], BN_ONE, BN_ONE, "BUY", 1, () => { })).rejects.toThrow(Errors.WalletIsNotConnected)
         await expect(contract.takeOrder(0, () => { })).rejects.toThrow(Errors.WalletIsNotConnected)
         await expect(contract.cancelOrder(0, () => { })).rejects.toThrow(Errors.WalletIsNotConnected)
         await expect(contract.balanceOf(mockedTokenId)).rejects.toThrow(Errors.WalletIsNotConnected)
@@ -74,32 +74,32 @@ describe('Contract', () => {
     });
 
     it('should fail to makeOrder if amountOffered is <= 0 || amountRequested <= 0', async () => {
-        await expect(contract.makeOrder([0, 1], BN_ONE, BN_ONE.neg(), "BUY", () => { })).rejects.toThrow(Errors.AmountIsLessOrEqualToZero)
-        await expect(contract.makeOrder([0, 1], BN_ZERO, BN_ONE, "SELL", () => { })).rejects.toThrow(Errors.AmountIsLessOrEqualToZero)
+        await expect(contract.makeOrder([0, 1], BN_ONE, BN_ONE.neg(), "BUY", 1, () => { })).rejects.toThrow(Errors.AmountIsLessOrEqualToZero)
+        await expect(contract.makeOrder([0, 1], BN_ZERO, BN_ONE, "SELL", 1, () => { })).rejects.toThrow(Errors.AmountIsLessOrEqualToZero)
 
         // Success case
         await expect(contract.deposit(mockedTokenId, BN_ONE, () => { })).resolves.not.toThrow()
-        await expect(contract.makeOrder([0, 1], BN_ONE, BN_ONE, "SELL", () => { })).resolves.not.toThrow()
+        await expect(contract.makeOrder([0, 1], BN_ONE, BN_ONE, "SELL", 1, () => { })).resolves.not.toThrow()
     });
 
     it('should fail to makeOrder if balance is not enough to cover make order', async () => {
         // SELL order
-        await expect(contract.makeOrder([mockedTokenId, 1], BN_ONE, BN_ONE, "SELL", () => { })).rejects.toThrow(Errors.NotEnoughBalance)
+        await expect(contract.makeOrder([mockedTokenId, 1], BN_ONE, BN_ONE, "SELL", 1, () => { })).rejects.toThrow(Errors.NotEnoughBalance)
 
         // Success case
         // We need to deposit first
         await expect(contract.deposit(mockedTokenId, BN_ONE, () => { })).resolves.not.toThrow()
 
-        await expect(contract.makeOrder([mockedTokenId, 1], BN_ONE, BN_ONE, "SELL", () => { })).resolves.not.toThrow()
+        await expect(contract.makeOrder([mockedTokenId, 1], BN_ONE, BN_ONE, "SELL", 1, () => { })).resolves.not.toThrow()
 
 
         // BUY order
-        await expect(contract.makeOrder([0, mockedTokenId], BN_ONE, BN_ONE, "BUY", () => { })).rejects.toThrow(Errors.NotEnoughBalance)
+        await expect(contract.makeOrder([0, mockedTokenId], BN_ONE, BN_ONE, "BUY", 1, () => { })).rejects.toThrow(Errors.NotEnoughBalance)
 
         // Success case
         // We need to deposit first
         await expect(contract.deposit(mockedTokenId, BN_ONE, () => { })).resolves.not.toThrow()
-        await expect(contract.makeOrder([0, mockedTokenId], BN_ONE, BN_ONE, "BUY", () => { })).resolves.not.toThrow()
+        await expect(contract.makeOrder([0, mockedTokenId], BN_ONE, BN_ONE, "BUY", 1, () => { })).resolves.not.toThrow()
 
     });
 

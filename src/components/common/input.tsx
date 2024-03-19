@@ -29,7 +29,7 @@ type InputWithPriceInfoProps = InputProps & {
 export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
     const value = props.value ?? 0;
     // We don't want to pass wrapperClassName to Input component
-    const forwardProps = { ...props, wrapperClassName: '' };
+    const { symbol, price, suffixStyle, ...forwardProps } = props;
 
     return (<div className={`relative w-full h-full ${props.wrapperClassName ?? ''}`} >
         <Input {...forwardProps}

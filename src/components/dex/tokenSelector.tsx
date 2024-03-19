@@ -3,9 +3,9 @@ import Spinner from "../common/spinner";
 import Contract, { errorHandler } from "@/services/api";
 import { Token } from "@/types";
 import CexService from "@/services/cex";
-import SelectLight, { SelectDark } from "../common/select";
+import { SelectDark } from "../common/select";
 import Image from "next/image";
-import { DexInput, Input, InputWithPriceInfo } from "../common/input";
+import { InputWithPriceInfo } from "../common/input";
 
 interface TokenSelectorProps {
     token?: TokenWithPrice;
@@ -47,7 +47,7 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
 
     if (token === undefined) {
         return (
-            <div className="flex w-full justify-center">
+            <div data-testid='spinner' className="flex w-full justify-center">
                 <div className="w-10 h-10">
                     <Spinner />
                 </div>
@@ -76,7 +76,7 @@ export default function TokenSelector({ token, amount, onChange, tokens, lockedA
     const price = (amount ?? 0) * token.price;
 
     return (
-        <div className="flex items-center justify-between[&>*]:text-GGx-light">
+        <div data-testid='tokenSelector' className="flex items-center justify-between[&>*]:text-GGx-light">
             <SelectDark<TokenWithPrice>
                 value={token}
                 onChange={handleSelectChange}
