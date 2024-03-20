@@ -25,7 +25,11 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 Whenever we change GGx api related to Balances, Assets and Dex pallets, please regenerate types from metadata.
 
+Also, you need to run local node with correct version of code (or change package.json to point to correct RPC)
+
 ```bash
+./ggxchain-node --dev
+
 npm run generate:defs
 npm run generate:types
 ```
