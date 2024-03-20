@@ -19,7 +19,7 @@ import Modal from "@/components/common/modal";
 import LoadingButton from "@/components/common/loadButton";
 import { InputWithPriceInfo, Input } from "@/components/common/input";
 import { toast } from "react-toastify";
-import { BN, u8aToHex } from "@polkadot/util";
+import { BN, BN_ZERO, u8aToHex } from "@polkadot/util";
 import { Keyring } from '@polkadot/keyring';
 
 import TokenDecimals from "@/tokenDecimalsConverter";
@@ -51,8 +51,11 @@ export default function Transfer() {
 
   // init chain
   useEffect(() => {
-    connectWallet();
-    connectGGxWallet();
+    const a = async () => {
+      await connectWallet()
+      await connectGGxWallet();
+    };
+    a()
   }, [chain]);
 
   const connectGGxWallet = () => {
@@ -279,10 +282,10 @@ export default function Transfer() {
       <div className="flex w-full justify-between items-center">
         <h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">${total.toFixed(2)}</h1>
         <div className="flex md:flex-row flex-col gap-5">
-          <Button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || selectedToken === undefined} className="w-1/4">
+          <Button data-testid="deposit" onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || selectedToken === undefined} className="w-1/4">
             Deposit {selectedToken?.name ?? ""}
           </Button>
-          <Button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || selectedToken === undefined} className="w-1/4">
+          <Button data-testid="withdraw" onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || selectedToken === undefined || selectedToken.balance.eq(BN_ZERO)} className="w-1/4">
             Withdraw {selectedToken?.name ?? ""}
           </Button>
         </div>
@@ -294,7 +297,7 @@ export default function Transfer() {
 
       <div className="mt-10 flex flex-col items-end w-full">
         <div className="w-full h-full md:max-w-96 max-w-48">
-          <div className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]" >
+          <div data-testid='selectNetwork' className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]" >
             <p className="h-full p-4 text-[14px] text-GGx-gray">Chain</p>
             <SelectDark<ChainInfo> onChange={(chain) => setChain(chain)} options={chains} value={chain} className="w-full h-full"
               childFormatter={(chain) => {
@@ -327,7 +330,7 @@ export default function Transfer() {
           {isGGxWalletNotConnected
             ? <Button onClick={connectGGxWallet} className="w-full h-full">Connect GGx wallet</Button>
             :
-            <div className="mt-2">
+            <div data-testid='selectGGxAccount' className="mt-2">
               <p className="text-GGx-gray text-[14px]">Destination account</p>
               <SelectLight<Account> onChange={ggxOnSelect} options={GGxAccounts} value={modalGGxAccount} className="w-full h-full"
                 childFormatter={(account) => {

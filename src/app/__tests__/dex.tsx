@@ -15,8 +15,6 @@ jest.mock("next/navigation", () => ({
     }
 }));
 
-
-
 jest.mock("../../services/cex", () => ({
     __esModule: true,
     default: class CexService {
