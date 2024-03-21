@@ -44,7 +44,7 @@ describe("OrdersList", () => {
         expect(screen.getByText("Actions")).toBeInTheDocument();
 
         const elem = screen.getAllByRole("row");
-        expect(elem.length).toBe(3); // 2 orders + header
+        expect(elem.length).toBe(4); // 2 orders + header + ruler
     });
 
     test("empty order list", () => {

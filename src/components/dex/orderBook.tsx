@@ -5,6 +5,7 @@ import TokenDecimals from "@/tokenDecimalsConverter";
 import { Amount, DetailedOrder, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
 import { useEffect, useMemo, useState } from "react";
+import { GrayRuler } from "../common/ruler";
 
 export interface OrderBookProps {
     buyToken?: Token;
@@ -67,58 +68,82 @@ export default function OrderBook({ buyToken, sellToken, selectedOrder, onChange
 
     return (
         <div className="flex flex-col border-GGx-gray border rounded-[4px] px-[26px] py-[22px]">
-            <p className="text-[24px] w-full text-left">Order book</p>
-            <table className="table-auto mt-2 md:mt-5 overflow-auto">
+            <p className="text-[24px] text-GGx-gray w-full text-left">Order book</p>
+            <table className="table-fixed mt-2 md:mt-5 overflow-auto">
                 <thead>
-                    <tr>
-                        <th className="text-left pl-4">Price <span className="italic font-semibold uppercase">{buyToken?.symbol ?? ""}</span></th>
-                        <th className="text-right">Volume <span className="italic font-semibold uppercase">{sellToken?.symbol ?? ""}</span></th>
+                    <tr className="text-GGx-gray">
+                        <th className="text-left ">Price <span className="italic font-semibold uppercase">{buyToken?.symbol ?? ""}</span></th>
+                        <th className="text-left">
+                            Volume <span className="italic font-semibold uppercase">{sellToken?.symbol ?? ""}</span>
+                        </th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    <tr>
-                        <td className="font-bold">Asks</td>
+                    <tr className="relative w-full h-[18px]">
+                        <td>
+                            <div className="absolute h-full w-[85%] top-1/2 -translate-y-1/2 left-0">
+                                <GrayRuler />
+                            </div>
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 font-telegraf  text-[10px] py-[4px] px-[8px] border-[0.5px] rounded-[4px] text-GGx-light border-GGx-gray bg-GGx-red/50"> Asks</div>
+                        </td>
                     </tr>
+
                     {
                         sellOrders.length === 0
                             ? <tr><td className="text-GGx-red">No asks found</td></tr>
                             : sellOrders.map((order) => {
                                 const orderPrice = amountConverter.divWithPrecision(order.amountRequestedNormalized, order.amountOfferedNormalized);
-                                // It's safe to not normalize the volume as it compared agains same denominator.
-                                const percent = order.amountOffered.muln(100).div(sellTotalVolume).toNumber();
                                 return (
                                     <tr key={order.counter} className="relative w-full text-GGx-red">
-                                        <td className="p-1 pl-4 text-left font-bold">{orderPrice.toFixed(9)}</td>
-                                        <td className="p-1 text-right text-white font-bold">
-                                            {amountConverter.BNToFloat(order.amountOfferedNormalized).toFixed(9)}
-                                            <div style={{ width: `${Math.round(percent)}%` }} className="absolute bg-GGx-red/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
+                                        <td className="text-left font-medium text-GGx-red">{orderPrice.toFixed(9)}</td>
+                                        <td className="text-left">
+                                            <span className="text-GGx-light font-medium bg-GGx-red/50 rounded-[4px] px-[6px]">
+                                                {amountConverter.BNtoDisplay(order.amountOfferedNormalized, "")}
+                                            </span>
                                         </td>
                                     </tr>
                                 )
                             })
                     }
+                </tbody>
+            </table>
+            <table className="table-auto mt-2 md:mt-5 overflow-auto">
+                <thead className="relative">
                     <tr>
-                        <td className="font-bold mt-5">Bids</td>
+                        <th className="text-left">Price <span className="italic font-semibold uppercase">{buyToken?.symbol ?? ""}</span></th>
+                        <th className="text-left">
+                            Volume <span className="italic font-semibold uppercase">{sellToken?.symbol ?? ""}</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr className="relative w-full h-[18px]">
+                        <td>
+                            <div className="absolute h-full w-[85%] top-1/2 -translate-y-1/2 left-0">
+                                <GrayRuler />
+                            </div>
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 font-telegraf  text-[10px] py-[4px] px-[8px] border-[0.5px] rounded-[4px] text-GGx-light border-GGx-gray bg-GGx-green/50"> Bids</div>
+                        </td>
                     </tr>
                     {
                         buyOrders.length === 0
                             ? <tr><td className="text-GGx-green">No bids found</td></tr>
                             : buyOrders.map((order) => {
                                 const selected = order.counter === selectedOrder?.counter;
-                                const percent = order.amoutRequested.muln(100).div(buyTotalVolume).toNumber();
                                 const orderPrice = amountConverter.divWithPrecision(order.amountOfferedNormalized, order.amountRequestedNormalized);
                                 return (
-                                    <tr key={order.counter} className={`relative w-full cursor-pointer glow-on-hover rounded-l-md text-GGx-green ${selected} `} onClick={() => onChange(order)}>
-                                        <td className="p-1 relative text-left font-bold">
+                                    <tr key={order.counter} className={`relative w-full cursor-pointer glow-on-hover rounded-l-md ${selected} `} onClick={() => onChange(order)}>
+                                        <td className="relative text-left font-medium text-GGx-green">
                                             {selected && <p className="absolute h-full left-0">↠</p>}
                                             <p className="pl-3">
                                                 {orderPrice.toFixed(9)}
                                             </p>
                                         </td>
-                                        <td className="p-1 text-right text-white font-bold">
-                                            {amountConverter.BNtoDisplay(order.amountRequestedNormalized, '')}
-                                            <div style={{ width: `${Math.round(percent)}%` }} className="absolute bg-GGx-green/45 rounded-l-md h-full right-0 top-0 bottom-0"></div>
+                                        <td className="text-left">
+                                            <span className="text-GGx-light font-medium bg-GGx-green/50 rounded-[4px] px-[6px]">
+                                                {amountConverter.BNtoDisplay(order.amountRequestedNormalized, "")}
+                                            </span>
                                         </td>
 
                                     </tr>
