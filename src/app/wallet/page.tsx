@@ -91,11 +91,7 @@ export default function Wallet() {
             }).catch(errorHandler);
         });
 
-        const ggx = new GGXWallet();
-        ggx.getAccounts().then((accounts) => {
-            setGGXAccounts(accounts);
-            setSelectedAccount(ggx.pubkey());
-        });
+        connectWallet();
     }, [contract]);
 
     useEffect(() => {
@@ -161,12 +157,14 @@ export default function Wallet() {
         setModal(true);
     }
 
-    const connectWallet = () => {
+    const connectWallet = async () => {
         const ggx = new GGXWallet();
-        ggx.getAccounts().then((accounts) => {
-            setGGXAccounts(accounts);
-            setSelectedAccount(ggx.pubkey());
-        });
+        const accounts = await ggx.getAccounts().catch(errorHandler);
+        if (accounts === undefined) {
+            return;
+        }
+        setGGXAccounts(accounts);
+        setSelectedAccount(ggx.pubkey());
     }
 
     const walletIsNotInitialized = ggxAccounts.length === 0;
@@ -211,10 +209,10 @@ export default function Wallet() {
             <div className="flex w-full justify-between items-center">
                 <h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">${total.toFixed(2)}</h1>
                 <div className="flex md:flex-row flex-col gap-5">
-                    <Button onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="w-1/4">
+                    <Button data-testid="deposit" onClick={() => onModalOpen("Deposit")} disabled={walletIsNotInitialized || isTokenNotSelected} className="w-1/4">
                         Deposit {selectedToken?.name ?? ""}
                     </Button>
-                    <Button onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected || selectedTokenBalance.lte(BN_ZERO)} className="w-1/4">
+                    <Button data-testid="withdraw" onClick={() => onModalOpen("Withdraw")} disabled={walletIsNotInitialized || isTokenNotSelected || selectedTokenBalance.lte(BN_ZERO)} className="w-1/4">
                         Withdraw {selectedToken?.name ?? ""}
                     </Button>
                 </div>
@@ -239,7 +237,7 @@ export default function Wallet() {
                     {
                         walletIsNotInitialized
                             ? <Button onClick={connectWallet} className="w-full h-full">Connect the wallet</Button>
-                            : <div className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]" >
+                            : <div data-testid='userSelect' className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]" >
                                 <p className="h-full p-4 text-[14px] text-GGx-gray">Account</p>
                                 <SelectDark<Account> onChange={handleSelectChange} options={ggxAccounts} value={selectedAccount} className="w-full h-full"
                                     childFormatter={(account) => {
