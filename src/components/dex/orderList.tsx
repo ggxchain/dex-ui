@@ -3,7 +3,9 @@ import Contract, { errorHandler } from "@/services/api";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import { DetailedOrder } from "@/types";
 import { useEffect, useState } from "react";
-import Ruler from "../common/ruler";
+import Ruler, { GrayRuler } from "../common/ruler";
+import Image from "next/image";
+import Close from "../common/close";
 
 export const useUserOrders = (contract: Contract) => {
     const [orders, setOrders] = useState<DetailedOrder[]>([]);
@@ -40,8 +42,8 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
         <Ruler />
         <table className="table-fixed mt-2 md:mt-5 border-separate md:border-spacing-y-2 border-spacing-y-1 [&>td]:px-6 [&>td]:py-20`">
             <thead>
-                <tr className="[&>th]:text-left [&th]:text-GGx-gray p-1">
-                    <th >Order</th>
+                <tr className="[&>th]:text-left [&>th]:text-[16px] [&th]:text-GGx-gray p-1">
+                    <th className="pl-10">Order</th>
                     <th >Buy</th>
                     <th >Price</th>
                     <th >Sell</th>
@@ -50,9 +52,17 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
                 </tr>
             </thead>
             <tbody>
+                <tr className="relative w-full h-[18px]">
+                    <td>
+                        <div className="absolute top-0 w-full">
+                            <GrayRuler />
+                        </div>
+                    </td>
+                </tr>
+
                 {
                     orders.length === 0
-                        ? <tr><td className="text-GGx-light opacity-50 text-center">No orders found</td></tr>
+                        ? <tr><td className="text-GGx-light text-[18px] font-medium text-left">No orders found</td></tr>
                         : orders.map((order) => {
                             const ownedToken = OrderUtils.ownedToken(order) === order.pair[0] ? order.token1 : order.token2;
                             const desiredToken = OrderUtils.desiredToken(order) === order.pair[0] ? order.token1 : order.token2;
@@ -64,26 +74,36 @@ export default function OrdersList({ orders, cancelOrder }: Readonly<UserOrderPr
                             const expiration = order.expiration - now;
                             const expiredText = expiration < 0 ? 'Expired' : expirationFormat(expiration);
                             return (
-                                <tr key={order.counter} className="h-full w-full even:bg-bg-gr-2/80 odd:bg-bg-gr-2/20">
-                                    <td>
+                                <tr key={order.counter} className="h-full w-full [&>td]:h-[23px] [&>td]:py-[20px] [&>td]:font-medium [&>td]:text-[18px] [&>td]:text-GGx-light [&>td]:text-left odd:bg-GGx-black2/70">
+                                    <td className="flex pl-10">
+                                        <Image alt='Sell' width={0} height={0} className="w-[24px] h-[24px] mr-2" src={`/svg/${ownedToken.symbol.toLowerCase()}.svg`} />
+                                        <span>{'>'}</span>
+                                        <Image alt='Buy' width={0} height={0} className="w-[24px] h-[24px] ml-2" src={`/svg/${desiredToken.symbol.toLowerCase()}.svg`} />
 
                                     </td>
 
                                     {/*Buy*/}
-                                    <td className="p-1 text-center rounded-l-xl">
+                                    <td className="text-left">
                                         {amountConverter.BNtoDisplay(requested, desiredToken.symbol)}
+                                        <sup className="pl-1 text-[10px] font-telegraf">{desiredToken.network}</sup>
                                     </td>
                                     {/*Price*/}
-                                    <td className="p-1 text-center">{price.toFixed(9)} {desiredToken.symbol}</td>
+                                    <td className="text-left">{price.toFixed(9)} {desiredToken.symbol}</td>
 
-                                    <td className="p-1 text-center text-white">
+                                    <td className="text-left">
                                         {amountConverter.BNtoDisplay(offered, ownedToken.symbol)}
+                                        <sup className="pl-1 text-[10px] font-telegraf">{ownedToken.network}</sup>
                                     </td>
-                                    <td className="p-1 text-center">
+                                    <td className="text-left">
                                         {expiredText}
                                     </td>
                                     <td className="rounded-r-xl">
-                                        <button onClick={() => cancelOrder(order)} className="md:p-1 p-[0.125rem] w-full grow-on-hover glow-on-hover rounded-xl border">Cancel</button>
+                                        <button onClick={() => cancelOrder(order)} className="flex items-center text-GGx-yellow">
+                                            <div className="w-[24px] mr-3">
+                                                <Close color="#EAD158" />
+                                            </div>
+                                            <p className="p-0">Cancel</p>
+                                        </button>
                                     </td>
                                 </tr>
                             )

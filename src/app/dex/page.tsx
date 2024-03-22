@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import Contract, { errorHandler } from "@/services/api";
 import GGXWallet from "@/services/ggx";
-import Ruler from "@/components/common/ruler";
+import Ruler, { GrayRuler } from "@/components/common/ruler";
 import { Amount, DetailedOrder } from "@/types";
 import TokenSelector, { TokenWithPrice, useTokens } from "@/components/dex/tokenSelector";
 import Pair from "@/pair";
@@ -184,7 +184,7 @@ export default function Dex() {
               </div>
             </div>
             <TokenSelector token={sell} tokens={tokens} lockedAmount={isTaker} amount={amountConverter.BNToFloat(sellAmount)} onChange={onSellChange} />
-            <div className="flex flex-col text-xs text-orange-300">
+            <div className="flex flex-col text-xs text-GGx-yellow">
               {
                 isUserBalanceNotEnough && !isTokenNotSelected &&
                 <div className="flex text-xs items-center mt-1 justify-between">
@@ -213,7 +213,7 @@ export default function Dex() {
 
 
             <div className="pt-[18px]">
-              <Ruler />
+              <GrayRuler />
 
               <div className="flex justify-between pt-[10px]">
                 <p className="font-semibold">RATE:</p>
@@ -241,7 +241,7 @@ export default function Dex() {
               </div>
 
               <div className="w-full mt-5 mb-5">
-                <Ruler />
+                <GrayRuler />
               </div>
 
 

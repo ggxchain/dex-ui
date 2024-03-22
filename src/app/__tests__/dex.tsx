@@ -44,7 +44,7 @@ describe("Dex", () => {
         expect(screen.getByText("Order book")).toBeInTheDocument();
 
         const elem = Array.prototype.slice.call(screen.getByText("My orders").parentElement?.querySelectorAll("tr"));
-        expect(elem.length).toBe(2); // 1 orders + header
+        expect(elem.length).toBe(3); // 1 orders + header + ruler
 
         expect(screen.getByText("No asks found")).toBeInTheDocument();
         expect(screen.getByText("No bids found")).toBeInTheDocument();
@@ -130,7 +130,7 @@ describe("Dex", () => {
         const option = screen.getByText(mockedTokens()[1].symbol);
         await act(() => fireEvent.click(option));
 
-        expect(screen.getByText(mockedTokens()[1].network)).toBeInTheDocument();
+        expect(screen.getAllByText(mockedTokens()[1].symbol)[0]).toBeInTheDocument();
 
         const clear = screen.getByText("Clear");
         await act(() => fireEvent.click(clear));
