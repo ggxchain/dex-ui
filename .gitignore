@@ -38,4 +38,4 @@ next-env.d.ts
 # NixOS
 .direnv
 
-/public/svg
+/public/svg/*.svg
