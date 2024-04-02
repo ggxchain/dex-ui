@@ -9,8 +9,12 @@
     "generate:defs": "npx tsx node_modules/.bin/polkadot-types-from-defs --endpoint ws://127.0.0.1:9944 --input ./src/interfaces --package @types/src/interfaces",
     "generate:types": "npx tsx node_modules/.bin/polkadot-types-from-chain --endpoint ws://127.0.0.1:9944 --output ./src/interfaces --package ggx/typegen",
     "start": "next start",
-    "lint": "next lint",
-    "test": "jest"
+    "lint": "bun run next_lint && bun run biome_check",
+    "next_lint": "next lint",
+    "biome_lint": "bunx @biomejs/biome lint src",
+    "biome_check": "bunx @biomejs/biome check --apply src",
+    "test": "jest",
+    "format": "bunx @biomejs/biome format src --write"
   },
   "dependencies": {
     "@chain-registry/keplr": "^1.30.0",
@@ -31,10 +35,10 @@
     "tailwindcss-safe-area": "^0.4.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.6.3",
     "@polkadot/dev": "^0.78.8",
     "@polkadot/dev-test": "^0.78.8",
     "@polkadot/typegen": "^10.11.2",
-    "jest-environment-jsdom": "^29.7.0",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.1.2",
     "@types/node": "^20",
@@ -43,6 +47,7 @@
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
+    "jest-environment-jsdom": "^29.7.0",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
     "ts-node": "^10.9.2",

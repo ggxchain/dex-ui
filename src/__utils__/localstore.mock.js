@@ -1,27 +1,27 @@
-const localStorageMock = (function () {
-    let store = new Map();
+const localStorageMock = (() => {
+	const store = new Map();
 
-    return {
-        getItem(key) {
-            return store.get(key) ?? null
-        },
+	return {
+		getItem(key) {
+			return store.get(key) ?? null;
+		},
 
-        setItem(key, value) {
-            store.set(key, value)
-        },
+		setItem(key, value) {
+			store.set(key, value);
+		},
 
-        clear() {
-            store.clear();
-        },
+		clear() {
+			store.clear();
+		},
 
-        removeItem(key) {
-            store.delete(key);
-        },
+		removeItem(key) {
+			store.delete(key);
+		},
 
-        getAll() {
-            return store;
-        },
-    };
+		getAll() {
+			return store;
+		},
+	};
 })();
 
 Object.defineProperty(window, "localStorage", { value: localStorageMock });
