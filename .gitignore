@@ -40,3 +40,9 @@ next-env.d.ts
 
 /public/svg/*.svg
 .vscode
+
+# sst
+.sst
+
+# open-next
+.open-next
