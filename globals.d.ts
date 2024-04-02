@@ -1,4 +1,4 @@
-import { Keplr, OfflineDirectSigner } from "@keplr-wallet/types";
+import type { Keplr, OfflineDirectSigner } from "@keplr-wallet/types";
 
 declare global {
   interface Window {
