@@ -3,10 +3,21 @@
 	"organizeImports": {
 		"enabled": true
 	},
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true,
+		"defaultBranch": "main"
+	},
 	"linter": {
 		"enabled": true,
 		"rules": {
 			"recommended": true
 		}
+	},
+	"files": {
+		"ignore": [
+			"src/interfaces/**/*.ts"
+		]
 	}
 }
