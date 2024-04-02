@@ -6884,5 +6884,6 @@ export default {
   /**
    * Lookup885: pallet_transaction_payment::ChargeTransactionPayment<T>
    **/
-  PalletTransactionPaymentChargeTransactionPayment: 'Compact<u128>'
+  // NOTE(Bohdan): Commented because this generated file is exactly same as prev one, causing build to fail
+  // PalletTransactionPaymentChargeTransactionPayment: 'Compact<u128>'
 };

@@ -10,8 +10,7 @@
     "generate:types": "npx tsx node_modules/.bin/polkadot-types-from-chain --endpoint ws://127.0.0.1:9944 --output ./src/interfaces --package ggx/typegen",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "test": "jest"
   },
   "dependencies": {
     "@chain-registry/keplr": "^1.30.0",
