@@ -6,6 +6,7 @@ const createJestConfig = nextJest({
     dir: './',
 });
 
+/** @type {import('ts-jest').JestConfigWithTsJest} */
 const config = {
     ...polkadotConfig,
     testEnvironment: 'jsdom',
@@ -13,6 +14,7 @@ const config = {
     moduleNameMapper: {
         "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     },
+    transformIgnorePatterns: []
 };
 
 // Exporting Jest configuration
