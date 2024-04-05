@@ -1,7 +1,7 @@
 "use client";
 import { WsProvider, ApiPromise } from "@polkadot/api";
 import { type ChangeEvent, MouseEventHandler, useEffect, useState } from "react";
-import { web3Accounts, web3Enable, web3FromAddress } from '@polkadot/extension-dapp';
+import { web3Accounts, web3AccountsSubscribe, web3Enable, web3FromAddress, web3FromSource } from '@polkadot/extension-dapp';
 import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import { BN } from "@polkadot/util/bn";
 import { createTestPairs } from "@polkadot/keyring/testingPairs";
@@ -21,6 +21,8 @@ const BridgeBtc = () => {
   const addr5ERyu = "5ERyuQCk9gt1SaTggiDReduDsgbhkYnUdAaLkCHZR7paEbuw";
 
   const amount = new BN(10).mul(new BN(10).pow(new BN(12)))
+
+  let unsubscribe: () => void; // this is the function of type `() => void` that should be called to unsubscribe
 
   const setup = async () => {
     lg("setup()")
@@ -78,6 +80,11 @@ const BridgeBtc = () => {
     if (typeof window !== "undefined") {
       const extensions = await web3Enable(DAPP_NAME);
       if (!extensions) { throw Error("No_extension _found") }
+      if (extensions.length === 0) {
+        lg("no extension installed, or the user did not accept the authorization")
+        // in this case we should inform the user and give a link to the extension
+        return;
+      }
       const allAccounts = await web3Accounts();
       lg('allAccounts:', allAccounts);
 
@@ -85,6 +92,16 @@ const BridgeBtc = () => {
       if (allAccounts.length === 1) {
         setSelectedAccount(allAccounts[0]);
       }
+
+      // we subscribe to any account change and log the new list. note that `web3AccountsSubscribe` returns the function to unsubscribe
+      unsubscribe = await web3AccountsSubscribe((injectedAccounts) => {
+        lg('new injected accounts found')
+        injectedAccounts.map((account) => {
+          lg(account.address);
+        })
+      });
+      // don't forget to unsubscribe when needed, e.g when unmounting a component
+      //unsubscribe && unsubscribe();
     }
   }
   const handleAccountSelection = async (e: ChangeEvent<HTMLSelectElement>) => {
@@ -97,16 +114,33 @@ const BridgeBtc = () => {
     lg('selectedAccount=', account)
     setSelectedAccount(account)
   }
+
   const handleTransaction = async () => {
     lg("handleTransaction")
-    const testingPair = createTestPairs();
-
     if (!api) throw Error("No_API_found");
-    const beforeAccountData = await api.query.system.account(addrAlice);
+    const beforeAccountData = await api.query.system.account(selectedAccount?.address);//addrAlice
     lg("beforeAccountData:", beforeAccountData.toHuman());
+    if (!selectedAccount) throw Error("No_selectedAccount");
 
-    const hash = await api.tx.tokens.transferKeepAlive(addr5ERyu, { Token: 'GGXT' }, "1000").signAndSend(testingPair.alice);
-    lg("Transfer sent with hash", hash.toHex());
+    if (typeof window !== "undefined") {
+      const injector = await web3FromSource(selectedAccount?.meta.source);//(addrAlice);
+
+      //const txExtrinsic = api.tx.balances.transfer(BOB, 1000)
+      const hash = await api.tx.tokens.transferKeepAlive(addr5ERyu, { Token: 'GGXT' }, "1000").signAndSend(selectedAccount.address, { signer: injector.signer }, (result) => {
+        //if (result.isCompleted)
+        //if (result.isFinalized) 
+        //if (result.isError)
+        if (result.status.isInBlock) {
+          lg(`Completed at block hash #${result.status.asInBlock.toString()}`);
+        } else {
+          lg(`Current status: ${result.status.type}`);
+        }
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      }).catch((error: any) => {
+        lg(':( transaction failed', error);
+      });//addrAlice
+      lg("hash", hash);//subscription.unsubscribe()
+    }
   }
   /*async signerFor(address: PubKey): Promise<Signer> {
       const { web3FromAddress } = await import("@polkadot/extension-dapp");
