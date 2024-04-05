@@ -3,8 +3,11 @@ import { WsProvider, ApiPromise } from "@polkadot/api";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { web3Accounts, web3AccountsSubscribe, web3Enable, web3FromAddress, web3FromSource } from '@polkadot/extension-dapp';
 import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
-import { BN } from "@polkadot/util/bn";
+import { BN, BN_ZERO } from "@polkadot/util/bn";
 import { GGX_WSS_URL } from "@/consts";
+import { Button } from "@/components/common/button";
+import Ruler from "@/components/common/ruler";
+import { SelectDark } from "@/components/common/select";
 //const wsProviderURL = "ws://127.0.0.1:9944";
 //https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/chainstate
 
@@ -36,7 +39,6 @@ const BridgeBtc = () => {
       api.rpc.system.name(),
       api.rpc.system.version(),
     ]);
-
     lg(
       `You are connected to chain ${chain} using ${nodeName} v${nodeVersion}`
     );
@@ -54,39 +56,39 @@ const BridgeBtc = () => {
     const time = await api.query.timestamp.now();
     lg("timestamp:", time.toPrimitive());
 
+    const asset = await api.query.assets.metadata(0 /* Asset Id */);
+    console.log("Asset", asset.name.toString(), 'has ', asset.decimals.toString(), "decimals");
+
+    const meta = api.rpc.system.properties.meta;
+    console.log("meta", meta);
+
     const selected = selectedAccount?.address;
     lg('selectedAccount.address:', selected)
+    if (!selected) throw Error("SelectedAccount undefined");
     const entries = await api.query.tokens.accounts.entries(selected)
     lg('show all detected tokens:')
     for (const entry of entries) {
-      //lg('entries', entry)
       lg(entry[0].toHuman())
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    const { free: ObjGGXT }: any = await api.query.tokens.accounts(selected, { Token: 'GGXT' });
-    lg("ObjGGXT:", ObjGGXT);
-    lg("ObjGGXT:", ObjGGXT.toString(), ObjGGXT.toHuman());//1,180,591,620,717,411,303,424 or 2^70
+    let balc1 = await getBalcToken(selected, 'GGXT');
+    let balc2 = await getBalcToken(wallet1, 'GGXT');
+    setBalcWallet1GGXT(new BN(balc2.toString()))
+    //1,180,591,620,717,411,303,424 or 2^70
 
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    const { free: ObjGGXT2 }: any = await api.query.tokens.accounts(wallet1, { Token: 'GGXT' });
-    lg("ObjGGXT2:", ObjGGXT2);
-    lg("ObjGGXT2:", ObjGGXT2.toString(), ObjGGXT2.toHuman());
-    setBalcWallet1GGXT(new BN(ObjGGXT2.toString()))
-
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    const { free: ObjKBTC }: any = await api.query.tokens.accounts(selected, { Token: 'KBTC' });
-    //enum= token, foreignasset, lendtoken, lptoken, stablelptoken
-    lg("ObjKBTC:", ObjKBTC.toString(), ObjKBTC.toHuman());
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    const { free: ObjKBTC2 }: any = await api.query.tokens.accounts(wallet1, { Token: 'KBTC' });
-    //enum= token, foreignasset, lendtoken, lptoken, stablelptoken
-    lg("ObjKBTC2:", ObjKBTC2.toString(), ObjKBTC2.toHuman());
-    setBalcWallet1KBTC(new BN(ObjKBTC2.toString()))
-
+    balc1 = await getBalcToken(selected, 'KBTC');
+    balc2 = await getBalcToken(wallet1, 'KBTC');
+    setBalcWallet1KBTC(new BN(balc2.toString()))
   }
-  const handleConnection = async () => {
-    lg("handleConnection()")
+  const getBalcToken = async (target: string, tokenName: string) => {
+    if (!api) throw Error("No_API_found");
+    const { free } = await api.query.tokens.accounts(target, { Token: tokenName });
+    //enum= token, foreignasset, lendtoken, lptoken, stablelptoken
+    lg(target.substring(0, 4), tokenName, "balance:", free.toString(), free.toHuman());
+    return free;
+  }
+  const connectWallet = async () => {
+    lg("connectWallet()")
     if (typeof window !== "undefined") {
       const extensions = await web3Enable(DAPP_NAME);
       if (!extensions) { throw Error("No_extension _found") }
@@ -113,16 +115,6 @@ const BridgeBtc = () => {
       // don't forget to unsubscribe when needed, e.g when unmounting a component
       //unsubscribe && unsubscribe();
     }
-  }
-  const handleAccountSelection = async (e: ChangeEvent<HTMLSelectElement>) => {
-    lg("handleAccountSelection")
-    //HTMLSelectElement is copied from onChange hint
-    const selectedAddress = e.target.value;
-    //if(!address) { throw Error() }
-    const account = accounts.find(account => account.address === selectedAddress)
-    if (!account) { throw Error("No_account_found") }
-    lg('selectedAccount=', account)
-    setSelectedAccount(account)
   }
 
   //const amount = new BN(10).mul(new BN(10).pow(new BN(12)));//.toString();
@@ -166,37 +158,110 @@ const BridgeBtc = () => {
     }
   }
 
-  return (<div>
-    <span>BTC to KBTC Bridge</span><br />
-    <span>Wallet1: {wallet1}</span><br />
+  type InteractType = "Deposit" | "Withdraw";
+  const onModalOpen = async (type: InteractType) => {
+    lg('onModalOpen')
+  }
+  const total = 0;
+  const selectedToken = "BTC"
 
-    {accounts.length === 0 ? (
-      <button type="button" onClick={handleConnection}>Connect Wallet</button>) : null}
+  const walletIsNotInitialized = accounts.length === 0;
 
-    {accounts.length > 0 && !selectedAccount ? (<>
-      <select onChange={handleAccountSelection} defaultValue={'DEFAULT'}>
-        <option value="DEFAULT" disabled hidden>Choose your account</option>
+  const handleAccountSelection = async (account1: InjectedAccountWithMeta) => {
+    lg("handleAccountSelection")
+    //if(!address) { throw Error() }
+    const account = accounts.find(account => account.address === account1.address)
+    if (!account) { throw Error("No_account_found") }
+    lg('selectedAccount=', account)
+    setSelectedAccount(account)
+  }
+  return (
+    <div className="w-full h-full flex flex-col">
+      <div className="flex w-full justify-between items-center">
+        <h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">
+          ${total.toFixed(2)}
+        </h1>
+        <div className="flex md:flex-row flex-col gap-5">
+          <Button
+            data-testid="deposit"
+            onClick={() => onModalOpen("Deposit")}
+            disabled={walletIsNotInitialized}
+            className="w-1/4"
+          >
+            Deposit {selectedToken ?? ""}
+          </Button>
+          <Button
+            data-testid="withdraw"
+            onClick={() => onModalOpen("Withdraw")}
+            disabled={
+              walletIsNotInitialized ||
+              balcWallet1KBTC.lte(BN_ZERO)
+            }
+            className="w-1/4"
+          >
+            Withdraw {selectedToken ?? ""}
+          </Button>
+        </div>
+      </div>
 
-        {accounts.map((account) => (
-          <option key={account.address} value={account.address}>
-            {account.meta.name || account.address}
-          </option>
-        ))}
-      </select>
-    </>
-    ) : null}
+      <div className="mt-5">
+        <Ruler />
+      </div>
 
-    {selectedAccount ? selectedAccount.address : null
-    }
-    <br />
-    <button type="button" onClick={checkBalances}>Check Balances</button><br />
-    <input name="amount1" onChange={handleAmountChange} /><br />
-    <button type="button" onClick={handleTransaction}>Send Transaction</button><br />
+      <div className="flex justify-end md:mt-10 mt-1 items-center">
+        <div className="w-[45%] md:w-[30%] md:max-w-96 max-w-48">
+          {walletIsNotInitialized ? (
+            <Button onClick={connectWallet} className="w-full h-full">
+              Connect Wallet
+            </Button>
+          ) : (
+            <div
+              data-testid="userSelect"
+              className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]"
+            >
+              <p className="h-full p-2 text-[14px] text-GGx-gray">Account</p>
+              <SelectDark<InjectedAccountWithMeta>
+                onChange={handleAccountSelection}
+                options={accounts}
+                value={selectedAccount}
+                className="w-full h-full"
+                childFormatter={(account) => {
+                  return (
+                    <div className="w-full p-1 h-full text-GGx-light rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+                      <span className="text-base">
+                        {account.meta.name
+                          ? account.meta.name
+                          : `Account ${accounts.findIndex(
+                            (acc) => acc.address === account.address,
+                          )}`}
+                      </span>
+                    </div>
+                  );
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
 
-    Wallet1 GGXT Balance: {balcWallet1GGXT.toString()}
-    <br />
-    Wallet1 KBTC Balance: {balcWallet1KBTC.toString()}
+      <span>BTC to KBTC Bridge</span><br />
+      <span>Wallet1: {wallet1}</span><br />
 
-  </div>)
-}//disabled selected hidden
+      {accounts.length === 0 ? (
+        <button type="button" onClick={connectWallet}>Connect Wallet</button>) : null}
+
+      {selectedAccount ? selectedAccount.address : null
+      }
+      <br />
+      <button type="button" onClick={checkBalances}>Check Balances</button><br />
+      <input name="amount1" onChange={handleAmountChange} /><br />
+      <button type="button" onClick={handleTransaction}>Send Transaction</button><br />
+
+      Wallet1 GGXT Balance: {balcWallet1GGXT.toString()}
+      <br />
+      Wallet1 KBTC Balance: {balcWallet1KBTC.toString()}
+
+    </div>
+  );
+}//disabled selected hidden 
 export default BridgeBtc;
