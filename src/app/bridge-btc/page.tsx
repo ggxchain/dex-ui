@@ -13,7 +13,7 @@ import type { PubKey } from "@/types";
 //https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/chainstate
 
 const lg = console.log;
-const DAPP_NAME = 'GGX'
+const DAPP_NAME = 'RfQ by GGx'
 export type Account = {
   address: PubKey;
   name?: string;
@@ -100,7 +100,8 @@ const BridgeBtc = () => {
       "ggx-wallet-selected-account",
     );
     const accounts = window.localStorage.getItem("ggx-wallet-accounts");
-    lg('localstorage selectedAccount:', selectedAccount, ', localstorage accounts:', accounts)
+    lg('localstorage selectedAccount:', selectedAccount)
+    //lg('localstorage accounts:', accounts)
     if (selectedAccount) {
       setSelectedAccount(JSON.parse(selectedAccount))
       if (accounts) { setAccounts(JSON.parse(accounts)) } else { setAccounts([]) };
@@ -163,7 +164,15 @@ const BridgeBtc = () => {
     if (!selectedAccount) throw Error("No_Selected_Account");
 
     if (typeof window !== "undefined") {
-      const injector = await web3FromSource(selectedAccount?.address);//?.meta.source;
+      const extensions = await web3Enable(DAPP_NAME);
+      if (!extensions) { throw Error("No_extension _found") }
+      if (extensions.length === 0) {
+        lg("no extension installed, or the user did not accept the authorization")
+        // in this case we should inform the user and give a link to the extension
+        return;
+      }
+      const injector = await web3FromAddress(selectedAccount?.address);
+      //const injector = await web3FromSource(selectedAccount?.meta.source);
 
       const amount = amountIp || 1000;
       lg('amount:', amount);
@@ -201,6 +210,11 @@ const BridgeBtc = () => {
     if (!account) { throw Error("No_account_found") }
     lg('selectedAccount=', account)
     setSelectedAccount(account)
+
+    window.localStorage.setItem(
+      "ggx-wallet-selected-account",
+      JSON.stringify(account),
+    );
   }
   return (
     <div className="w-full h-full flex flex-col">
@@ -272,14 +286,13 @@ const BridgeBtc = () => {
       </div>
 
       <span>BTC to KBTC Bridge</span><br />
-      <span>Wallet1: {wallet1}</span><br />
 
-      {accounts.length === 0 ? (
-        <button type="button" onClick={connectWallet}>Connect Wallet</button>) : null}
-
-      {selectedAccount ? selectedAccount.address : null
-      }
+      <span>From wallet: {selectedAccount ? selectedAccount.address : null
+      }</span>
       <br />
+      <span>To Wallet: {wallet1}</span>
+      <br />
+
       <button type="button" onClick={checkBalances}>Check Balances</button><br />
       <input name="amount1" onChange={handleAmountChange} /><br />
       <button type="button" onClick={handleTransaction}>Send Transaction</button><br />
