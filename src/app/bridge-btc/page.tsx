@@ -1,6 +1,6 @@
 "use client";
 import { WsProvider, ApiPromise } from "@polkadot/api";
-import { type ChangeEvent, useEffect, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { web3Accounts, web3AccountsSubscribe, web3Enable, web3FromAddress, web3FromSource } from '@polkadot/extension-dapp';
 import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import { BN, BN_ZERO } from "@polkadot/util/bn";
@@ -8,7 +8,10 @@ import { GGX_WSS_URL } from "@/consts";
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
-import type { PubKey } from "@/types";
+import type { PubKey, Token } from "@/types";
+import Modal from "@/components/common/modal";
+import { InputWithPriceInfo } from "@/components/common/input";
+import LoadingButton from "@/components/common/loadButton";
 //const wsProviderURL = "ws://127.0.0.1:9944";
 //https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/chainstate
 
@@ -99,12 +102,12 @@ const BridgeBtc = () => {
     const selectedAccount = window.localStorage.getItem(
       "ggx-wallet-selected-account",
     );
-    const accounts = window.localStorage.getItem("ggx-wallet-accounts");
+    const localstorageAccounts = window.localStorage.getItem("ggx-wallet-accounts");
     lg('localstorage selectedAccount:', selectedAccount)
     //lg('localstorage accounts:', accounts)
     if (selectedAccount) {
       setSelectedAccount(JSON.parse(selectedAccount))
-      if (accounts) { setAccounts(JSON.parse(accounts)) } else { setAccounts([]) };
+      if (localstorageAccounts) { setAccounts(JSON.parse(localstorageAccounts)) } else { setAccounts([]) };
     }
   }
   const connectWallet = async () => {
@@ -127,10 +130,20 @@ const BridgeBtc = () => {
           };
         }));
       lg('allAccounts:', allAccounts);
-
       setAccounts(allAccounts);
+      window.localStorage.setItem(
+        "ggx-wallet-accounts",
+        JSON.stringify(allAccounts),
+      );
+
       if (allAccounts.length === 1) {
         setSelectedAccount(allAccounts[0]);
+      } else if (allAccounts.length > 1 && !selectedAccount) {
+        setSelectedAccount(allAccounts[0]);
+        window.localStorage.setItem(
+          "ggx-wallet-selected-account",
+          JSON.stringify(allAccounts[0]),
+        );
       }
 
       // we subscribe to any account change and log the new list. note that `web3AccountsSubscribe` returns the function to unsubscribe
@@ -194,14 +207,41 @@ const BridgeBtc = () => {
     }
   }
 
+  const fiatBalance = 0;
+  const [selectedToken, setSelectedToken] = useState<Token | undefined>(
+    {
+      id: 0,
+      name: 'Bitcoin',
+      symbol: 'BTC',
+      network: 'bitcoin',
+      decimals: 8,
+    }
+  );
+  const isTokenNotSelected = selectedToken === undefined;
   type InteractType = "Deposit" | "Withdraw";
+  const modalTitle = useRef<InteractType>("Deposit");
+  // Modal related states
+  const [modal, setModal] = useState<boolean>(false);
+  const [modalAmount, setModalAmount] = useState<number>(0);
+  const [modalLoading, setModalLoading] = useState<boolean>(false);
+
   const onModalOpen = async (type: InteractType) => {
     lg('onModalOpen')
+    if (isTokenNotSelected) throw Error("No_token_selected");
+    modalTitle.current = type;
+    setModalLoading(false);
+    setModalAmount(0);
+    setModal(true);
   }
-  const total = 0;
-  const selectedToken = "BTC"
+  const omModalSubmit = () => {
+    lg('onModalSubmit')
+  }
 
   const walletIsNotInitialized = accounts.length === 0;
+  /*const selectedTokenPrice = selectedToken
+    ? tokenPrices.get(selectedToken.id) ?? 0
+    : 0;*/
+  const amountPrice = 0;//modalAmount * selectedTokenPrice;
 
   const handleAccountSelection = async (account1: Account) => {
     lg("handleAccountSelection")
@@ -209,8 +249,8 @@ const BridgeBtc = () => {
     const account = accounts.find(account => account.address === account1.address)
     if (!account) { throw Error("No_account_found") }
     lg('selectedAccount=', account)
-    setSelectedAccount(account)
 
+    setSelectedAccount(account);
     window.localStorage.setItem(
       "ggx-wallet-selected-account",
       JSON.stringify(account),
@@ -220,7 +260,7 @@ const BridgeBtc = () => {
     <div className="w-full h-full flex flex-col">
       <div className="flex w-full justify-between items-center">
         <h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">
-          ${total.toFixed(2)}
+          ${fiatBalance.toFixed(2)}
         </h1>
         <div className="flex md:flex-row flex-col gap-5">
           <Button
@@ -229,7 +269,7 @@ const BridgeBtc = () => {
             disabled={walletIsNotInitialized}
             className="w-1/4"
           >
-            Deposit {selectedToken ?? ""}
+            Deposit {selectedToken?.name ?? ""}
           </Button>
           <Button
             data-testid="withdraw"
@@ -240,7 +280,7 @@ const BridgeBtc = () => {
             }
             className="w-1/4"
           >
-            Withdraw {selectedToken ?? ""}
+            Withdraw {selectedToken?.name ?? ""}
           </Button>
         </div>
       </div>
@@ -284,6 +324,34 @@ const BridgeBtc = () => {
           )}
         </div>
       </div>
+
+
+      <Modal
+        modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`}
+        isOpen={modal}
+        onClose={() => setModal(false)}
+      >
+        <div className="flex flex-col w-full">
+          <InputWithPriceInfo
+            name="Amount"
+            className="mt-1 rounded-[4px] border p-3 basis-1/4 bg-transparent text-GGx-gray border-GGx-gray w-full"
+            value={modalAmount.toString()}
+            onChange={(e) => setModalAmount(Number(e.target.value))}
+            symbol={selectedToken?.name ?? ""}
+            price={amountPrice}
+          />
+          <div className="flex w-full justify-center">
+            <LoadingButton
+              loading={modalLoading}
+              disabled={modalAmount === 0}
+              className="disabled:opacity-90 text-lg md:w-1/2 mt-5 w-3/4 bg-GGx-dark border-GGx-dark"
+              onClick={omModalSubmit}
+            >
+              <p>{modalTitle.current}</p>
+            </LoadingButton>
+          </div>
+        </div>
+      </Modal>
 
       <span>BTC to KBTC Bridge</span><br />
 
