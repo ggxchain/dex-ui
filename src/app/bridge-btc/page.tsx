@@ -8,15 +8,21 @@ import { GGX_WSS_URL } from "@/consts";
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
+import type { PubKey } from "@/types";
 //const wsProviderURL = "ws://127.0.0.1:9944";
 //https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/chainstate
 
 const lg = console.log;
 const DAPP_NAME = 'GGX'
+export type Account = {
+  address: PubKey;
+  name?: string;
+};
 const BridgeBtc = () => {
   const [api, setApi] = useState<ApiPromise>();
-  const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
-  const [selectedAccount, setSelectedAccount] = useState<InjectedAccountWithMeta>();
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<Account>();
+  //InjectedAccountWithMeta
 
   const [amountIp, setAmountIp] = useState(0);
   const [balcWallet1GGXT, setBalcWallet1GGXT] = useState<BN>(new BN(0));
@@ -43,6 +49,8 @@ const BridgeBtc = () => {
       `You are connected to chain ${chain} using ${nodeName} v${nodeVersion}`
     );
     setApi(api);
+    getLocalstorageAccounts()
+    //await connectWallet()
   }
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
@@ -87,6 +95,17 @@ const BridgeBtc = () => {
     lg(target.substring(0, 4), tokenName, "balance:", free.toString(), free.toHuman());
     return free;
   }
+  const getLocalstorageAccounts = () => {
+    const selectedAccount = window.localStorage.getItem(
+      "ggx-wallet-selected-account",
+    );
+    const accounts = window.localStorage.getItem("ggx-wallet-accounts");
+    lg('localstorage selectedAccount:', selectedAccount, ', localstorage accounts:', accounts)
+    if (selectedAccount) {
+      setSelectedAccount(JSON.parse(selectedAccount))
+      if (accounts) { setAccounts(JSON.parse(accounts)) } else { setAccounts([]) };
+    }
+  }
   const connectWallet = async () => {
     lg("connectWallet()")
     if (typeof window !== "undefined") {
@@ -97,7 +116,15 @@ const BridgeBtc = () => {
         // in this case we should inform the user and give a link to the extension
         return;
       }
-      const allAccounts = await web3Accounts();
+      const allAccounts = await web3Accounts({
+        accountType: ["sr25519", "ed25519"],
+      }).then((accounts) =>
+        accounts.map((info) => {
+          return {
+            address: info.address,
+            name: info.meta.name,
+          };
+        }));
       lg('allAccounts:', allAccounts);
 
       setAccounts(allAccounts);
@@ -136,7 +163,7 @@ const BridgeBtc = () => {
     if (!selectedAccount) throw Error("No_Selected_Account");
 
     if (typeof window !== "undefined") {
-      const injector = await web3FromSource(selectedAccount?.meta.source);//(addrAlice);
+      const injector = await web3FromSource(selectedAccount?.address);//?.meta.source;
 
       const amount = amountIp || 1000;
       lg('amount:', amount);
@@ -167,7 +194,7 @@ const BridgeBtc = () => {
 
   const walletIsNotInitialized = accounts.length === 0;
 
-  const handleAccountSelection = async (account1: InjectedAccountWithMeta) => {
+  const handleAccountSelection = async (account1: Account) => {
     lg("handleAccountSelection")
     //if(!address) { throw Error() }
     const account = accounts.find(account => account.address === account1.address)
@@ -220,7 +247,7 @@ const BridgeBtc = () => {
               className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]"
             >
               <p className="h-full p-2 text-[14px] text-GGx-gray">Account</p>
-              <SelectDark<InjectedAccountWithMeta>
+              <SelectDark<Account>
                 onChange={handleAccountSelection}
                 options={accounts}
                 value={selectedAccount}
@@ -229,8 +256,8 @@ const BridgeBtc = () => {
                   return (
                     <div className="w-full p-1 h-full text-GGx-light rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
                       <span className="text-base">
-                        {account.meta.name
-                          ? account.meta.name
+                        {account.name
+                          ? account.name
                           : `Account ${accounts.findIndex(
                             (acc) => acc.address === account.address,
                           )}`}
