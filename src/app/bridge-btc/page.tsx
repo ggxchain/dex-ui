@@ -12,11 +12,16 @@ import type { PubKey, Token } from "@/types";
 import Modal from "@/components/common/modal";
 import { InputWithPriceInfo } from "@/components/common/input";
 import LoadingButton from "@/components/common/loadButton";
+import Contract, { errorHandler } from "@/services/api";
+import TokenDecimals from "@/tokenDecimalsConverter";
+import { toast } from "react-toastify";
 //const wsProviderURL = "ws://127.0.0.1:9944";
 //https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/chainstate
 
 const lg = console.log;
 const DAPP_NAME = 'RfQ by GGx'
+const tokenSymbol = "BTC"
+const tokenSymbolBridged = "KBTC"
 export type Account = {
   address: PubKey;
   name?: string;
@@ -28,10 +33,10 @@ const BridgeBtc = () => {
   //InjectedAccountWithMeta
 
   const [amountIp, setAmountIp] = useState(0);
-  const [balcWallet1GGXT, setBalcWallet1GGXT] = useState<BN>(new BN(0));
-  const [balcWallet1KBTC, setBalcWallet1KBTC] = useState<BN>(new BN(0));
+  const [balcWalletToGGXT, setBalcWallet1GGXT] = useState<BN>(new BN(0));
+  const [balcWalletToKBTC, setBalcWallet1KBTC] = useState<BN>(new BN(0));
   const addrAlice = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
-  const wallet1 = process.env.NEXT_PUBLIC_WALLET1 || "INVALID_WALLET_ADDRESS";
+  const walletTo = process.env.NEXT_PUBLIC_WALLET1 || "INVALID_WALLET_ADDRESS";
 
   //const amount = new BN(10).mul(new BN(10).pow(new BN(12)));//.toString();
 
@@ -68,10 +73,10 @@ const BridgeBtc = () => {
     lg("timestamp:", time.toPrimitive());
 
     const asset = await api.query.assets.metadata(0 /* Asset Id */);
-    console.log("Asset", asset.name.toString(), 'has ', asset.decimals.toString(), "decimals");
+    lg("Asset", asset.name.toString(), 'has ', asset.decimals.toString(), "decimals");
 
     const meta = api.rpc.system.properties.meta;
-    console.log("meta", meta);
+    lg("meta", meta);
 
     const selected = selectedAccount?.address;
     lg('selectedAccount.address:', selected)
@@ -83,12 +88,12 @@ const BridgeBtc = () => {
     }
 
     let balc1 = await getBalcToken(selected, 'GGXT');
-    let balc2 = await getBalcToken(wallet1, 'GGXT');
+    let balc2 = await getBalcToken(walletTo, 'GGXT');
     setBalcWallet1GGXT(new BN(balc2.toString()))
     //1,180,591,620,717,411,303,424 or 2^70
 
     balc1 = await getBalcToken(selected, 'KBTC');
-    balc2 = await getBalcToken(wallet1, 'KBTC');
+    balc2 = await getBalcToken(walletTo, 'KBTC');
     setBalcWallet1KBTC(new BN(balc2.toString()))
   }
   const getBalcToken = async (target: string, tokenName: string) => {
@@ -190,7 +195,7 @@ const BridgeBtc = () => {
       const amount = amountIp || 1000;
       lg('amount:', amount);
       //const txHash = api.tx.balances.transfer(BOB, 1000).signAndSend(alice);
-      const subscription = await api.tx.tokens.transferKeepAlive(wallet1, { Token: 'GGXT' }, `${amount}`).signAndSend(selectedAccount.address, { signer: injector.signer }, (result) => {
+      const subscription = await api.tx.tokens.transferKeepAlive(walletTo, { Token: 'GGXT' }, `${amount}`).signAndSend(selectedAccount.address, { signer: injector.signer }, (result) => {
         //if (result.isCompleted)
         //if (result.isFinalized) 
         //if (result.isError)
@@ -208,15 +213,7 @@ const BridgeBtc = () => {
   }
 
   const fiatBalance = 0;
-  const [selectedToken, setSelectedToken] = useState<Token | undefined>(
-    {
-      id: 0,
-      name: 'Bitcoin',
-      symbol: 'BTC',
-      network: 'bitcoin',
-      decimals: 8,
-    }
-  );
+  const [selectedToken, setSelectedToken] = useState<Token | undefined>(undefined);
   const isTokenNotSelected = selectedToken === undefined;
   type InteractType = "Deposit" | "Withdraw";
   const modalTitle = useRef<InteractType>("Deposit");
@@ -233,8 +230,51 @@ const BridgeBtc = () => {
     setModalAmount(0);
     setModal(true);
   }
-  const omModalSubmit = () => {
-    lg('onModalSubmit')
+
+  const [contract, setContract] = useState<Contract>(new Contract());
+  const [tokens, setTokens] = useState<Token[]>([]);
+  useEffect(() => {
+    setTokens([]);
+    contract.allTokensWithInfo().then((tokens) => {
+      lg('tokens:', tokens)
+      setTokens(tokens);
+      const tokenWanted = tokens.find(token =>
+        token.symbol === tokenSymbol);
+      if (!tokenWanted) {
+        throw Error("No_token_found");
+      }
+      setSelectedToken(tokenWanted);
+    });
+    //connectWallet();
+  }, [contract]);
+
+  const bridgeAction = async (action: string): Promise<boolean> => {
+    if (action === "Deposit") {
+      //await func1().catch((err:any) => lg(err))
+    } else {
+      //withdraw token
+    }
+    return true;
+  }
+  const omModalSubmit = async () => {
+    lg('onModalSubmit. selectedToken:', selectedToken, ', modalTitle.current:', modalTitle.current);
+    if (isTokenNotSelected || modalAmount <= 0) {
+      return;
+    }
+    setModalLoading(true);
+    const amount = new TokenDecimals(selectedToken.decimals).floatToBN(modalAmount);
+    lg('amount:', amount.toString());//BTC has 10 dp??
+
+    try {
+      await bridgeAction(modalTitle.current)
+      setModal(false);
+      checkBalances();
+      toast.success(`${modalTitle.current} finalized`);
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    } catch (error: any) {
+      setModal(false);
+      errorHandler(error);
+    };
   }
 
   const walletIsNotInitialized = accounts.length === 0;
@@ -276,7 +316,7 @@ const BridgeBtc = () => {
             onClick={() => onModalOpen("Withdraw")}
             disabled={
               walletIsNotInitialized ||
-              balcWallet1KBTC.lte(BN_ZERO)
+              balcWalletToKBTC.lte(BN_ZERO)
             }
             className="w-1/4"
           >
@@ -340,6 +380,9 @@ const BridgeBtc = () => {
             symbol={selectedToken?.name ?? ""}
             price={amountPrice}
           />
+          {modalTitle.current === "Deposit" ? <h1 className="text-xl text-GGx-dark text-left w-full">Show deposit address...
+          </h1> : <h1 className="text-xl text-GGx-dark text-left w-full">Ask destination address...
+          </h1>}
           <div className="flex w-full justify-center">
             <LoadingButton
               loading={modalLoading}
@@ -353,21 +396,21 @@ const BridgeBtc = () => {
         </div>
       </Modal>
 
-      <span>BTC to KBTC Bridge</span><br />
+      <span>{tokenSymbol} to {tokenSymbolBridged} Bridge</span><br />
 
       <span>From wallet: {selectedAccount ? selectedAccount.address : null
       }</span>
       <br />
-      <span>To Wallet: {wallet1}</span>
+      <span>To Wallet: {walletTo}</span>
       <br />
 
       <button type="button" onClick={checkBalances}>Check Balances</button><br />
       <input name="amount1" onChange={handleAmountChange} /><br />
       <button type="button" onClick={handleTransaction}>Send Transaction</button><br />
 
-      Wallet1 GGXT Balance: {balcWallet1GGXT.toString()}
+      WalletTo GGXT Balance: {balcWalletToGGXT.toString()}
       <br />
-      Wallet1 KBTC Balance: {balcWallet1KBTC.toString()}
+      WalletTo KBTC Balance: {balcWalletToKBTC.toString()}
 
     </div>
   );
