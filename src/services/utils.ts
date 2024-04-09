@@ -7,7 +7,7 @@ export const translateErrorMesg = (error: string| undefined) => {
   const errorObj = JSON.parse(error);
   console.log("🚀 ~ translateErrorMesg ~ errorObj:", errorObj)
   let errEasy = '';
-  switch(errorObj.token) {
+  switch(errorObj.token || errorObj.arithmetic) {
     case 'FundsUnavailable':
       errEasy = "User's fund is not enough"
       break;
@@ -38,29 +38,26 @@ export const translateErrorMesg = (error: string| undefined) => {
     case 'Blocked':
       errEasy = "blocked"
         break;
+    case 'Underflow':
+      errEasy = "cannot deposit/withdraw more than what you have"
+        break;
+    case 'Overflow':
+      errEasy = "cannot make the result balance over the math limit"
+        break;
+    case 'DivisionByZero':
+      errEasy = "cannot divide something by zero"
+        break;
     case 'SpRuntimeModuleError':
       errEasy = "module error"
         break;
     case 'SpRuntimeTokenError':
       errEasy = "token error"
         break;
-    case 'SpArithmeticArithmeticError':
-      errEasy = "arithmetic error"
-        break;
     case 'SpRuntimeTransactionalError':
       errEasy = "transactional error"
         break;
     case 'Null':
       errEasy = "null"
-        break;
-    case 'Underflow':
-      errEasy = "cannot substract due to underflow"
-        break;
-    case 'Overflow':
-      errEasy = "cannot add due to overflow"
-        break;
-    case 'DivisionByZero':
-      errEasy = "cannot divide by zero"
         break;
     case 'LimitReached':
       errEasy = "LimitReached"
