@@ -16,6 +16,7 @@ import type Order from "@/order";
 import { toast } from "react-toastify";
 import GGxNetwork from "./api/ggx";
 import ContractMock from "./api/mock";
+import { translateErrorMesg } from "./utils";
 
 export type onFinalize = (error: string | undefined) => void;
 
@@ -332,7 +333,8 @@ function wrapCallWithNotifications<T>(
 ): ReturnType<typeof toast.promise> {
 	const wrappedOnFinalize = (error: string | undefined) => {
 		if (error !== undefined) {
-			toast.error(`${error}`);
+      const errEasy = translateErrorMesg(error)
+			toast.error(`${errEasy}`);
 		} else {
 			toast.success(`${text} finalized`);
 		}
