@@ -66,7 +66,7 @@ export const translateErrorMesg = (error: string| undefined) => {
       errEasy = "NoLayer"
         break;
     default:
-      errEasy = errorObj.token;
+      errEasy = error;
   }
   return errEasy;
 }

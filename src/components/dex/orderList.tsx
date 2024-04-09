@@ -104,8 +104,11 @@ export default function OrdersList({
 							);
 
 							const expiration = order.expiration - now;
+              const expiry = expirationFormat(expiration);
+              //console.log("🚀 ~ orders.map ~ expiry:", expiry)
+              
 							const expiredText =
-								expiration < 0 ? "Expired" : expirationFormat(expiration);
+								expiration < 0 ? "Expired" : expiry.landText;
 							return (
 								<tr
 									key={order.counter}
@@ -150,7 +153,16 @@ export default function OrdersList({
 											{ownedToken.network}
 										</sup>
 									</td>
-									<td className="text-left">{expiredText}</td>
+                  <td>
+                  <span className="group relative">
+                    <div className="absolute bottom-[calc(100%+0.5rem)] left-[50%] -translate-x-[50%] hidden group-hover:block w-auto">
+                      <div className="bottom-full right-0 rounded bg-black px-4 py-1 text-xs text-white whitespace-nowrap">
+                        {expiry.hoverText}
+                      </div>
+                    </div>
+                    <span>{expiredText}</span>
+                  </span>
+                  </td>
 									<td className="rounded-r-xl">
 										<button
 											onClick={() => cancelOrder(order)}
@@ -178,16 +190,29 @@ function expirationFormat(timeLeft: number) {
 	const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
 	const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
 
-	let result = "";
+	let landText = "";
+	if (days > 9) {
+      landText = '9+ Days';
+	} else if (days <= 9 && days > 1) {
+      landText = `${days}+ Days ${hours} Hours`;
+	} else if (days <= 1 && hours > 1) {
+      landText += `${hours} Hours ${minutes} Minutes`;
+	} else if (hours <= 1 && minutes > 1) {
+      landText = `${minutes} Minutes ${seconds} Seconds`;
+	} else {
+      landText = `${seconds} Seconds`;
+  }
+
+	let hoverText = "";
 	if (days > 0) {
-		result += `${days} Days `;
+		hoverText += `${days} Days `;
 	}
 	if (hours > 0) {
-		result += `${hours} Hours `;
+		hoverText += `${hours} Hours `;
 	}
 	if (minutes > 0) {
-		result += `${minutes} Minutes `;
+		hoverText += `${minutes} Minutes `;
 	}
-	result += `${seconds} Seconds `;
-	return result;
+	hoverText += `${seconds} Seconds `;
+	return {landText, hoverText};
 }
