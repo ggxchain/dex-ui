@@ -29,7 +29,6 @@ type TokenData = TokenWithPrice & {
 
 export default function Dex() {
 	const contractRef = useRef<Contract>(new Contract());
-
 	const [isMaker, setIsMaker] = useState<boolean>(false);
 	const [sell, setSell] = useState<TokenData>();
 	const [buy, setBuy] = useState<TokenData>();
@@ -41,6 +40,7 @@ export default function Dex() {
 	const [expireNumber, expireUnit, convertToMillis, setExpiration] =
 		useExpire();
 	const isConnected = useRef<boolean>();
+  const [isInitialized, setIsInitialized] = useState(false);
 
 	const orderBookOrders = useOrderBookOrders(buy, sell, contractRef.current);
 
@@ -58,6 +58,7 @@ export default function Dex() {
 	useEffect(() => {
 		updateUserOrders();
 		loadTokens();
+    setIsInitialized(true)
 	}, []);
 
 	useEffect(() => {
@@ -370,7 +371,9 @@ export default function Dex() {
 			</div>
       <Suspense fallback={<Loading />}>
 			<div className="py-[75px] w-full ">
-				<OrdersList orders={userOrders} cancelOrder={onCancelOrder} />
+				<OrdersList orders={userOrders} cancelOrder={onCancelOrder}
+        isInitialized={isInitialized}
+        />
 			</div>
       </Suspense>
 		</div>

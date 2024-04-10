@@ -53,6 +53,7 @@ const useOwnedTokens = (
 };
 
 export default function Wallet() {
+  const [isInitialized, setIsInitialized] = useState(false);
 	const [contract, setContract] = useState<Contract>(new Contract());
 
 	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
@@ -114,7 +115,9 @@ export default function Wallet() {
 					setTokenPrices(map);
 				})
 				.catch(errorHandler);
-		});
+		}).then(()=> {
+      setIsInitialized(true)
+    });
 
 		connectWallet();
 	}, [contract]);
@@ -343,6 +346,7 @@ export default function Wallet() {
 				} w-full`}
 				tokens={displayTokens}
 				onClick={onTokenSelect}
+        isInitialized={isInitialized}
 			/>
       </Suspense>
 

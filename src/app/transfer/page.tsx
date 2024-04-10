@@ -30,6 +30,7 @@ import Loading from "./loading";
 type ModalTypes = "Deposit" | "Withdraw";
 
 export default function Transfer() {
+  const [isInitialized, setIsInitialized] = useState(false);
 	const chains = ibcChains;
 	const [chain, setChain] = useState<ChainInfo>(ibcChains[0]);
 	const [client, setClient] = useState<SigningStargateClient>();
@@ -56,6 +57,7 @@ export default function Transfer() {
 		const a = async () => {
 			await connectWallet();
 			await connectGGxWallet();
+      setIsInitialized(true)
 		};
 		a();
 	}, [chain]);
@@ -366,6 +368,7 @@ export default function Transfer() {
 						walletIsNotInitialized ? "opacity-50" : "opacity-100"
 					}`}
 					tokens={tokens}
+          isInitialized={isInitialized}
 				/>
         </Suspense>
 			</div>

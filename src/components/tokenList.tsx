@@ -2,6 +2,7 @@ import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
+import Spinner from "./common/spinner";
 
 export interface ListElement extends Token {
 	balance: Amount;
@@ -16,6 +17,7 @@ interface TokenListProperties {
 	className?: string;
 	selected?: ListElement;
 	onChain?: boolean;
+  isInitialized?: boolean;
 }
 
 export default function TokenList({
@@ -24,6 +26,7 @@ export default function TokenList({
 	className,
 	selected,
 	onChain,
+  isInitialized,
 }: Readonly<TokenListProperties>) {
 	const handleClick = (token: ListElement) => {
 		if (onClick !== undefined) {
@@ -44,11 +47,18 @@ export default function TokenList({
 				</tr>
 			</thead>
 			<tbody>
-				{tokens.length === 0 && (
+        {(!isInitialized && tokens.length === 0) ?
+            <tr><td><div className="flex w-full justify-center">
+              <div className="w-20 h-20 mt-5">
+                <Spinner />
+              </div>
+            </div></td></tr> : null}
+            
+				{(isInitialized && tokens.length === 0) ? (
 					<tr>
 						<td className="text-center">No tokens found</td>
-					</tr>
-				)}
+					</tr>) : null
+				}
 
 				{tokens.map((token) => {
 					const isSelected = token.id === selected?.id;
