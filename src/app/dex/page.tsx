@@ -20,7 +20,8 @@ import type { Amount, DetailedOrder } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
 import { useRouter } from "next/navigation";
 import { Rule } from "postcss";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import Loading from "./loading";
 
 type TokenData = TokenWithPrice & {
 	amount: Amount;
@@ -353,6 +354,8 @@ export default function Dex() {
 							</div>
 						</div>
 					</div>
+
+          <Suspense fallback={<Loading />}>
 					<div className="md:has-[table]:py-12 md:py-5 pl-5 basis-2/5">
 						<OrderBook
 							orders={orderBookOrders}
@@ -362,11 +365,14 @@ export default function Dex() {
 							selectedOrder={order}
 						/>
 					</div>
+          </Suspense>
 				</div>
 			</div>
+      <Suspense fallback={<Loading />}>
 			<div className="py-[75px] w-full ">
 				<OrdersList orders={userOrders} cancelOrder={onCancelOrder} />
 			</div>
+      </Suspense>
 		</div>
 	);
 }

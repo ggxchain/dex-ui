@@ -13,7 +13,8 @@ import GGXWallet, { type Account } from "@/services/ggx";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token, TokenId } from "@/types";
 import { BN, BN_ZERO } from "@polkadot/util";
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
+import Loading from "./loading";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -334,6 +335,7 @@ export default function Wallet() {
 					)}
 				</div>
 			</div>
+      <Suspense fallback={<Loading />}>
 			<TokenList
 				onChain={true}
 				className={`${
@@ -342,6 +344,7 @@ export default function Wallet() {
 				tokens={displayTokens}
 				onClick={onTokenSelect}
 			/>
+      </Suspense>
 
 			<Modal
 				modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`}

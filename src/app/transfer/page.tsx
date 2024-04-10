@@ -19,12 +19,13 @@ import {
 import type { AccountData, ChainInfo } from "@keplr-wallet/types";
 import { Keyring } from "@polkadot/keyring";
 import { BN, BN_ZERO, u8aToHex } from "@polkadot/util";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
 import TokenDecimals from "@/tokenDecimalsConverter";
+import Loading from "./loading";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -357,6 +358,7 @@ export default function Transfer() {
 						/>
 					</div>
 				</div>
+        <Suspense fallback={<Loading />}>
 				<TokenList
 					selected={selectedToken}
 					onClick={setSelectedToken}
@@ -365,6 +367,7 @@ export default function Transfer() {
 					}`}
 					tokens={tokens}
 				/>
+        </Suspense>
 			</div>
 
 			<Modal
