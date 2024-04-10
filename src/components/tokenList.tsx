@@ -2,6 +2,7 @@ import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
+import { useState } from "react";
 
 export interface ListElement extends Token {
 	balance: Amount;
@@ -17,7 +18,7 @@ interface TokenListProperties {
 	selected?: ListElement;
 	onChain?: boolean;
 }
-
+const lg = console.log;
 export default function TokenList({
 	tokens,
 	onClick,
@@ -25,8 +26,13 @@ export default function TokenList({
 	selected,
 	onChain,
 }: Readonly<TokenListProperties>) {
-	const handleClick = (token: ListElement) => {
-		if (onClick !== undefined) {
+
+  const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
+
+  const handleClick = (token: ListElement) => {
+			console.log("🚀 ~ handleClick. token:", token)
+      setSelectedTokenId(token.id)
+      if (onClick !== undefined) {
 			onClick(token);
 		}
 	};
@@ -53,14 +59,16 @@ export default function TokenList({
 				{tokens.map((token) => {
 					const isSelected = token.id === selected?.id;
 					const amountConverter = new TokenDecimals(token.decimals);
+          const isSelected2 = token.id === selectedTokenId;
 
-					return (
+          return (
 						<tr
 							key={token.symbol}
 							onClick={() => handleClick(token)}
-							className={`text-left font-medium text-[18px] text-GGx-light even:bg-GGx-black2 even:bg-opacity-70 [&>td]:px-6 [&>td]:py-1 ${
+							className={`text-left font-medium text-[18px] text-GGx-light [&>td]:px-6 [&>td]:py-1 ${
 								isSelected ? "filter backdrop-brightness-125" : ""
-							} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}
+							} ${onClick ? "glow-on-hover cursor-pointer" : ""}
+              ${isSelected2 ? "bg-yellow-600":"even:bg-GGx-black2 even:bg-opacity-70"}`}
 						>
 							<td>
 								<div className="flex items-center w-full">
