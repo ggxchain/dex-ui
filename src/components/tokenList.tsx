@@ -27,11 +27,10 @@ export default function TokenList({
 	onChain,
 }: Readonly<TokenListProperties>) {
 
-  const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
+  const [clickedTokenId, setClickedTokenId] = useState<number | null>(null);
 
   const handleClick = (token: ListElement) => {
-			console.log("🚀 ~ handleClick. token:", token)
-      setSelectedTokenId(token.id)
+      setClickedTokenId(token.id)
       if (onClick !== undefined) {
 			onClick(token);
 		}
@@ -59,7 +58,7 @@ export default function TokenList({
 				{tokens.map((token) => {
 					const isSelected = token.id === selected?.id;
 					const amountConverter = new TokenDecimals(token.decimals);
-          const isSelected2 = token.id === selectedTokenId;
+          const isClicked = token.id === clickedTokenId;
 
           return (
 						<tr
@@ -68,7 +67,7 @@ export default function TokenList({
 							className={`text-left font-medium text-[18px] text-GGx-light [&>td]:px-6 [&>td]:py-1 ${
 								isSelected ? "filter backdrop-brightness-125" : ""
 							} ${onClick ? "glow-on-hover cursor-pointer" : ""}
-              ${isSelected2 ? "bg-yellow-600":"even:bg-GGx-black2 even:bg-opacity-70"}`}
+              ${isClicked ? "bg-yellow-600":"even:bg-GGx-black2 even:bg-opacity-70"}`}
 						>
 							<td>
 								<div className="flex items-center w-full">
