@@ -214,12 +214,12 @@ export default function Dex() {
 		<div className="text-GGx-gray flex flex-col w-full items-center">
 			<div className="flex flex-col w-full">
 				<div className="flex text-xl justify-between text-[30px] pb-[10px]">
-					<button onClick={() => setIsMaker(false)}>
+					<button onClick={() => setIsMaker(false)} type="button" >
 						<p className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}>
 							Taker order
 						</p>
 					</button>
-					<button onClick={() => setIsMaker(true)}>
+					<button onClick={() => setIsMaker(true)} type="button">
 						<p className={isMaker ? "text-GGx-yellow" : "text-GGx-gray"}>
 							Maker order
 						</p>
@@ -259,7 +259,7 @@ export default function Dex() {
 										The balance is not enough to make this swap
 									</p>
 									{isMaker && ( // Taker can't regulate the amount of the order.
-										<button
+										<button type="button"
 											className="ml-2 p-1 rounded-2xl border grow-on-hover"
 											onClick={() =>
 												setSell({ ...sell, amount: availableBalanceNormalized })

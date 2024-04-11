@@ -155,7 +155,7 @@ export default function OrdersList({
 									</td>
 									<td className="text-left">{expiredText}</td>
 									<td className="rounded-r-xl">
-										<button
+										<button type="button"
 											onClick={() => cancelOrder(order)}
 											className="flex items-center text-GGx-yellow"
 										>
