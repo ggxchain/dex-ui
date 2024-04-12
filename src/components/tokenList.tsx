@@ -65,6 +65,7 @@ export default function TokenList({
 					const amountConverter = new TokenDecimals(token.decimals);
 
 					return (
+						// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 						<tr
 							key={token.symbol}
 							onClick={() => handleClick(token)}
@@ -73,7 +74,7 @@ export default function TokenList({
 							} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}
 						>
 							<td>
-								<div className="flex items-center w-full">
+								<div className="flex flex-col md:flex-row items-center w-full">
 									<Image
 										width={0}
 										height={0}
@@ -81,10 +82,10 @@ export default function TokenList({
 										className="md:w-6 md:h-6 w-5 h-5 my-1 mr-2"
 										alt={`${token.name} icon`}
 									/>
-									<p className="font-bold">{token.name}</p>
-									<sup className="pl-1 font-normal text-[10px]">
-										{token.network}
-									</sup>
+									<TokenDetail
+										tokenName={token.name}
+										tokenNetwork={token.network}
+									/>
 								</div>
 							</td>
 							<td>
@@ -140,4 +141,15 @@ function Balance({
 			</p>
 		</div>
 	);
+}
+interface TokenDetailInterface {
+	tokenName: string;
+	tokenNetwork: string;
+}
+const TokenDetail = ({tokenName, tokenNetwork}: TokenDetailInterface) => {
+	return <>
+    <p className="font-bold">{tokenName}
+		<sup className="pl-1 font-normal text-[10px]">{tokenNetwork}</sup>
+		</p>
+	</>
 }

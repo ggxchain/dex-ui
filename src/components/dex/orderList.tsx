@@ -37,6 +37,7 @@ export default function OrdersList({
 }: Readonly<UserOrderProps>) {
 	const [now, setNow] = useState(Date.now());
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		// TODO: JS timers slow down when you leave the page, and in a few hours they became not accurate at all.
 		// Ideally, we could reset the interval at some periods of time and check it.
@@ -56,7 +57,7 @@ export default function OrdersList({
 			<table className="table-fixed mt-2 md:mt-5 border-separate md:border-spacing-y-2 border-spacing-y-1 [&>td]:px-6 [&>td]:py-20`">
 				<thead>
 					<tr className="[&>th]:text-left [&>th]:text-[16px] [&th]:text-GGx-gray p-1">
-						<th className="pl-10">Order</th>
+						<th className="xl:pl-10">Order</th>
 						<th>Buy</th>
 						<th>Price</th>
 						<th>Sell</th>
@@ -67,7 +68,7 @@ export default function OrdersList({
 				<tbody>
 					<tr className="relative w-full h-[18px]">
 						<td>
-							<div className="absolute top-0 w-full">
+							<div className="absolute top-0 xl:pl-10 w-full">
 								<GrayRuler />
 							</div>
 						</td>
@@ -114,12 +115,13 @@ export default function OrdersList({
 									key={order.counter}
 									className="h-full w-full [&>td]:h-[23px] [&>td]:py-[20px] [&>td]:font-medium [&>td]:text-[18px] [&>td]:text-GGx-light [&>td]:text-left odd:bg-GGx-black2/70"
 								>
-									<td className="flex pl-10">
+									<td className="flex xl:pl-10">
+										<div className="flex flex-col xl:flex-row">
 										<Image
 											alt="Sell"
 											width={0}
 											height={0}
-											className="w-[24px] h-[24px] mr-2"
+											className="w-[24px] h-[24px] xl:mr-2"
 											src={`/svg/${ownedToken.symbol.toLowerCase()}.svg`}
 										/>
 										<span>{">"}</span>
@@ -127,9 +129,10 @@ export default function OrdersList({
 											alt="Buy"
 											width={0}
 											height={0}
-											className="w-[24px] h-[24px] ml-2"
+											className="w-[24px] h-[24px] xl:ml-2"
 											src={`/svg/${desiredToken.symbol.toLowerCase()}.svg`}
 										/>
+										</div>
 									</td>
 
 									{/*Buy*/}

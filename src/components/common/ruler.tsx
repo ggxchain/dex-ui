@@ -4,7 +4,7 @@ export function GoldenRuler() {
 			<div
 				className="absolute left-0 w-[4px] h-full text-xl"
 				style={{ content: "•", verticalAlign: "middle" }}
-			></div>
+			/>
 		</div>
 	);
 }
@@ -15,7 +15,7 @@ export function GrayRuler() {
 			<div
 				className="absolute left-0 w-[4px] h-full text-xl"
 				style={{ content: "•", verticalAlign: "middle" }}
-			></div>
+			/>
 		</div>
 	);
 }

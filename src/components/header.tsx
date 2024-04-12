@@ -26,7 +26,7 @@ export default function HeaderWithNavbar() {
 	return (
 		<>
 			<header className="peer flex justify-between items-center secondary-gradient w-full sticky top-0 z-50 p-safe-or-4 ">
-				<button className="inline-flex items-center p-2 rounded-lg md:hidden">
+				<button type="button" className="inline-flex items-center p-2 rounded-lg lg:hidden">
 					<ThreeDotsImage />
 				</button>
 
@@ -78,7 +78,7 @@ export default function HeaderWithNavbar() {
 				</div>
 			</header>
 
-			<aside className="text-GGx-light fixed top-0 left-0 z-40 w-80 h-screen transition-transform transparent p-safe-or-4 menu -translate-x-full peer-has-[button:focus]:translate-x-0 peer-has-[button:focus]:primary-gradient  md:translate-x-0">
+			<aside className="text-GGx-light fixed top-0 left-0 z-40 w-80 h-screen transition-transform transparent p-safe-or-4 menu -translate-x-full peer-has-[button:focus]:translate-x-0 peer-has-[button:focus]:primary-gradient  lg:translate-x-0">
 				<Image
 					src="/GGx.svg"
 					alt="GGX"
@@ -90,11 +90,11 @@ export default function HeaderWithNavbar() {
 					<ul className="space-y-10 font-medium flex flex-col items-center w-full">
 						{menus.map((menu, index) => (
 							<Link
-								key={index}
+								key={JSON.stringify(menu)}
 								href={menu.path}
 								className={
-									"w-full text-center p-2 rounded-lg hover:bg-gray-800 " +
-									(pathname === menu.path ? "secondary-gradient" : "")
+									`w-full text-center p-2 rounded-lg hover:bg-gray-800 
+									${(pathname === menu.path ? "secondary-gradient" : "")}`
 								}
 							>
 								<li>{menu.name}</li>
