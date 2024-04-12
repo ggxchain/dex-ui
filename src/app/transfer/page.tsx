@@ -53,7 +53,8 @@ export default function Transfer() {
 		useState<string>("channel-0");
 
 	// init chain
-	useEffect(() => {
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+		useEffect(() => {
 		const a = async () => {
 			await connectWallet();
 			await connectGGxWallet();
@@ -233,10 +234,7 @@ export default function Transfer() {
 
 			if (result.code === 0) {
 				console.log(
-					"transfer success, height:" +
-						result.height +
-						"hash: " +
-						result.transactionHash,
+					`transfer success, height: ${result.height}, hash: ${result.transactionHash}`
 				);
 
 				setTx(result.transactionHash);
@@ -289,6 +287,7 @@ export default function Transfer() {
 		}
 	};
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	const tokens = useMemo<ListElement[]>(
 		() => balances?.map((balance, index) => mapToken(balance, index)) ?? [],
 		[balances],

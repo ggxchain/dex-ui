@@ -55,12 +55,14 @@ export default function Dex() {
 		isConnected.current = wallet.pubkey() !== undefined;
 	});
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		updateUserOrders();
 		loadTokens();
 		setIsInitialized(true)
 	}, []);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		if (sell !== undefined) {
 			const contract = contractRef.current;
@@ -228,7 +230,7 @@ export default function Dex() {
 
 				<Ruler />
 
-				<div className="flex w-full">
+				<div className="flex flex-col xl:flex-row w-full">
 					<div className="flex flex-col rounded-3xl secondary-gradient mt-5 basis-3/5">
 						<div className="flex justify-between text-[18px]">
 							<p className="font-medium">Sell</p>
