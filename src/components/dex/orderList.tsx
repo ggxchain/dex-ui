@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import Close from "../common/close";
 import Ruler, { GrayRuler } from "../common/ruler";
+import Spinner from "../common/spinner";
 
 export const useUserOrders = (contract: Contract) => {
 	const [orders, setOrders] = useState<DetailedOrder[]>([]);
@@ -26,11 +27,13 @@ export const useUserOrders = (contract: Contract) => {
 interface UserOrderProps {
 	orders: DetailedOrder[];
 	cancelOrder: (order: DetailedOrder) => void;
+	isInitialized: boolean;
 }
 
 export default function OrdersList({
 	orders,
 	cancelOrder,
+	isInitialized,
 }: Readonly<UserOrderProps>) {
 	const [now, setNow] = useState(Date.now());
 
@@ -152,7 +155,7 @@ export default function OrdersList({
 									</td>
 									<td className="text-left">{expiredText}</td>
 									<td className="rounded-r-xl">
-										<button
+										<button type="button"
 											onClick={() => cancelOrder(order)}
 											className="flex items-center text-GGx-yellow"
 										>

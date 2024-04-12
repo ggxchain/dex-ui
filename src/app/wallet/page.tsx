@@ -13,7 +13,8 @@ import GGXWallet, { type Account } from "@/services/ggx";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token, TokenId } from "@/types";
 import { BN, BN_ZERO } from "@polkadot/util";
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
+import Loading from "./loading";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -52,6 +53,7 @@ const useOwnedTokens = (
 };
 
 export default function Wallet() {
+	const [isInitialized, setIsInitialized] = useState(false);
 	const [contract, setContract] = useState<Contract>(new Contract());
 
 	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
@@ -113,7 +115,9 @@ export default function Wallet() {
 					setTokenPrices(map);
 				})
 				.catch(errorHandler);
-		});
+		}).then(()=> {
+			setIsInitialized(true)
+    });
 
 		connectWallet();
 	}, [contract]);
@@ -334,6 +338,7 @@ export default function Wallet() {
 					)}
 				</div>
 			</div>
+      <Suspense fallback={<Loading />}>
 			<TokenList
 				onChain={true}
 				className={`${
@@ -341,7 +346,9 @@ export default function Wallet() {
 				} w-full`}
 				tokens={displayTokens}
 				onClick={onTokenSelect}
+        isInitialized={isInitialized}
 			/>
+      </Suspense>
 
 			<Modal
 				modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`}
