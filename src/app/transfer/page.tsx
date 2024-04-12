@@ -30,7 +30,7 @@ import Loading from "./loading";
 type ModalTypes = "Deposit" | "Withdraw";
 
 export default function Transfer() {
-  const [isInitialized, setIsInitialized] = useState(false);
+	const [isInitialized, setIsInitialized] = useState(false);
 	const chains = ibcChains;
 	const [chain, setChain] = useState<ChainInfo>(ibcChains[0]);
 	const [client, setClient] = useState<SigningStargateClient>();

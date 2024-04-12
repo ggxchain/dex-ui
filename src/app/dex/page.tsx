@@ -40,7 +40,7 @@ export default function Dex() {
 	const [expireNumber, expireUnit, convertToMillis, setExpiration] =
 		useExpire();
 	const isConnected = useRef<boolean>();
-  const [isInitialized, setIsInitialized] = useState(false);
+	const [isInitialized, setIsInitialized] = useState(false);
 
 	const orderBookOrders = useOrderBookOrders(buy, sell, contractRef.current);
 

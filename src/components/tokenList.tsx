@@ -47,13 +47,13 @@ export default function TokenList({
 				</tr>
 			</thead>
 			<tbody>
-        {(!isInitialized && tokens.length === 0) ?
-            <tr><td><div className="flex w-full justify-center">
-              <div className="w-20 h-20 mt-5">
-                <Spinner />
-              </div>
-            </div></td></tr> : null}
-            
+				{(!isInitialized && tokens.length === 0) ?
+					<tr><td><div className="flex w-full justify-center">
+						<div className="w-20 h-20 mt-5">
+							<Spinner />
+						</div>
+					</div></td></tr> : null}
+
 				{(isInitialized && tokens.length === 0) ? (
 					<tr>
 						<td className="text-center">No tokens found</td>

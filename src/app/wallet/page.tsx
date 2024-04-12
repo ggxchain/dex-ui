@@ -53,7 +53,7 @@ const useOwnedTokens = (
 };
 
 export default function Wallet() {
-  const [isInitialized, setIsInitialized] = useState(false);
+	const [isInitialized, setIsInitialized] = useState(false);
 	const [contract, setContract] = useState<Contract>(new Contract());
 
 	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
