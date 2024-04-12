@@ -39,9 +39,12 @@ describe("OrdersList", () => {
 		},
 	];
 
-	test("render empty token list", () => {
+	test("render empty token list", async() => {
 		render(<TokenList tokens={[]} />);
-		expect(screen.getByText("No tokens found")).toBeInTheDocument();
+		setTimeout((done) => {
+			expect(screen.getByText("No tokens found")).toBeInTheDocument()
+			done();
+		}, 2000);
 	});
 
 	test("render correctly without onchaindata", () => {

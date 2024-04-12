@@ -17,7 +17,7 @@ interface TokenListProperties {
 	className?: string;
 	selected?: ListElement;
 	onChain?: boolean;
-  isInitialized?: boolean;
+	isInitialized?: boolean;
 }
 
 export default function TokenList({
@@ -26,7 +26,7 @@ export default function TokenList({
 	className,
 	selected,
 	onChain,
-  isInitialized,
+	isInitialized,
 }: Readonly<TokenListProperties>) {
 	const handleClick = (token: ListElement) => {
 		if (onClick !== undefined) {

@@ -58,7 +58,7 @@ export default function Dex() {
 	useEffect(() => {
 		updateUserOrders();
 		loadTokens();
-    setIsInitialized(true)
+		setIsInitialized(true)
 	}, []);
 
 	useEffect(() => {

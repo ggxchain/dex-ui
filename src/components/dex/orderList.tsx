@@ -27,13 +27,13 @@ export const useUserOrders = (contract: Contract) => {
 interface UserOrderProps {
 	orders: DetailedOrder[];
 	cancelOrder: (order: DetailedOrder) => void;
-  isInitialized: boolean;
+	isInitialized: boolean;
 }
 
 export default function OrdersList({
 	orders,
 	cancelOrder,
-  isInitialized,
+	isInitialized,
 }: Readonly<UserOrderProps>) {
 	const [now, setNow] = useState(Date.now());
 

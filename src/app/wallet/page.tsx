@@ -116,7 +116,7 @@ export default function Wallet() {
 				})
 				.catch(errorHandler);
 		}).then(()=> {
-      setIsInitialized(true)
+			setIsInitialized(true)
     });
 
 		connectWallet();

@@ -57,7 +57,7 @@ export default function Transfer() {
 		const a = async () => {
 			await connectWallet();
 			await connectGGxWallet();
-      setIsInitialized(true)
+			setIsInitialized(true)
 		};
 		a();
 	}, [chain]);
