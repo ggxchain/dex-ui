@@ -21,7 +21,7 @@ import { toast } from "react-toastify";
 const lg = console.log;
 const DAPP_NAME = 'RfQ by GGx'
 const tokenSymbol = "BTC"
-const tokenSymbolBridged = "KBTC"
+const tokenSymbolOnChain = 'KBTC'
 export type Account = {
   address: PubKey;
   name?: string;
@@ -33,8 +33,9 @@ const BridgeBtc = () => {
   //InjectedAccountWithMeta
 
   const [amountIp, setAmountIp] = useState(0);
-  const [balcWalletToGGXT, setBalcWallet1GGXT] = useState<BN>(new BN(0));
-  const [balcWalletToKBTC, setBalcWallet1KBTC] = useState<BN>(new BN(0));
+  const [balcWalletToGGXT, setBalcWalletToGGXT] = useState<BN>(new BN(0));
+  const [balcWalletToKBTC, setBalcWalletToKBTC] = useState<BN>(new BN(0));
+  const [userTokenList, setUserTokenList] = useState<string[]>();
   const addrAlice = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
   const walletTo = process.env.NEXT_PUBLIC_WALLET1 || "INVALID_WALLET_ADDRESS";
 
@@ -43,7 +44,7 @@ const BridgeBtc = () => {
   let unsubscribe: () => void; // this is the function of type `() => void` that should be called to unsubscribe
 
   const setup = async () => {
-    lg("setup()")
+    //lg("setup()")
     const wsProvider = new WsProvider(GGX_WSS_URL);
     const api = await ApiPromise.create({ provider: wsProvider });
     await api.isReadyOrError;
@@ -65,39 +66,64 @@ const BridgeBtc = () => {
   useEffect(() => {
     setup();
   }, []);
+  useEffect(() => {
+    if (api) checkBalances();
+  }, [api]);
 
   const checkBalances = async () => {
     lg("checkBalances()")
-    if (!api) throw Error("No_API_found");
+    if (!api) {
+      console.error("No_API_found");
+      return;
+    }
     const time = await api.query.timestamp.now();
     lg("timestamp:", time.toPrimitive());
 
     const asset = await api.query.assets.metadata(0 /* Asset Id */);
-    lg("Asset", asset.name.toString(), 'has ', asset.decimals.toString(), "decimals");
+    lg('asset:', asset)
+    lg("Asset name:", asset.name.toString(), ', symbol:', asset.symbol.toString(), ", decimals:", asset.decimals.toString());
 
     const meta = api.rpc.system.properties.meta;
     lg("meta", meta);
 
     const selected = selectedAccount?.address;
     lg('selectedAccount.address:', selected)
-    if (!selected) throw Error("SelectedAccount undefined");
+    if (!selected) {
+      console.error("SelectedAccount undefined");
+      return;
+    }
     const entries = await api.query.tokens.accounts.entries(selected)
     lg('show all detected tokens:')
+    //let box: AnyJson;
+    const userTokList = []
     for (const entry of entries) {
-      lg(entry[0].toHuman())
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      const box: any = entry[0].toHuman();
+      if(!box) {
+        lg('token invalid:', box)
+        continue;
+      }
+      //lg(box, typeof box);//lg(box['0'])
+      lg(box['1'].Token)
+      userTokList.push(box['1'].Token.toString())
     }
+    lg('userTokList:', userTokList)
+    setUserTokenList(userTokList)
 
-    let balc1 = await getBalcToken(selected, 'GGXT');
-    let balc2 = await getBalcToken(walletTo, 'GGXT');
-    setBalcWallet1GGXT(new BN(balc2.toString()))
+    let balcFrom = await getBalcToken(selected, 'GGXT');
+    let balcTo = await getBalcToken(walletTo, 'GGXT');
+    if(balcTo) setBalcWalletToGGXT(new BN(balcTo.toString()))
     //1,180,591,620,717,411,303,424 or 2^70
 
-    balc1 = await getBalcToken(selected, 'KBTC');
-    balc2 = await getBalcToken(walletTo, 'KBTC');
-    setBalcWallet1KBTC(new BN(balc2.toString()))
+    balcFrom = await getBalcToken(selected, 'KBTC');
+    balcTo = await getBalcToken(walletTo, 'KBTC');
+    if(balcTo) setBalcWalletToKBTC(new BN(balcTo.toString()))
   }
   const getBalcToken = async (target: string, tokenName: string) => {
-    if (!api) throw Error("No_API_found");
+    if (!api) {
+      console.error('No_API_found')
+      return;
+    }
     const { free } = await api.query.tokens.accounts(target, { Token: tokenName });
     //enum= token, foreignasset, lendtoken, lptoken, stablelptoken
     lg(target.substring(0, 4), tokenName, "balance:", free.toString(), free.toHuman());
@@ -119,7 +145,10 @@ const BridgeBtc = () => {
     lg("connectWallet()")
     if (typeof window !== "undefined") {
       const extensions = await web3Enable(DAPP_NAME);
-      if (!extensions) { throw Error("No_extension _found") }
+      if (!extensions) { 
+        console.error("No_extension_found")
+        return;
+      }
       if (extensions.length === 0) {
         lg("no extension installed, or the user did not accept the authorization")
         // in this case we should inform the user and give a link to the extension
@@ -174,16 +203,24 @@ const BridgeBtc = () => {
       setAmountIp(out);
     }
   }
-  const handleTransaction = async () => {
-    lg("handleTransaction")
-    if (!api) throw Error("No_API_found");
+  const handleSendTransaction = async () => {
+    lg("handleSendTransaction")
+    if (!api) {
+      console.error("No_API_found");
+      return;
+    }
     const beforeAccountData = await api.query.system.account(selectedAccount?.address);//addrAlice
     lg("beforeAccountData:", beforeAccountData.toHuman());
-    if (!selectedAccount) throw Error("No_Selected_Account");
-
+    if (!selectedAccount) {
+      console.error("No_Selected_Account");
+      return;
+    }
     if (typeof window !== "undefined") {
       const extensions = await web3Enable(DAPP_NAME);
-      if (!extensions) { throw Error("No_extension _found") }
+      if (!extensions) { 
+        console.error("No_extension _found")
+        return;
+      }
       if (extensions.length === 0) {
         lg("no extension installed, or the user did not accept the authorization")
         // in this case we should inform the user and give a link to the extension
@@ -192,10 +229,31 @@ const BridgeBtc = () => {
       const injector = await web3FromAddress(selectedAccount?.address);
       //const injector = await web3FromSource(selectedAccount?.meta.source);
 
-      const amount = amountIp || 1000;
+      const amount = Number.parseInt(amountIp.toString());
+      if (Number.isNaN(amount)) {
+        console.error('parseInt failed');
+        return;
+      }
+      if(amount <= 0){
+        console.error('amount invalid')
+        return;
+      }
       lg('amount:', amount);
+      if(!userTokenList) {
+        console.error("userTokenList invalid... userTokenList:", userTokenList);
+        return;
+      }
+      lg('selectedToken:', selectedToken)
+      const tokenSymbol = userTokenList.find(token => token === tokenSymbolOnChain)
+      lg('userTokenList:', userTokenList, selectedToken?.symbol)
+      
+      if(!tokenSymbol) {
+        console.error("tokenSymbol invalid... tokenSymbol:", tokenSymbol);
+        return;
+      }
+      lg('tokenSymbol:', tokenSymbol)
       //const txHash = api.tx.balances.transfer(BOB, 1000).signAndSend(alice);
-      const subscription = await api.tx.tokens.transferKeepAlive(walletTo, { Token: 'GGXT' }, `${amount}`).signAndSend(selectedAccount.address, { signer: injector.signer }, (result) => {
+      const subscription = await api.tx.tokens.transferKeepAlive(walletTo, { Token: tokenSymbol }, `${amount}`).signAndSend(selectedAccount.address, { signer: injector.signer }, (result) => {
         //if (result.isCompleted)
         //if (result.isFinalized) 
         //if (result.isError)
@@ -203,6 +261,9 @@ const BridgeBtc = () => {
           lg(`Completed at block hash #${result.status.asInBlock.toString()}`);
         } else {
           lg(`Current status: ${result.status.type}`);
+          if(result.status.type === 'Finalized') {
+            checkBalances();
+          }
         }
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
       }).catch((error: any) => {
@@ -224,7 +285,10 @@ const BridgeBtc = () => {
 
   const onModalOpen = async (type: InteractType) => {
     lg('onModalOpen')
-    if (isTokenNotSelected) throw Error("No_token_selected");
+    if (isTokenNotSelected) {
+      console.error('No_token_selected')
+      return;
+    }
     modalTitle.current = type;
     setModalLoading(false);
     setModalAmount(0);
@@ -234,18 +298,22 @@ const BridgeBtc = () => {
   const [contract, setContract] = useState<Contract>(new Contract());
   const [tokens, setTokens] = useState<Token[]>([]);
   useEffect(() => {
-    setTokens([]);
-    contract.allTokensWithInfo().then((tokens) => {
+    lg('useEffect() ... setTokens')
+    const run = async () => {
+      const tokens = await contract.allTokensWithInfo()
       lg('tokens:', tokens)
       setTokens(tokens);
-      const tokenWanted = tokens.find(token =>
+      const tokenObj = tokens.find(token =>
         token.symbol === tokenSymbol);
-      if (!tokenWanted) {
-        throw Error("No_token_found");
+      if (!tokenObj) {
+        console.error('No_token_found')
+        return;
       }
-      setSelectedToken(tokenWanted);
-    });
-    //connectWallet();
+      setSelectedToken(tokenObj);
+      lg('tokenObj:', tokenObj)
+      //connectWallet();
+    }
+    run()
   }, [contract]);
 
   const bridgeAction = async (action: string): Promise<boolean> => {
@@ -285,9 +353,11 @@ const BridgeBtc = () => {
 
   const handleAccountSelection = async (account1: Account) => {
     lg("handleAccountSelection")
-    //if(!address) { throw Error() }
     const account = accounts.find(account => account.address === account1.address)
-    if (!account) { throw Error("No_account_found") }
+    if (!account) { 
+      console.error("No_account_found")
+      return
+    }
     lg('selectedAccount=', account)
 
     setSelectedAccount(account);
@@ -380,7 +450,7 @@ const BridgeBtc = () => {
             symbol={selectedToken?.name ?? ""}
             price={amountPrice}
           />
-          {modalTitle.current === "Deposit" ? <h1 className="text-xl text-GGx-dark text-left w-full">Show deposit address...
+          {modalTitle.current === "Deposit" ? <h1 className="text-xl text-GGx-dark text-left w-full">Click below to show deposit address...
           </h1> : <h1 className="text-xl text-GGx-dark text-left w-full">Ask destination address...
           </h1>}
           <div className="flex w-full justify-center">
@@ -390,13 +460,13 @@ const BridgeBtc = () => {
               className="disabled:opacity-90 text-lg md:w-1/2 mt-5 w-3/4 bg-GGx-dark border-GGx-dark"
               onClick={omModalSubmit}
             >
-              <p>{modalTitle.current}</p>
+              <p>Action</p>
             </LoadingButton>
           </div>
         </div>
       </Modal>
 
-      <span>{tokenSymbol} to {tokenSymbolBridged} Bridge</span><br />
+      <span>{tokenSymbol} to {tokenSymbolOnChain} Bridge</span><br />
 
       <span>From wallet: {selectedAccount ? selectedAccount.address : null
       }</span>
@@ -406,7 +476,7 @@ const BridgeBtc = () => {
 
       <button type="button" onClick={checkBalances}>Check Balances</button><br />
       <input name="amount1" onChange={handleAmountChange} /><br />
-      <button type="button" onClick={handleTransaction}>Send Transaction</button><br />
+      <button type="button" onClick={handleSendTransaction}>Send Transaction</button><br />
 
       WalletTo GGXT Balance: {balcWalletToGGXT.toString()}
       <br />
