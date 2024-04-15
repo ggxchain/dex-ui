@@ -6,22 +6,26 @@ import { usePathname } from "next/navigation";
 import ThreeDotsImage from "./common/threeDots";
 
 export default function HeaderWithNavbar() {
-	const pathname = usePathname();
+  const pathname = usePathname();
 
-	const menus = [
-		{
-			name: "Wallet",
-			path: "/wallet",
-		},
-		{
-			name: "Transfers",
-			path: "/transfer",
-		},
-		{
-			name: "DEX",
-			path: "/dex",
-		},
-	];
+  const menus = [
+    {
+      name: "Wallet",
+      path: "/wallet",
+    },
+    {
+      name: "Transfers",
+      path: "/transfer",
+    },
+    {
+      name: "DEX",
+      path: "/dex",
+    },
+    {
+      name: "Bridge-BTC",
+      path: "/bridge-btc",
+    },
+  ];
 
 	return (
 		<>
@@ -30,53 +34,53 @@ export default function HeaderWithNavbar() {
 					<ThreeDotsImage />
 				</button>
 
-				<div className="w-full flex justify-end">
-					<div className="w-[50%] text-GGx-gray text-base flex justify-end mr-[5%]">
-						<Link
-							className="mx-auto grow-on-hover"
-							href="https://ggxchain.io/wp-content/uploads/2023/10/GGx-Whitepaper.pdf"
-						>
-							Whitepaper
-						</Link>
-						<Link
-							className="mx-auto grow-on-hover"
-							href="https://ggxchain.io/#roadmap"
-						>
-							Roadmap
-						</Link>
-						<Link
-							className="mx-auto grow-on-hover"
-							href="https://ggxchain.io/developers/"
-						>
-							Developers
-						</Link>
-						<Link
-							className="mx-auto grow-on-hover"
-							href="https://ggxchain.io/news/"
-						>
-							News
-						</Link>
-						<Link
-							className="mx-auto grow-on-hover"
-							href="https://ggxchain.io/careers/"
-						>
-							Careeers
-						</Link>
-						<Link
-							className="mx-auto grow-on-hover"
-							href="https://docs.ggxchain.io"
-						>
-							Docs
-						</Link>
-						<Link
-							className="mx-auto grow-on-hover"
-							href="https://ggxchain.io/contacts"
-						>
-							Contact us
-						</Link>
-					</div>
-				</div>
-			</header>
+        <div className="w-full flex justify-end">
+          <div className="w-[50%] text-GGx-gray text-base flex justify-end mr-[5%]">
+            <Link
+              className="mx-auto grow-on-hover"
+              href="https://ggxchain.io/wp-content/uploads/2023/10/GGx-Whitepaper.pdf"
+            >
+              Whitepaper
+            </Link>
+            <Link
+              className="mx-auto grow-on-hover"
+              href="https://ggxchain.io/#roadmap"
+            >
+              Roadmap
+            </Link>
+            <Link
+              className="mx-auto grow-on-hover"
+              href="https://ggxchain.io/developers/"
+            >
+              Developers
+            </Link>
+            <Link
+              className="mx-auto grow-on-hover"
+              href="https://ggxchain.io/news/"
+            >
+              News
+            </Link>
+            <Link
+              className="mx-auto grow-on-hover"
+              href="https://ggxchain.io/careers/"
+            >
+              Careeers
+            </Link>
+            <Link
+              className="mx-auto grow-on-hover"
+              href="https://docs.ggxchain.io"
+            >
+              Docs
+            </Link>
+            <Link
+              className="mx-auto grow-on-hover"
+              href="https://ggxchain.io/contacts"
+            >
+              Contact us
+            </Link>
+          </div>
+        </div>
+      </header>
 
 			<aside className="text-GGx-light fixed top-0 left-0 z-40 w-80 h-screen transition-transform transparent p-safe-or-4 menu -translate-x-full peer-has-[button:focus]:translate-x-0 peer-has-[button:focus]:primary-gradient  lg:translate-x-0">
 				<Image
