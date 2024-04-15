@@ -3,10 +3,10 @@ import "./globals.css";
 
 import HeaderWithNavbar from "@/components/header";
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ToastContainer } from "react-toastify";
 
-const sans = DM_Sans({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] }) 
 
 const metadata: Metadata = {
 	title: "RfQ by GGX",
@@ -20,7 +20,7 @@ export default function Layout({
 }>) {
 	return (
 		<html lang="en">
-			<body className={`${sans.className} relative min-h-dvh`}>
+			<body className={`${inter.className} relative min-h-dvh`}>
 				<main className="h-dvh flex flex-col">
 					<ToastContainer position="top-right" closeOnClick theme="colored" />
 
