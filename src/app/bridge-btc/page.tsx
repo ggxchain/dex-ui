@@ -316,14 +316,6 @@ const BridgeBtc = () => {
     run()
   }, [contract]);
 
-  const bridgeAction = async (action: string): Promise<boolean> => {
-    if (action === "Deposit") {
-      //await func1().catch((err:any) => lg(err))
-    } else {
-      //withdraw token
-    }
-    return true;
-  }
   const omModalSubmit = async () => {
     lg('onModalSubmit. selectedToken:', selectedToken, ', modalTitle.current:', modalTitle.current);
     if (isTokenNotSelected || modalAmount <= 0) {
@@ -334,7 +326,7 @@ const BridgeBtc = () => {
     lg('amount:', amount.toString());//BTC has 10 dp??
 
     try {
-      await bridgeAction(modalTitle.current)
+      //Call bridgeAction to make deposit or withdraw action...
       setModal(false);
       checkBalances();
       toast.success(`${modalTitle.current} finalized`);
