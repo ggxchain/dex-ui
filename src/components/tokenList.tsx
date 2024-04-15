@@ -2,6 +2,7 @@ import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
+import Spinner from "./common/spinner";
 
 export interface ListElement extends Token {
 	balance: Amount;
@@ -16,6 +17,7 @@ interface TokenListProperties {
 	className?: string;
 	selected?: ListElement;
 	onChain?: boolean;
+	isInitialized?: boolean;
 }
 
 export default function TokenList({
@@ -24,6 +26,7 @@ export default function TokenList({
 	className,
 	selected,
 	onChain,
+	isInitialized,
 }: Readonly<TokenListProperties>) {
 	const handleClick = (token: ListElement) => {
 		if (onClick !== undefined) {
@@ -44,17 +47,25 @@ export default function TokenList({
 				</tr>
 			</thead>
 			<tbody>
-				{tokens.length === 0 && (
+				{(!isInitialized && tokens.length === 0) ?
+					<tr><td><div className="flex w-full justify-center">
+						<div className="w-20 h-20 mt-5">
+							<Spinner />
+						</div>
+					</div></td></tr> : null}
+
+				{(isInitialized && tokens.length === 0) ? (
 					<tr>
 						<td className="text-center">No tokens found</td>
-					</tr>
-				)}
+					</tr>) : null
+				}
 
 				{tokens.map((token) => {
 					const isSelected = token.id === selected?.id;
 					const amountConverter = new TokenDecimals(token.decimals);
 
 					return (
+						// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 						<tr
 							key={token.symbol}
 							onClick={() => handleClick(token)}
@@ -63,7 +74,7 @@ export default function TokenList({
 							} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}
 						>
 							<td>
-								<div className="flex items-center w-full">
+								<div className="flex flex-col md:flex-row items-center w-full">
 									<Image
 										width={0}
 										height={0}
@@ -71,10 +82,10 @@ export default function TokenList({
 										className="md:w-6 md:h-6 w-5 h-5 my-1 mr-2"
 										alt={`${token.name} icon`}
 									/>
-									<p className="font-bold">{token.name}</p>
-									<sup className="pl-1 font-normal text-[10px]">
-										{token.network}
-									</sup>
+									<TokenDetail
+										tokenName={token.name}
+										tokenNetwork={token.network}
+									/>
 								</div>
 							</td>
 							<td>
@@ -130,4 +141,15 @@ function Balance({
 			</p>
 		</div>
 	);
+}
+interface TokenDetailInterface {
+	tokenName: string;
+	tokenNetwork: string;
+}
+const TokenDetail = ({tokenName, tokenNetwork}: TokenDetailInterface) => {
+	return <>
+    <p className="font-bold">{tokenName}
+		<sup className="pl-1 font-normal text-[10px]">{tokenNetwork}</sup>
+		</p>
+	</>
 }

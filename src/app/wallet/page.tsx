@@ -13,7 +13,8 @@ import GGXWallet, { type Account } from "@/services/ggx";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token, TokenId } from "@/types";
 import { BN, BN_ZERO } from "@polkadot/util";
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
+import Loading from "./loading";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -52,6 +53,7 @@ const useOwnedTokens = (
 };
 
 export default function Wallet() {
+	const [isInitialized, setIsInitialized] = useState(false);
 	const [contract, setContract] = useState<Contract>(new Contract());
 
 	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
@@ -113,11 +115,14 @@ export default function Wallet() {
 					setTokenPrices(map);
 				})
 				.catch(errorHandler);
-		});
+		}).then(()=> {
+			setIsInitialized(true)
+    });
 
 		connectWallet();
 	}, [contract]);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		refreshBalances();
 	}, [selectedAccount]);
@@ -250,7 +255,7 @@ export default function Wallet() {
 				<h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">
 					${total.toFixed(2)}
 				</h1>
-				<div className="flex md:flex-row flex-col gap-5">
+				<div className="flex xl:flex-row flex-col gap-5">
 					<Button
 						data-testid="deposit"
 						onClick={() => onModalOpen("Deposit")}
@@ -286,7 +291,7 @@ export default function Wallet() {
 						onChange={onContractTypeChange}
 						className="sr-only peer"
 					/>
-					<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-bg-gr-2"></div>
+					<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-bg-gr-2"/>
 					<span className="ms-3 text-sm font-medium text-GGx-light dark:text-gray-300">
 						Contract
 					</span>
@@ -334,6 +339,7 @@ export default function Wallet() {
 					)}
 				</div>
 			</div>
+      <Suspense fallback={<Loading />}>
 			<TokenList
 				onChain={true}
 				className={`${
@@ -341,7 +347,9 @@ export default function Wallet() {
 				} w-full`}
 				tokens={displayTokens}
 				onClick={onTokenSelect}
+        isInitialized={isInitialized}
 			/>
+      </Suspense>
 
 			<Modal
 				modalTitle={`${modalTitle.current} ${selectedToken?.name ?? ""}`}

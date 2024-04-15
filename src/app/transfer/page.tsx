@@ -19,16 +19,18 @@ import {
 import type { AccountData, ChainInfo } from "@keplr-wallet/types";
 import { Keyring } from "@polkadot/keyring";
 import { BN, BN_ZERO, u8aToHex } from "@polkadot/util";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
 import TokenDecimals from "@/tokenDecimalsConverter";
+import Loading from "./loading";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
 export default function Transfer() {
+	const [isInitialized, setIsInitialized] = useState(false);
 	const chains = ibcChains;
 	const [chain, setChain] = useState<ChainInfo>(ibcChains[0]);
 	const [client, setClient] = useState<SigningStargateClient>();
@@ -51,10 +53,12 @@ export default function Transfer() {
 		useState<string>("channel-0");
 
 	// init chain
-	useEffect(() => {
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+		useEffect(() => {
 		const a = async () => {
 			await connectWallet();
 			await connectGGxWallet();
+			setIsInitialized(true)
 		};
 		a();
 	}, [chain]);
@@ -230,10 +234,7 @@ export default function Transfer() {
 
 			if (result.code === 0) {
 				console.log(
-					"transfer success, height:" +
-						result.height +
-						"hash: " +
-						result.transactionHash,
+					`transfer success, height: ${result.height}, hash: ${result.transactionHash}`
 				);
 
 				setTx(result.transactionHash);
@@ -286,6 +287,7 @@ export default function Transfer() {
 		}
 	};
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	const tokens = useMemo<ListElement[]>(
 		() => balances?.map((balance, index) => mapToken(balance, index)) ?? [],
 		[balances],
@@ -357,6 +359,7 @@ export default function Transfer() {
 						/>
 					</div>
 				</div>
+        <Suspense fallback={<Loading />}>
 				<TokenList
 					selected={selectedToken}
 					onClick={setSelectedToken}
@@ -364,7 +367,9 @@ export default function Transfer() {
 						walletIsNotInitialized ? "opacity-50" : "opacity-100"
 					}`}
 					tokens={tokens}
+          isInitialized={isInitialized}
 				/>
+        </Suspense>
 			</div>
 
 			<Modal

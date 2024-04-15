@@ -20,7 +20,8 @@ import type { Amount, DetailedOrder } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
 import { useRouter } from "next/navigation";
 import { Rule } from "postcss";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import Loading from "./loading";
 
 type TokenData = TokenWithPrice & {
 	amount: Amount;
@@ -28,7 +29,6 @@ type TokenData = TokenWithPrice & {
 
 export default function Dex() {
 	const contractRef = useRef<Contract>(new Contract());
-
 	const [isMaker, setIsMaker] = useState<boolean>(false);
 	const [sell, setSell] = useState<TokenData>();
 	const [buy, setBuy] = useState<TokenData>();
@@ -40,6 +40,7 @@ export default function Dex() {
 	const [expireNumber, expireUnit, convertToMillis, setExpiration] =
 		useExpire();
 	const isConnected = useRef<boolean>();
+	const [isInitialized, setIsInitialized] = useState(false);
 
 	const orderBookOrders = useOrderBookOrders(buy, sell, contractRef.current);
 
@@ -54,11 +55,14 @@ export default function Dex() {
 		isConnected.current = wallet.pubkey() !== undefined;
 	});
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		updateUserOrders();
 		loadTokens();
+		setIsInitialized(true)
 	}, []);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		if (sell !== undefined) {
 			const contract = contractRef.current;
@@ -212,12 +216,12 @@ export default function Dex() {
 		<div className="text-GGx-gray flex flex-col w-full items-center">
 			<div className="flex flex-col w-full">
 				<div className="flex text-xl justify-between text-[30px] pb-[10px]">
-					<button onClick={() => setIsMaker(false)}>
+					<button onClick={() => setIsMaker(false)} type="button" >
 						<p className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}>
 							Taker order
 						</p>
 					</button>
-					<button onClick={() => setIsMaker(true)}>
+					<button onClick={() => setIsMaker(true)} type="button">
 						<p className={isMaker ? "text-GGx-yellow" : "text-GGx-gray"}>
 							Maker order
 						</p>
@@ -226,7 +230,7 @@ export default function Dex() {
 
 				<Ruler />
 
-				<div className="flex w-full">
+				<div className="flex flex-col xl:flex-row w-full">
 					<div className="flex flex-col rounded-3xl secondary-gradient mt-5 basis-3/5">
 						<div className="flex justify-between text-[18px]">
 							<p className="font-medium">Sell</p>
@@ -257,7 +261,7 @@ export default function Dex() {
 										The balance is not enough to make this swap
 									</p>
 									{isMaker && ( // Taker can't regulate the amount of the order.
-										<button
+										<button type="button"
 											className="ml-2 p-1 rounded-2xl border grow-on-hover"
 											onClick={() =>
 												setSell({ ...sell, amount: availableBalanceNormalized })
@@ -353,6 +357,8 @@ export default function Dex() {
 							</div>
 						</div>
 					</div>
+
+          <Suspense fallback={<Loading />}>
 					<div className="md:has-[table]:py-12 md:py-5 pl-5 basis-2/5">
 						<OrderBook
 							orders={orderBookOrders}
@@ -362,11 +368,16 @@ export default function Dex() {
 							selectedOrder={order}
 						/>
 					</div>
+          </Suspense>
 				</div>
 			</div>
+      <Suspense fallback={<Loading />}>
 			<div className="py-[75px] w-full ">
-				<OrdersList orders={userOrders} cancelOrder={onCancelOrder} />
+				<OrdersList orders={userOrders} cancelOrder={onCancelOrder}
+        isInitialized={isInitialized}
+        />
 			</div>
+      </Suspense>
 		</div>
 	);
 }
