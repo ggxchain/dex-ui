@@ -53,7 +53,7 @@ export interface ApiInterface {
 	// Sadly we can't fetch all tokens owned by user, so we have to fetch all tokens and then filter them.
 	onChainBalanceOf(tokenId: TokenId, address: string): Promise<Amount>;
 }
-
+let mesg = ''
 export enum Errors {
 	WalletIsNotConnected = "Wallet is not connected",
 	AmountIsLessOrEqualToZero = "Amount is less or equal to zero",
@@ -207,7 +207,10 @@ export default class Contract {
 	async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
 		const _ = this.walletAddress(); // Check if wallet is initialized
 		if (amount.lten(0)) {
-			throw new Error(Errors.AmountIsLessOrEqualToZero);
+			mesg = Errors.AmountIsLessOrEqualToZero;
+			console.error(mesg);
+			toast.error(mesg);
+			return;
 		}
 		await this.validateTokenId(tokenId);
 
@@ -223,11 +226,17 @@ export default class Contract {
 		await this.validateTokenId(tokenId);
 
 		if (amount.lten(0)) {
-			throw new Error(Errors.AmountIsLessOrEqualToZero);
+			mesg = Errors.AmountIsLessOrEqualToZero;
+			console.error(mesg);
+			toast.error(mesg);
+			return;
 		}
 		const balance = await this.balanceOf(tokenId);
 		if (balance.lt(amount)) {
-			throw new Error(Errors.NotEnoughBalance);
+			mesg = Errors.NotEnoughBalance;
+			console.error(mesg);
+			toast.error(mesg);
+			return;
 		}
 
 		wrapCallWithNotifications(
@@ -251,22 +260,30 @@ export default class Contract {
 		amountOffered: Amount,
 		amoutRequested: Amount,
 		orderType: OrderType,
-		endTime: number,
+		endTime: Amount,
 		callback: onFinalize,
 	) {
+		console.log('makeOrder:', pair, amountOffered, amoutRequested, orderType, endTime.toString())
+
 		const _ = this.walletAddress(); // Check if wallet is initialized
 		await this.validateTokenId(pair[0]);
 		await this.validateTokenId(pair[1]);
 
 		if (amountOffered.lten(0) || amoutRequested.lten(0)) {
-			throw new Error(Errors.AmountIsLessOrEqualToZero);
+			mesg = Errors.AmountIsLessOrEqualToZero
+			console.error(mesg);
+			toast.error(mesg);
+			return;
 		}
 
 		const balance = await this.balanceOf(
 			orderType === "SELL" ? pair[0] : pair[1],
 		);
 		if (balance.lt(amountOffered)) {
-			throw new Error(Errors.NotEnoughBalance);
+			mesg = Errors.NotEnoughBalance
+			console.error(mesg);
+			toast.error(mesg);
+			return;
 		}
 
 		wrapCallWithNotifications(
@@ -277,7 +294,7 @@ export default class Contract {
 				orderType,
 				amountOffered,
 				amoutRequested,
-				endTime,
+				endTime.toNumber(),
 			),
 			"Order",
 			callback,
@@ -296,7 +313,10 @@ export default class Contract {
 	walletAddress(): string {
 		const wallet = new GGXWallet().pubkey()?.address;
 		if (wallet === undefined) {
-			throw new Error(Errors.WalletIsNotConnected);
+			mesg = Errors.WalletIsNotConnected
+			console.error(mesg);
+			toast.error(mesg);
+			return mesg;
 		}
 		return wallet;
 	}
@@ -305,7 +325,10 @@ export default class Contract {
 		// Should be safe to do as it cached
 		const tokens = await this.allTokens();
 		if (tokens.findIndex((value) => value === tokenId) === -1) {
-			throw new Error(Errors.InvalidTokenId);
+			mesg = Errors.InvalidTokenId;
+			console.error(mesg);
+			toast.error(mesg);
+			return;
 		}
 	}
 }
@@ -319,8 +342,10 @@ export function errorHandler(error: Errors): undefined {
 type WrapCall<T> = (_: onFinalize) => Promise<T>;
 
 function curry<T>(
+	// biome-ignore lint/complexity/noBannedTypes: <explanation>
 	f: Function,
 	_this: ApiInterface,
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	...args: any[]
 ): WrapCall<T> {
 	return (onFinalize: onFinalize) => f.call(_this, ...args, onFinalize);

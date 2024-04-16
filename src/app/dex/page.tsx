@@ -17,17 +17,22 @@ import Contract, { errorHandler } from "@/services/api";
 import GGXWallet from "@/services/ggx";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, DetailedOrder } from "@/types";
-import { BN_ZERO } from "@polkadot/util";
+import { BN, BN_ZERO } from "@polkadot/util";
 import { useRouter } from "next/navigation";
 import { Rule } from "postcss";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Loading from "./loading";
+import { toast } from "react-toastify";
 
 type TokenData = TokenWithPrice & {
 	amount: Amount;
 };
 
 export default function Dex() {
+	let mesg = ''
+	const milisecPerYear = useMemo(() => {
+		return new BN(31536000).mul(new BN(1000));
+	}, [])
 	const contractRef = useRef<Contract>(new Contract());
 	const [isMaker, setIsMaker] = useState<boolean>(false);
 	const [sell, setSell] = useState<TokenData>();
@@ -82,7 +87,7 @@ export default function Dex() {
 		setBuy(undefined);
 		setOrder(undefined);
 		setAvailableBalanceNormalized(BN_ZERO);
-		setExpiration(0, { string: "Minutes" });
+		setExpiration('0', { value: "Minutes" });
 	};
 
 	const onLogin = () => {
@@ -120,7 +125,7 @@ export default function Dex() {
 	const isUserBalanceNotEnough =
 		!isWalletNotConnected && availableBalanceNormalized.lt(sellAmount);
 	const isAmountZero = isSellAmountZero || buyAmount.eq(BN_ZERO);
-	const isExpirationZero = isMaker && expireNumber === 0;
+	const isExpirationZero = isMaker && expireNumber === '0';
 
 	const rate =
 		!isTokenNotSelected && !buyAmount.eq(BN_ZERO) && !sellAmount.eq(BN_ZERO)
@@ -138,6 +143,7 @@ export default function Dex() {
 
 	const onSwap = () => {
 		if (isFormHasErrors) {
+			console.error('isFormHasErrors:', isAmountZero)
 			return;
 		}
 		const pair = [sell.id, buy.id] as Pair;
@@ -146,8 +152,19 @@ export default function Dex() {
 			updateUserOrders();
 			onClear();
 		};
-
 		if (isMaker) {
+			if(sellAmount.lte(BN_ZERO)){
+				mesg = 'Sell amount should be greater than zero';
+				console.error(mesg)
+				toast.error(mesg)
+				return;
+			}
+			if(buyAmount.lte(BN_ZERO)){
+				mesg = 'Buy amount should be greater than zero';
+				console.error(mesg)
+				toast.error(mesg)
+				return;
+			}
 			// Basically, we need to send the amount of tokens that we want to sell but we need to convert it to the decimals of the token.
 			const sellTokenAmount = amountConverter.denormalize(
 				sellAmount,
@@ -157,13 +174,20 @@ export default function Dex() {
 				buyAmount,
 				buy.decimals,
 			);
+			const milisec = convertToMillis();
+			if(milisec.gt(milisecPerYear)){
+				mesg = 'cannot be greater than 1 year';
+				console.error(mesg)
+				toast.error(mesg)
+				return;
+			}
 			contract
 				.makeOrder(
 					pair,
 					sellTokenAmount,
 					buyTokenAmount,
 					"SELL",
-					convertToMillis(),
+					milisec,
 					callback,
 				)
 				.catch(errorHandler);
@@ -291,7 +315,7 @@ export default function Dex() {
 							<div>
 								<p className="text-[18px] font-medium mt-5">Expiration</p>
 								<OrderExpireSelect
-									number={expireNumber}
+									str={expireNumber}
 									unit={expireUnit}
 									onChange={setExpiration}
 								/>

@@ -58,7 +58,8 @@ export default class GGXWallet {
 
 	async selectAccount(account: Account): Promise<void> {
 		if (!this.accounts.find((a) => a.address === account.address)) {
-			throw new Error("Account not found");
+			console.error("Account not found");
+			return;
 		}
 		this.selectedAccount = account;
 		window.localStorage.setItem(

@@ -1,7 +1,8 @@
 import assert from "assert";
-import { BN_TEN } from "@polkadot/util";
+import { BN_ONE, BN_TEN } from "@polkadot/util";
 import BN from "bn.js";
 import { CALCULATION_PRECISION } from "./consts";
+import { bn } from "./services/utils";
 
 export default class TokenDecimals {
 	private decimalPlaces: number;
@@ -32,7 +33,7 @@ export default class TokenDecimals {
 				? fractionalMultiplied.mul(BN_TEN.pow(new BN(this.decimalPlaces - min)))
 				: fractionalMultiplied;
 
-		return multiplier.muln(integer).add(fractionalBN);
+		return multiplier.mul(bn(integer)).add(fractionalBN);
 	}
 
 	BNToFloat(value: BN): number {
@@ -49,17 +50,17 @@ export default class TokenDecimals {
 
 	BNtoDisplay(value: BN, symbol: string): string {
 		const multiplier = new BN(10).pow(new BN(this.decimalPlaces));
-		const integer = value.div(multiplier).toNumber();
+		const integer = value.div(multiplier);
 
 		let prefix = "";
 		let extraPrecision = 0;
-		if (integer / 1_000_000_000 > 1) {
+		if (integer.div(bn(1_000_000_000)).gt(BN_ONE)) {
 			prefix = "B";
 			extraPrecision = 9;
-		} else if (integer / 1_000_000 > 1) {
+		} else if (integer.div(bn(1_000_000)).gt(BN_ONE)) {
 			prefix = "M";
 			extraPrecision = 6;
-		} else if (integer / 1_000 > 1) {
+		} else if (integer.div(bn(1_000)).gt(BN_ONE)) {
 			prefix = "K";
 			extraPrecision = 3;
 		}
@@ -87,7 +88,7 @@ export default class TokenDecimals {
 		const o = new TokenDecimals(this.decimalPlaces + CALCULATION_PRECISION);
 		const value1Normalized = o.normalize(value1, this.decimalPlaces);
 		return (
-			value1Normalized.div(value2).toNumber() / 10 ** CALCULATION_PRECISION
-		);
+			value1Normalized.div(value2).div(bn(10).pow(bn(CALCULATION_PRECISION))).toNumber() 
+		);//
 	}
 }

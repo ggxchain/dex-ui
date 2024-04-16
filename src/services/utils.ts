@@ -1,4 +1,15 @@
+import { BN, BN_ZERO } from "@polkadot/util";
 
+export const bn = (n: number | string | number[]) => new BN(n)
+
+export const strToBn = (str: string): BN => {
+  const integer: number = Number.parseInt(str);
+  if(Number.isNaN(integer)){
+    console.error('convertStr input invalid')
+    return BN_ZERO
+  }
+  return bn(integer);
+}
 /** interfaces/lookup.ts
     _enum: ['FundsUnavailable', 'OnlyProvider', 'BelowMinimum', 'CannotCreate', 'UnknownAsset', 'Frozen', 'Unsupported', 'CannotCreateHold', 'NotExpendable', 'Blocked']
 */
