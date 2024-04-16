@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "sst dev next dev",
     "build": "cp ./node_modules/cryptocurrency-icons/svg/color/* ./public/our_svg/* ./public/svg && next build",
     "polkadot-types": "npm run generate:defs && npm run generate:types",
     "generate:defs": "npx tsx node_modules/.bin/polkadot-types-from-defs --endpoint ws://127.0.0.1:9944 --input ./src/interfaces --package @types/src/interfaces",
@@ -33,7 +33,7 @@
     "react-select": "^5.8.0",
     "react-toastify": "^10.0.4",
     "tailwindcss-safe-area": "^0.4.1",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4","sst":"^3.0.1"
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.3",

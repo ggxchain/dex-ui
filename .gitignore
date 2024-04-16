@@ -27,7 +27,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env*.local
+.env
 
 # vercel
 .vercel
@@ -42,3 +42,11 @@ next-env.d.ts
 /public/svg/*.svg
 .vscode
 zz.sh
+
+# sst
+.sst
+
+# open-next
+.open-next
+
+.env
