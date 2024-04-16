@@ -30,9 +30,7 @@ type TokenData = TokenWithPrice & {
 
 export default function Dex() {
 	let mesg = ''
-	const milisecPerYear = useMemo(() => {
-		return new BN(31536000).mul(new BN(1000));
-	}, [])
+	const milisecPerYear = new BN(31536000).mul(new BN(1000));
 	const contractRef = useRef<Contract>(new Contract());
 	const [isMaker, setIsMaker] = useState<boolean>(false);
 	const [sell, setSell] = useState<TokenData>();
