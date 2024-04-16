@@ -26,6 +26,7 @@ import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import Loading from "./loading";
+import { errorHandler } from "@/services/api";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -247,7 +248,12 @@ export default function Transfer() {
 	const ggxOnSelect = (account: Account) => {
 		setModalGGxAccount(account);
 		const ggx = new GGXWallet();
-		ggx.selectAccount(account);
+		try {
+			ggx.selectAccount(account)
+		} catch (err) {
+			console.warn(err);
+			toast.warn(`${err}`);
+		}
 	};
 
 	const onModalOpen = (modalType: ModalTypes) => {

@@ -53,7 +53,7 @@ export interface ApiInterface {
 	// Sadly we can't fetch all tokens owned by user, so we have to fetch all tokens and then filter them.
 	onChainBalanceOf(tokenId: TokenId, address: string): Promise<Amount>;
 }
-let mesg = ''
+
 export enum Errors {
 	WalletIsNotConnected = "Wallet is not connected",
 	AmountIsLessOrEqualToZero = "Amount is less or equal to zero",
@@ -139,6 +139,7 @@ export default class Contract {
 		await this.validateTokenId(pair[0]);
 		await this.validateTokenId(pair[1]);
 
+
 		const orders = await this.api.pairOrders(pair);
 		// TODO: We need to double check this logic after contract will be ready.
 		// Currently we fetch both side tiker orders and then filter out duplicates.
@@ -207,10 +208,7 @@ export default class Contract {
 	async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
 		const _ = this.walletAddress(); // Check if wallet is initialized
 		if (amount.lten(0)) {
-			mesg = Errors.AmountIsLessOrEqualToZero;
-			console.error(mesg);
-			toast.error(mesg);
-			return;
+			throw new Error(Errors.AmountIsLessOrEqualToZero);
 		}
 		await this.validateTokenId(tokenId);
 
@@ -226,17 +224,11 @@ export default class Contract {
 		await this.validateTokenId(tokenId);
 
 		if (amount.lten(0)) {
-			mesg = Errors.AmountIsLessOrEqualToZero;
-			console.error(mesg);
-			toast.error(mesg);
-			return;
+			throw new Error(Errors.AmountIsLessOrEqualToZero);
 		}
 		const balance = await this.balanceOf(tokenId);
 		if (balance.lt(amount)) {
-			mesg = Errors.NotEnoughBalance;
-			console.error(mesg);
-			toast.error(mesg);
-			return;
+			throw new Error(Errors.NotEnoughBalance);
 		}
 
 		wrapCallWithNotifications(
@@ -270,20 +262,14 @@ export default class Contract {
 		await this.validateTokenId(pair[1]);
 
 		if (amountOffered.lten(0) || amoutRequested.lten(0)) {
-			mesg = Errors.AmountIsLessOrEqualToZero
-			console.error(mesg);
-			toast.error(mesg);
-			return;
+			throw new Error(Errors.AmountIsLessOrEqualToZero);
 		}
 
 		const balance = await this.balanceOf(
 			orderType === "SELL" ? pair[0] : pair[1],
 		);
 		if (balance.lt(amountOffered)) {
-			mesg = Errors.NotEnoughBalance
-			console.error(mesg);
-			toast.error(mesg);
-			return;
+			throw new Error(Errors.NotEnoughBalance);
 		}
 
 		wrapCallWithNotifications(
@@ -313,10 +299,7 @@ export default class Contract {
 	walletAddress(): string {
 		const wallet = new GGXWallet().pubkey()?.address;
 		if (wallet === undefined) {
-			mesg = Errors.WalletIsNotConnected
-			console.error(mesg);
-			toast.error(mesg);
-			return mesg;
+			throw new Error(Errors.WalletIsNotConnected);
 		}
 		return wallet;
 	}
@@ -325,14 +308,16 @@ export default class Contract {
 		// Should be safe to do as it cached
 		const tokens = await this.allTokens();
 		if (tokens.findIndex((value) => value === tokenId) === -1) {
-			mesg = Errors.InvalidTokenId;
-			console.error(mesg);
-			toast.error(mesg);
-			return;
+			throw new Error(Errors.InvalidTokenId);
 		}
 	}
 }
 
+export function warnHandler(error: Errors): undefined {
+	toast.warn(`${error}`);
+	console.warn(error);
+	return undefined;
+}
 export function errorHandler(error: Errors): undefined {
 	toast.error(`${error}`);
 	console.error(error);

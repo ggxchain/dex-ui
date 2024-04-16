@@ -2,6 +2,7 @@ import { fireEvent, render, renderHook, screen } from "@testing-library/react";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import OrderExpireSelect, { useExpire } from "../orderExpireSelect";
+import { bn } from "@/services/utils";
 
 describe("OrderExpireSelect", () => {
 	beforeEach(() => {
@@ -14,8 +15,8 @@ describe("OrderExpireSelect", () => {
 		render(
 			<OrderExpireSelect
 				onChange={onChangeMock}
-				number={0}
-				unit={{ string: "Minutes" }}
+				str={'0'}
+				unit={{ value: "Minutes" }}
 			/>,
 		);
 		expect(screen.getByText("Minutes")).toBeInTheDocument();
@@ -25,8 +26,8 @@ describe("OrderExpireSelect", () => {
 		render(
 			<OrderExpireSelect
 				onChange={onChangeMock}
-				number={0}
-				unit={{ string: "Minutes" }}
+				str={'0'}
+				unit={{ value: "Minutes" }}
 			/>,
 		);
 
@@ -35,22 +36,22 @@ describe("OrderExpireSelect", () => {
 		const option = screen.getByText("Hours");
 		fireEvent.click(option);
 
-		expect(onChangeMock).toHaveBeenCalledWith(0, { string: "Hours" });
+		expect(onChangeMock).toHaveBeenCalledWith('0', { value: "Hours" });
 	});
 
 	test("calls onChange when input value changes", () => {
 		render(
 			<OrderExpireSelect
 				onChange={onChangeMock}
-				number={0}
-				unit={{ string: "Minutes" }}
+				str={'0'}
+				unit={{ value: "Minutes" }}
 			/>,
 		);
 		const input = screen.getByDisplayValue("0");
 
 		fireEvent.change(input, { target: { value: "10" } });
 
-		expect(onChangeMock).toHaveBeenCalledWith(10, { string: "Minutes" });
+		expect(onChangeMock).toHaveBeenCalledWith('10', { value: "Minutes" });
 	});
 
 	test("converts number and unit to milliseconds correctly", () => {
@@ -58,13 +59,13 @@ describe("OrderExpireSelect", () => {
 
 		const convertToMillis = () => result.current[2]();
 		const onChange = (number: number, unit: any) =>
-			result.current[3](number, unit);
-		expect(convertToMillis()).toBe(0);
+			result.current[3](number.toString(), unit);
+		expect(convertToMillis().toString()).toBe('0');
 
-		act(() => onChange(5, { string: "Hours" }));
-		expect(convertToMillis()).toBe(18000000);
+		act(() => onChange(5, { value: "Hours" }));
+		expect(convertToMillis().toString()).toBe('18000000');
 
-		act(() => onChange(2, { string: "Days" }));
-		expect(convertToMillis()).toBe(172800000);
+		act(() => onChange(2, { value: "Days" }));
+		expect(convertToMillis().toString()).toBe('172800000');
 	});
 });

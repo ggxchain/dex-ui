@@ -6,7 +6,6 @@ export type Account = {
 	address: PubKey;
 	name?: string;
 };
-
 export default class GGXWallet {
 	accounts: Account[] = [];
 	selectedAccount: Account | undefined = undefined;
@@ -58,8 +57,7 @@ export default class GGXWallet {
 
 	async selectAccount(account: Account): Promise<void> {
 		if (!this.accounts.find((a) => a.address === account.address)) {
-			console.error("Account not found");
-			return;
+			throw new Error("Account not found");
 		}
 		this.selectedAccount = account;
 		window.localStorage.setItem(

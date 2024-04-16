@@ -152,17 +152,18 @@ export default function Dex() {
 			updateUserOrders();
 			onClear();
 		};
+
 		if (isMaker) {
 			if(sellAmount.lte(BN_ZERO)){
 				mesg = 'Sell amount should be greater than zero';
-				console.error(mesg)
-				toast.error(mesg)
+				console.warn(mesg)
+				toast.warn(mesg)
 				return;
 			}
 			if(buyAmount.lte(BN_ZERO)){
 				mesg = 'Buy amount should be greater than zero';
-				console.error(mesg)
-				toast.error(mesg)
+				console.warn(mesg)
+				toast.warn(mesg)
 				return;
 			}
 			// Basically, we need to send the amount of tokens that we want to sell but we need to convert it to the decimals of the token.
@@ -177,8 +178,8 @@ export default function Dex() {
 			const milisec = convertToMillis();
 			if(milisec.gt(milisecPerYear)){
 				mesg = 'cannot be greater than 1 year';
-				console.error(mesg)
-				toast.error(mesg)
+				console.warn(mesg)
+				toast.warn(mesg)
 				return;
 			}
 			contract
