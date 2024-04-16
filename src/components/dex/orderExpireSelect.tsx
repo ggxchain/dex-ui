@@ -5,7 +5,7 @@ import { bn, strToBn } from "@/services/utils";
 
 interface Props {
 	onChange: (str: string, unit: Option) => void;
-	str: string;
+	expNum: string;
 	unit: Option;
 }
 
@@ -15,26 +15,26 @@ type Days = { value: "Days" };
 type Option = Minutes | Hours | Days;
 
 export function useExpire() {
-	const [period, setPeriod] = useState<string>('0');
+	const [expNum, setExpNum] = useState<string>('0');
 	const [unit, setUnit] = useState<Option>({ value: "Minutes" });
 
 	const onChange = (str: string, unit: Option) => {
-		setPeriod(str);
+		setExpNum(str);
 		setUnit(unit);
 	};
 
 	const convertToMillis = () => {
 		switch (unit.value) {
 			case "Minutes":
-				return strToBn(period).mul(bn(60000));
+				return strToBn(expNum).mul(bn(60000));
 			case "Hours":
-				return strToBn(period).mul(bn(3600000));
+				return strToBn(expNum).mul(bn(3600000));
 			case "Days":
-				return strToBn(period).mul(bn(86400000));
+				return strToBn(expNum).mul(bn(86400000));
 		}
 	};
 
-	return [period, unit, convertToMillis, onChange] as const;
+	return [expNum, unit, convertToMillis, onChange] as const;
 }
 
 export default function OrderExpireSelect(props: Props) {
@@ -71,7 +71,7 @@ export default function OrderExpireSelect(props: Props) {
 			/>
 			<Input
 				wrapperClassName="basis-4/6"
-				value={props.str}
+				value={props.expNum}
 				className="w-full bg-GGx-gray text-GGx-black2 px-[15px] py-[16px] rounded-r-[4px] border-GGx-gray border text-left "
 				type="string"
 				onChange={onInput}

@@ -197,6 +197,7 @@ const BridgeBtc = () => {
     const value = (event?.target as HTMLInputElement).value;
     lg('handleAmountChange:', (event?.target as HTMLInputElement).value);
     const out = Number.parseInt(value);
+    //TODO handle parseFloat instead
     if (Number.isNaN(out)) {
       console.error('parseInt failed');
     } else {
@@ -229,7 +230,7 @@ const BridgeBtc = () => {
       const injector = await web3FromAddress(selectedAccount?.address);
       //const injector = await web3FromSource(selectedAccount?.meta.source);
 
-      const amount = Number.parseInt(amountIp.toString());
+      const amount = Number.parseInt(amountIp.toString());//TODO: handle parseFloat
       if (Number.isNaN(amount)) {
         console.error('parseInt failed');
         return;

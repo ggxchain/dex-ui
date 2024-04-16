@@ -316,7 +316,7 @@ export default function Dex() {
 							<div>
 								<p className="text-[18px] font-medium mt-5">Expiration</p>
 								<OrderExpireSelect
-									str={expireNumber}
+									expNum={expireNumber}
 									unit={expireUnit}
 									onChange={setExpiration}
 								/>

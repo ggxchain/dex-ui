@@ -15,7 +15,7 @@ describe("OrderExpireSelect", () => {
 		render(
 			<OrderExpireSelect
 				onChange={onChangeMock}
-				str={'0'}
+				expNum={'0'}
 				unit={{ value: "Minutes" }}
 			/>,
 		);
@@ -26,7 +26,7 @@ describe("OrderExpireSelect", () => {
 		render(
 			<OrderExpireSelect
 				onChange={onChangeMock}
-				str={'0'}
+				expNum={'0'}
 				unit={{ value: "Minutes" }}
 			/>,
 		);
@@ -43,7 +43,7 @@ describe("OrderExpireSelect", () => {
 		render(
 			<OrderExpireSelect
 				onChange={onChangeMock}
-				str={'0'}
+				expNum={'0'}
 				unit={{ value: "Minutes" }}
 			/>,
 		);
@@ -58,6 +58,7 @@ describe("OrderExpireSelect", () => {
 		const { result } = renderHook(() => useExpire());
 
 		const convertToMillis = () => result.current[2]();
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		const onChange = (number: number, unit: any) =>
 			result.current[3](number.toString(), unit);
 		expect(convertToMillis().toString()).toBe('0');
