@@ -1,5 +1,5 @@
 import Dex from "@/app/dex/page";
-import { BN_TEN } from "@polkadot/util";
+import { BN_ONE, BN_TEN } from "@polkadot/util";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import "@/__utils__/localstore.mock";
@@ -39,7 +39,7 @@ describe("Dex", () => {
 
 		const contract = new Contract();
 		contract.deposit(0, BN_TEN.muln(2), () => {});
-		contract.makeOrder([0, 1], BN_TEN, BN_TEN, "SELL", 1, () => {});
+		contract.makeOrder([0, 1], BN_TEN, BN_TEN, "SELL", BN_ONE, () => {});
 	});
 
 	test("renders default component", async () => {

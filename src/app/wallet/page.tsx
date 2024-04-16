@@ -15,6 +15,7 @@ import type { Amount, Token, TokenId } from "@/types";
 import { BN, BN_ZERO } from "@polkadot/util";
 import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
 import Loading from "./loading";
+import { toast } from "react-toastify";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -214,7 +215,12 @@ export default function Wallet() {
 		if (e === null) {
 			return;
 		}
-		wallet.selectAccount(e);
+		try {
+			wallet.selectAccount(e);
+		} catch (err) {
+			console.warn(err);
+			toast.warn(`${err}`);
+		}
 		setSelectedAccount(e);
 	};
 

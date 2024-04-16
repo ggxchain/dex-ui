@@ -6,7 +6,6 @@ export type Account = {
 	address: PubKey;
 	name?: string;
 };
-
 export default class GGXWallet {
 	accounts: Account[] = [];
 	selectedAccount: Account | undefined = undefined;

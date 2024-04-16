@@ -139,6 +139,7 @@ export default class Contract {
 		await this.validateTokenId(pair[0]);
 		await this.validateTokenId(pair[1]);
 
+
 		const orders = await this.api.pairOrders(pair);
 		// TODO: We need to double check this logic after contract will be ready.
 		// Currently we fetch both side tiker orders and then filter out duplicates.
@@ -251,9 +252,11 @@ export default class Contract {
 		amountOffered: Amount,
 		amoutRequested: Amount,
 		orderType: OrderType,
-		endTime: number,
+		endTime: Amount,
 		callback: onFinalize,
 	) {
+		console.log('makeOrder:', pair, amountOffered, amoutRequested, orderType, endTime.toString())
+
 		const _ = this.walletAddress(); // Check if wallet is initialized
 		await this.validateTokenId(pair[0]);
 		await this.validateTokenId(pair[1]);
@@ -277,7 +280,7 @@ export default class Contract {
 				orderType,
 				amountOffered,
 				amoutRequested,
-				endTime,
+				endTime.toNumber(),
 			),
 			"Order",
 			callback,
@@ -310,6 +313,11 @@ export default class Contract {
 	}
 }
 
+export function warnHandler(error: Errors): undefined {
+	toast.warn(`${error}`);
+	console.warn(error);
+	return undefined;
+}
 export function errorHandler(error: Errors): undefined {
 	toast.error(`${error}`);
 	console.error(error);
@@ -319,8 +327,10 @@ export function errorHandler(error: Errors): undefined {
 type WrapCall<T> = (_: onFinalize) => Promise<T>;
 
 function curry<T>(
+	// biome-ignore lint/complexity/noBannedTypes: <explanation>
 	f: Function,
 	_this: ApiInterface,
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	...args: any[]
 ): WrapCall<T> {
 	return (onFinalize: onFinalize) => f.call(_this, ...args, onFinalize);

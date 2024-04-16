@@ -1,53 +1,54 @@
 import React, { type ChangeEvent, useMemo, useState } from "react";
 import { Input } from "../common/input";
 import SelectLight, { SelectDark } from "../common/select";
+import { bn, strToBn } from "@/services/utils";
 
 interface Props {
-	onChange: (number: number, unit: Option) => void;
-	number: number;
+	onChange: (str: string, unit: Option) => void;
+	expNum: string;
 	unit: Option;
 }
 
-type Minutes = { string: "Minutes" };
-type Hours = { string: "Hours" };
-type Days = { string: "Days" };
+type Minutes = { value: "Minutes" };
+type Hours = { value: "Hours" };
+type Days = { value: "Days" };
 type Option = Minutes | Hours | Days;
 
 export function useExpire() {
-	const [number, setNumber] = useState<number>(0);
-	const [unit, setUnit] = useState<Option>({ string: "Minutes" });
+	const [expNum, setExpNum] = useState<string>('0');
+	const [unit, setUnit] = useState<Option>({ value: "Minutes" });
 
-	const onChange = (number: number, unit: Option) => {
-		setNumber(number);
+	const onChange = (str: string, unit: Option) => {
+		setExpNum(str);
 		setUnit(unit);
 	};
 
 	const convertToMillis = () => {
-		switch (unit.string) {
+		switch (unit.value) {
 			case "Minutes":
-				return number * 60_000;
+				return strToBn(expNum).mul(bn(60000));
 			case "Hours":
-				return number * 3600_000;
+				return strToBn(expNum).mul(bn(3600000));
 			case "Days":
-				return number * 86400_000;
+				return strToBn(expNum).mul(bn(86400000));
 		}
 	};
 
-	return [number, unit, convertToMillis, onChange] as const;
+	return [expNum, unit, convertToMillis, onChange] as const;
 }
 
 export default function OrderExpireSelect(props: Props) {
 	const values: Option[] = useMemo(
-		() => [{ string: "Minutes" }, { string: "Hours" }, { string: "Days" }],
+		() => [{ value: "Minutes" }, { value: "Hours" }, { value: "Days" }],
 		[],
 	);
 
 	const onSelectChange = (value: Option) => {
-		props.onChange(0, value);
+		props.onChange('0', value);
 	};
 
-	const onInput = (value: ChangeEvent<HTMLInputElement>) => {
-		props.onChange(Number.parseInt(value.target.value), props.unit);
+	const onInput = (e: ChangeEvent<HTMLInputElement>) => {
+		props.onChange((e.target.value).replace(/^0+/, ""), props.unit);
 	};
 
 	return (
@@ -63,16 +64,16 @@ export default function OrderExpireSelect(props: Props) {
 				childFormatter={(option: Option) => {
 					return (
 						<div className="flex p-3 items-center text-GGx-light w-full border-white md:text-lg text-base grow-on-hover">
-							<p className="font-bold">{option.string}</p>
+							<p className="font-bold">{option.value}</p>
 						</div>
 					);
 				}}
 			/>
 			<Input
 				wrapperClassName="basis-4/6"
-				value={props.number.toString()}
+				value={props.expNum}
 				className="w-full bg-GGx-gray text-GGx-black2 px-[15px] py-[16px] rounded-r-[4px] border-GGx-gray border text-left "
-				type="number"
+				type="string"
 				onChange={onInput}
 			/>
 		</div>

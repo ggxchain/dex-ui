@@ -37,7 +37,7 @@ describe("Contract", () => {
 			contract.withdraw(mockedTokenId, BN_ONE, () => {}),
 		).rejects.toThrow(Errors.WalletIsNotConnected);
 		await expect(
-			contract.makeOrder([0, 1], BN_ONE, BN_ONE, "BUY", 1, () => {}),
+			contract.makeOrder([0, 1], BN_ONE, BN_ONE, "BUY", BN_ONE, () => {}),
 		).rejects.toThrow(Errors.WalletIsNotConnected);
 		await expect(contract.takeOrder(0, () => {})).rejects.toThrow(
 			Errors.WalletIsNotConnected,
@@ -67,7 +67,7 @@ describe("Contract", () => {
 				BN_ONE,
 				BN_ONE,
 				"BUY",
-				1,
+				BN_ONE,
 				() => {},
 			),
 		).rejects.toThrow(Errors.InvalidTokenId);
@@ -77,7 +77,7 @@ describe("Contract", () => {
 				BN_ONE,
 				BN_ONE,
 				"BUY",
-				1,
+				BN_ONE,
 				() => {},
 			),
 		).rejects.toThrow(Errors.InvalidTokenId);
@@ -139,10 +139,10 @@ describe("Contract", () => {
 
 	it("should fail to makeOrder if amountOffered is <= 0 || amountRequested <= 0", async () => {
 		await expect(
-			contract.makeOrder([0, 1], BN_ONE, BN_ONE.neg(), "BUY", 1, () => {}),
+			contract.makeOrder([0, 1], BN_ONE, BN_ONE.neg(), "BUY", BN_ONE, () => {}),
 		).rejects.toThrow(Errors.AmountIsLessOrEqualToZero);
 		await expect(
-			contract.makeOrder([0, 1], BN_ZERO, BN_ONE, "SELL", 1, () => {}),
+			contract.makeOrder([0, 1], BN_ZERO, BN_ONE, "SELL", BN_ONE, () => {}),
 		).rejects.toThrow(Errors.AmountIsLessOrEqualToZero);
 
 		// Success case
@@ -150,7 +150,7 @@ describe("Contract", () => {
 			contract.deposit(mockedTokenId, BN_ONE, () => {}),
 		).resolves.not.toThrow();
 		await expect(
-			contract.makeOrder([0, 1], BN_ONE, BN_ONE, "SELL", 1, () => {}),
+			contract.makeOrder([0, 1], BN_ONE, BN_ONE, "SELL", BN_ONE, () => {}),
 		).resolves.not.toThrow();
 	});
 
@@ -162,7 +162,7 @@ describe("Contract", () => {
 				BN_ONE,
 				BN_ONE,
 				"SELL",
-				1,
+				BN_ONE,
 				() => {},
 			),
 		).rejects.toThrow(Errors.NotEnoughBalance);
@@ -179,7 +179,7 @@ describe("Contract", () => {
 				BN_ONE,
 				BN_ONE,
 				"SELL",
-				1,
+				BN_ONE,
 				() => {},
 			),
 		).resolves.not.toThrow();
@@ -191,7 +191,7 @@ describe("Contract", () => {
 				BN_ONE,
 				BN_ONE,
 				"BUY",
-				1,
+				BN_ONE,
 				() => {},
 			),
 		).rejects.toThrow(Errors.NotEnoughBalance);
@@ -207,7 +207,7 @@ describe("Contract", () => {
 				BN_ONE,
 				BN_ONE,
 				"BUY",
-				1,
+				BN_ONE,
 				() => {},
 			),
 		).resolves.not.toThrow();
