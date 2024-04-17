@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "sst dev next dev",
+    "dev": "next dev",
     "build": "cp ./node_modules/cryptocurrency-icons/svg/color/* ./public/our_svg/* ./public/svg && next build",
     "polkadot-types": "npm run generate:defs && npm run generate:types",
     "generate:defs": "npx tsx node_modules/.bin/polkadot-types-from-defs --endpoint ws://127.0.0.1:9944 --input ./src/interfaces --package @types/src/interfaces",
