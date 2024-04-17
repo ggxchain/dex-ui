@@ -22,10 +22,6 @@ const config: Config = {
         'GGx-green': '#158A0C',
         'GGx-red': '#E6283D',
       },
-      fontFamily: {
-        'telegraf': ['PP Telegraf', 'sans-serif'],
-        'main': ['DM Sans', 'sans-serif'],
-      }
     },
   },
   plugins: [

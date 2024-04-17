@@ -40,3 +40,14 @@ npm run generate:types
 ```bash
 npm run test
 ```
+
+## Running tests on BTC balances
+in ggxnode repo: `$ cd node && cargo run --release --no-default-features --features=brooklyn -- --dev -d /tmp/db`
+
+Comment out ggx container: `//let alice = start_ggx(&docker);`
+Replace `alice.get_host_ws_url()` by `ws://127.0.0.1:9944`
+
+in testutil repo: $ `cargo test --release`
+... to simulate BTC depositing
+
+then go to bridge-BTC page, and you should be able to see the KBTC and GGXT balances
