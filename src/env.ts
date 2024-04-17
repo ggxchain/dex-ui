@@ -17,8 +17,8 @@ export const env = {
 
 	GGX_NETWORK: (() => {
 		return z.enum(["brooklyn", "sydney"], {
-			required_error: "Must provide a GGX_NETWORK env var",
-		}).parse(process.env.GGX_NETWORK);
+			required_error: "Must provide a NEXT_PUBLIC_GGX_NETWORK env var",
+		}).parse(process.env.NEXT_PUBLIC_GGX_NETWORK);
 	})(),
 
 };

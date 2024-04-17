@@ -41,7 +41,6 @@ next-env.d.ts
 
 /public/svg/*.svg
 .vscode
-zz.sh
 
 # sst
 .sst
@@ -49,4 +48,3 @@ zz.sh
 # open-next
 .open-next
 
-.env
