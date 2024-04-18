@@ -26,7 +26,7 @@ export default class TokenDecimals {
 
 		// It's safe to work with up to 3 decimal places. Later float number too messy.
 		// TODO: maybe it's better to avoid convertation in input fields and use BNs with selector of decimal places
-		const min = Math.min(3, this.decimalPlaces);
+		const min = Math.min(8, this.decimalPlaces);
 		const fractionalMultiplied = new BN(Math.ceil(fractional * 10 ** min));
 		const fractionalBN =
 			this.decimalPlaces - min > 0

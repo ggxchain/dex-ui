@@ -16,6 +16,8 @@ import { BN, BN_ZERO } from "@polkadot/util";
 import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
 import Loading from "./loading";
 import { toast } from "react-toastify";
+import { count_decimals, fixDP } from "@/services/utils";
+import { MAX_DP } from "@/consts";
 
 type InteractType = "Deposit" | "Withdraw";
 
@@ -255,6 +257,17 @@ export default function Wallet() {
 		? new BN(dexBalances.get(selectedToken.id) ?? 0)
 		: BN_ZERO;
 
+	const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
+		let input = e.target.value;
+		const num = Number(input);
+		if(num < 0 || num > 10000000) return;
+		//Number.isNaN(input) || input.trim() === "" 
+		const dpLen = count_decimals(input)
+		if(dpLen > MAX_DP) {
+			input = fixDP(input)
+		}
+		setModalAmount(Number(input))
+	}
 	return (
 		<div className="w-full h-full flex flex-col">
 			<div className="flex w-full justify-between items-center">
@@ -367,7 +380,7 @@ export default function Wallet() {
 						name="Amount"
 						className="mt-1 rounded-[4px] border p-3 basis-1/4 bg-transparent text-GGx-gray border-GGx-gray w-full"
 						value={modalAmount.toString()}
-						onChange={(e) => setModalAmount(Number(e.target.value))}
+						onChange={handleAmountChange}
 						symbol={selectedToken?.name ?? ""}
 						price={amountPrice}
 					/>

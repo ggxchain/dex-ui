@@ -7,13 +7,16 @@ import { type ChangeEvent, useEffect, useState } from "react";
 import { InputWithPriceInfo } from "../common/input";
 import { SelectDark } from "../common/select";
 import Spinner from "../common/spinner";
+import { bn, count_decimals, fixDP } from "@/services/utils";
+import { BN_ZERO, type BN } from "@polkadot/util";
+import { MAX_DP } from "@/consts";
 
 interface TokenSelectorProps {
 	token?: TokenWithPrice;
 	tokens: TokenWithPrice[];
 	amount?: number;
 	lockedAmount?: boolean;
-	onChange: (tokenId: TokenWithPrice, amount: number) => void;
+	onChange: (tokenId: TokenWithPrice, amount: string) => void;
 }
 
 export type TokenWithPrice = Token & { price: number };
@@ -51,7 +54,7 @@ export default function TokenSelector({
 }: Readonly<TokenSelectorProps>) {
 	useEffect(() => {
 		if (tokens.length > 0 && token === undefined) {
-			onChange(tokens[0], 0);
+			onChange(tokens[0], '0');
 		}
 	});
 
@@ -70,17 +73,22 @@ export default function TokenSelector({
 			return;
 		}
 
-		onChange(e, 0);
+		onChange(e, '0');
 	};
 
 	const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
-		if (Number(e.target.value) > 10000000) {
-			return;
+		let input = e.target.value;
+		const num = Number(input);
+		if(Number.isNaN(input) || input.trim() === "" || num <= 0 || num > 10000000) return;
+		
+		const dpLen = count_decimals(input)
+		if(dpLen > MAX_DP) {
+			input = fixDP(input)
 		}
 		// The question here should we allow decimals or not.
 		// My guess is not as it's not possible to work with decimals on chain.
 		// So probably tokens will be more like satoshi/gwei/wei and not like eth/btc.
-		onChange(token, Number(e.target.value));
+		onChange(token, input);
 	};
 
 	const price = (amount ?? 0) * token.price;

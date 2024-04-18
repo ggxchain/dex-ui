@@ -8,3 +8,4 @@ export const CONTRACT_MOCKED = false;
 export const CALCULATION_PRECISION = 3;
 export const NATIVE_TOKEN_ID_RESERVED = 8888;
 export const BLOCK_TIME_IN_MILLIS = 2000;
+export const MAX_DP = 8; //Max decimal precision

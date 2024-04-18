@@ -4,7 +4,7 @@ import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { web3Accounts, web3AccountsSubscribe, web3Enable, web3FromAddress, web3FromSource } from '@polkadot/extension-dapp';
 import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import { BN, BN_ZERO } from "@polkadot/util/bn";
-import { GGX_WSS_URL } from "@/consts";
+import { GGX_WSS_URL, MAX_DP } from "@/consts";
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
@@ -15,6 +15,7 @@ import LoadingButton from "@/components/common/loadButton";
 import Contract, { errorHandler } from "@/services/api";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import { toast } from "react-toastify";
+import { count_decimals, fixDP } from "@/services/utils";
 //const wsProviderURL = "ws://127.0.0.1:9944";
 //https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/chainstate
 
@@ -194,15 +195,18 @@ const BridgeBtc = () => {
 
   //const amount = new BN(10).mul(new BN(10).pow(new BN(12)));//.toString();
   const handleAmountChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const value = (event?.target as HTMLInputElement).value;
-    lg('handleAmountChange:', (event?.target as HTMLInputElement).value);
-    const out = Number.parseInt(value);
-    //TODO handle parseFloat instead
-    if (Number.isNaN(out)) {
-      console.error('parseInt failed');
-    } else {
-      setAmountIp(out);
-    }
+    let input = event?.target.value;
+    lg('handleAmountChange:', input);
+
+    const num = Number(input);
+		if(Number.isNaN(input) || input.trim() === "" || num <= 0 || num > 10000000) return;
+    
+		const dpLen = count_decimals(input)
+		if(dpLen > MAX_DP) {
+			input = fixDP(input)
+      lg('over dp limit', input)
+		}
+    setAmountIp(Number(input));//TODO
   }
   const handleSendTransaction = async () => {
     lg("handleSendTransaction")
@@ -337,7 +341,17 @@ const BridgeBtc = () => {
       errorHandler(error);
     };
   }
-
+  const hangleModalAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
+		let input = e.target.value;
+		const num = Number(input);
+		if(num < 0 || num > 10000000) return;
+		//Number.isNaN(input) || input.trim() === "" ||
+		const dpLen = count_decimals(input)
+		if(dpLen > MAX_DP) {
+			input = fixDP(input)
+		}
+    setModalAmount(Number(input))
+  }
   const walletIsNotInitialized = accounts.length === 0;
   /*const selectedTokenPrice = selectedToken
     ? tokenPrices.get(selectedToken.id) ?? 0
@@ -439,7 +453,7 @@ const BridgeBtc = () => {
             name="Amount"
             className="mt-1 rounded-[4px] border p-3 basis-1/4 bg-transparent text-GGx-gray border-GGx-gray w-full"
             value={modalAmount.toString()}
-            onChange={(e) => setModalAmount(Number(e.target.value))}
+            onChange={hangleModalAmountChange}
             symbol={selectedToken?.name ?? ""}
             price={amountPrice}
           />
@@ -468,7 +482,7 @@ const BridgeBtc = () => {
       <br />
 
       <button type="button" onClick={checkBalances}>Check Balances</button><br />
-      <input name="amount1" onChange={handleAmountChange} /><br />
+      <input name="amount1" value={amountIp} onChange={handleAmountChange} /><br />
       <button type="button" onClick={handleSendTransaction}>Send Transaction</button><br />
 
       WalletTo GGXT Balance: {balcWalletToGGXT.toString()}
