@@ -15,11 +15,10 @@ import LoadingButton from "@/components/common/loadButton";
 import Contract, { errorHandler } from "@/services/api";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import { toast } from "react-toastify";
-import { count_decimals, fixDP } from "@/services/utils";
+import { count_decimals, fixDP, lg } from "@/services/utils";
 //const wsProviderURL = "ws://127.0.0.1:9944";
 //https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/chainstate
 
-const lg = console.log;
 const DAPP_NAME = 'RfQ by GGx'
 const tokenSymbol = "BTC"
 const tokenSymbolOnChain = 'KBTC'
@@ -198,16 +197,16 @@ const BridgeBtc = () => {
     let input = event?.target.value;
     lg('handleAmountChange:', input);
 
-		const dpLen = count_decimals(input)
-		if(dpLen > MAX_DP) {
-			input = fixDP(input)
+    const dpLen = count_decimals(input)
+    if(dpLen > MAX_DP) {
+      input = fixDP(input)
       lg('over dp limit', input)
-		}
+    }
     const num = Number(input);
-		if(Number.isNaN(num) || num < 0 || num > 10000000) {
-			console.warn("Invalid input:", input)
-			return;
-		}
+    if(Number.isNaN(num) || num < 0 || num > 10000000) {
+      console.warn("Invalid input:", input)
+      return;
+    }
     setAmountIp(Number(input));//TODO
   }
   const handleSendTransaction = async () => {

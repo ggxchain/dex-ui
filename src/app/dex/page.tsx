@@ -198,12 +198,10 @@ export default function Dex() {
 	const onOrderChange = (order: Order) => {
 		setOrder(order);
 	};
-	const lg = console.log;
 	const onSellChange = (token: TokenWithPrice, amount: string) => {
 		if (token.id !== sell?.id) {
 			setOrder(undefined);
 		}
-		lg('amount', amount, ', prev:', amountConverter.BNToFloat(sellAmount))
 		setSell({ ...token, amount: amountConverter.floatToBN(Number(amount)) });
 	};
 
