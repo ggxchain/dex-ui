@@ -203,7 +203,7 @@ export default function Dex() {
 		if (token.id !== sell?.id) {
 			setOrder(undefined);
 		}
-		lg('amount', amount)
+		lg('amount', amount, ', prev:', amountConverter.BNToFloat(sellAmount))
 		setSell({ ...token, amount: amountConverter.floatToBN(Number(amount)) });
 	};
 

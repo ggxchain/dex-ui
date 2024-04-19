@@ -259,12 +259,14 @@ export default function Wallet() {
 
 	const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
 		let input = e.target.value;
-		const num = Number(input);
-		if(num < 0 || num > 10000000) return;
-		//Number.isNaN(input) || input.trim() === "" 
 		const dpLen = count_decimals(input)
 		if(dpLen > MAX_DP) {
 			input = fixDP(input)
+		}
+		const num = Number(input);
+		if(Number.isNaN(num) || num < 0 || num > 10000000) {
+			console.warn("Invalid input:", input)
+			return;
 		}
 		setModalAmount(Number(input))
 	}

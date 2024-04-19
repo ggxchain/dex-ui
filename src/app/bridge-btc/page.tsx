@@ -198,13 +198,15 @@ const BridgeBtc = () => {
     let input = event?.target.value;
     lg('handleAmountChange:', input);
 
-    const num = Number(input);
-		if(Number.isNaN(input) || input.trim() === "" || num <= 0 || num > 10000000) return;
-    
 		const dpLen = count_decimals(input)
 		if(dpLen > MAX_DP) {
 			input = fixDP(input)
       lg('over dp limit', input)
+		}
+    const num = Number(input);
+		if(Number.isNaN(num) || num < 0 || num > 10000000) {
+			console.warn("Invalid input:", input)
+			return;
 		}
     setAmountIp(Number(input));//TODO
   }
@@ -343,13 +345,12 @@ const BridgeBtc = () => {
   }
   const hangleModalAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
 		let input = e.target.value;
-		const num = Number(input);
-		if(num < 0 || num > 10000000) return;
-		//Number.isNaN(input) || input.trim() === "" ||
 		const dpLen = count_decimals(input)
 		if(dpLen > MAX_DP) {
 			input = fixDP(input)
 		}
+		const num = Number(input);
+		if(Number.isNaN(num) || num < 0 || num > 10000000) return;
     setModalAmount(Number(input))
   }
   const walletIsNotInitialized = accounts.length === 0;

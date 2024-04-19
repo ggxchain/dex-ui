@@ -78,12 +78,14 @@ export default function TokenSelector({
 
 	const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
 		let input = e.target.value;
-		const num = Number(input);
-		if(Number.isNaN(input) || input.trim() === "" || num <= 0 || num > 10000000) return;
-		
 		const dpLen = count_decimals(input)
 		if(dpLen > MAX_DP) {
 			input = fixDP(input)
+		}
+		const num = Number(input);
+		if(Number.isNaN(num) || num < 0 || num > 10000000) {
+			console.warn("Invalid input:", input)
+			return;
 		}
 		// The question here should we allow decimals or not.
 		// My guess is not as it's not possible to work with decimals on chain.
