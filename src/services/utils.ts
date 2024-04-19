@@ -1,6 +1,7 @@
 import { MAX_DP } from "@/consts";
 import { BN, BN_ZERO } from "@polkadot/util";
 
+export const lg = console.log;
 export const bn = (n: number | string | number[]) => new BN(n)
 
 export const strToBn = (str: string): BN => {
@@ -15,9 +16,24 @@ export const count_decimals = (str: string) => {
   const dpPart= str.split(".")[1] || [];
   return dpPart.length;
 }
-export const fixDP = (str: string) => {
+export const fixDP = (str: string, dp = MAX_DP) => {
   const splitted = str.split('.');
-  return `${splitted[0]}.${splitted[1].substring(0, MAX_DP)}`
+  if(splitted.length === 1) return `${splitted[0]}.00`
+  
+  return `${splitted[0]}.${splitted[1].substring(0, dp)}`
+}
+export const formatPrice = (n: number) => {
+  if(n >= 1) {
+    return fixDP(`${n}`, 2)
+  }
+  if(n === 0){
+    return '0.00'
+  }
+  return sigFig(n, 4)
+}
+export const sigFig = (n: number, sig: number) => {
+  const mult = 10 ** (sig - Math.floor(Math.log(n) / Math.LN10) - 1);
+  return `${Math.round(n * mult) / mult}`;
 }
 /** interfaces/lookup.ts
     _enum: ['FundsUnavailable', 'OnlyProvider', 'BelowMinimum', 'CannotCreate', 'UnknownAsset', 'Frozen', 'Unsupported', 'CannotCreateHold', 'NotExpendable', 'Blocked']

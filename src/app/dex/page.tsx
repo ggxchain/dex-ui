@@ -395,6 +395,7 @@ export default function Dex() {
           </Suspense>
 				</div>
 			</div>
+
       <Suspense fallback={<Loading />}>
 			<div className="py-[75px] w-full ">
 				<OrdersList orders={userOrders} cancelOrder={onCancelOrder}

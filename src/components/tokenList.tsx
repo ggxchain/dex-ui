@@ -3,6 +3,7 @@ import type { Amount, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
 import Spinner from "./common/spinner";
+import { formatPrice } from "@/services/utils";
 
 export interface ListElement extends Token {
 	balance: Amount;
@@ -106,7 +107,7 @@ export default function TokenList({
 									/>
 								</td>
 							)}
-							<td>${token.estimatedPrice.toString()}</td>
+							<td>${formatPrice(token.estimatedPrice)}</td>
 						</tr>
 					);
 				})}

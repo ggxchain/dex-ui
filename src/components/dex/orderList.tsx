@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import Close from "../common/close";
 import Ruler, { GrayRuler } from "../common/ruler";
 import Spinner from "../common/spinner";
+import { formatPrice } from "@/services/utils";
 
 export const useUserOrders = (contract: Contract) => {
 	const [orders, setOrders] = useState<DetailedOrder[]>([]);
@@ -147,7 +148,7 @@ export default function OrdersList({
 									</td>
 									{/*Price*/}
 									<td className="text-left">
-										{price.toFixed(9)} {desiredToken.symbol}
+										{formatPrice(price)} {desiredToken.symbol}
 									</td>
 
 									<td className="text-left">
