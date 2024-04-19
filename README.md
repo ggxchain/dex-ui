@@ -25,6 +25,8 @@ NEXT_PUBLIC_PARACHAIN_URL=ws://127.0.0.1:9944
 NEXT_PUBLIC_WALLET1=YOUR_TEST_WALLET_ADDRESS
 NEXT_PUBLIC_GGX_NETWORK=brooklyn
 
+Copy the `.env.local` file into `.env` file
+
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Update metadata
