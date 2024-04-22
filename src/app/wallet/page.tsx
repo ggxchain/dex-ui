@@ -16,7 +16,7 @@ import { BN, BN_ZERO } from "@polkadot/util";
 import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
 import Loading from "./loading";
 import { toast } from "react-toastify";
-import { count_decimals, fixDP } from "@/services/utils";
+import { checkNumInput, count_decimals, fixDP } from "@/services/utils";
 import { MAX_DP } from "@/consts";
 
 type InteractType = "Deposit" | "Withdraw";
@@ -263,8 +263,7 @@ export default function Wallet() {
 		if(dpLen > MAX_DP) {
 			input = fixDP(input)
 		}
-		const num = Number(input);
-		if(Number.isNaN(num) || num < 0 || num > 10000000) {
+		if(checkNumInput(input)) {
 			console.warn("Invalid input:", input)
 			return;
 		}

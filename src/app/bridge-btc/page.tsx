@@ -15,7 +15,7 @@ import LoadingButton from "@/components/common/loadButton";
 import Contract, { errorHandler } from "@/services/api";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import { toast } from "react-toastify";
-import { count_decimals, fixDP, lg } from "@/services/utils";
+import { checkNumInput, count_decimals, fixDP, lg } from "@/services/utils";
 //const wsProviderURL = "ws://127.0.0.1:9944";
 //https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/chainstate
 
@@ -202,8 +202,7 @@ const BridgeBtc = () => {
       input = fixDP(input)
       lg('over dp limit', input)
     }
-    const num = Number(input);
-    if(Number.isNaN(num) || num < 0 || num > 10000000) {
+    if(checkNumInput(input)) {
       console.warn("Invalid input:", input)
       return;
     }
@@ -348,8 +347,7 @@ const BridgeBtc = () => {
 		if(dpLen > MAX_DP) {
 			input = fixDP(input)
 		}
-		const num = Number(input);
-		if(Number.isNaN(num) || num < 0 || num > 10000000) return;
+		if(checkNumInput(input)) return;
     setModalAmount(Number(input))
   }
   const walletIsNotInitialized = accounts.length === 0;

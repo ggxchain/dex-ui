@@ -7,7 +7,7 @@ import { type ChangeEvent, useEffect, useState } from "react";
 import { InputWithPriceInfo } from "../common/input";
 import { SelectDark } from "../common/select";
 import Spinner from "../common/spinner";
-import { bn, count_decimals, fixDP } from "@/services/utils";
+import { bn, checkNumInput, count_decimals, fixDP } from "@/services/utils";
 import { BN_ZERO, type BN } from "@polkadot/util";
 import { MAX_DP } from "@/consts";
 
@@ -82,8 +82,7 @@ export default function TokenSelector({
 		if(dpLen > MAX_DP) {
 			input = fixDP(input)
 		}
-		const num = Number(input);
-		if(Number.isNaN(num) || num < 0 || num > 10000000) {
+		if(checkNumInput(input)) {
 			console.warn("Invalid input:", input)
 			return;
 		}
