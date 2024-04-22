@@ -20,7 +20,7 @@ import type { Amount, DetailedOrder } from "@/types";
 import { BN, BN_ZERO } from "@polkadot/util";
 import { useRouter } from "next/navigation";
 import { Rule } from "postcss";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Loading from "./loading";
 import { toast } from "react-toastify";
 
@@ -198,19 +198,18 @@ export default function Dex() {
 	const onOrderChange = (order: Order) => {
 		setOrder(order);
 	};
-
-	const onSellChange = (token: TokenWithPrice, amount: number) => {
+	const onSellChange = (token: TokenWithPrice, amount: string) => {
 		if (token.id !== sell?.id) {
 			setOrder(undefined);
 		}
-		setSell({ ...token, amount: amountConverter.floatToBN(amount) });
+		setSell({ ...token, amount: amountConverter.floatToBN(Number(amount)) });
 	};
 
-	const onBuyChange = (token: TokenWithPrice, amount: number) => {
+	const onBuyChange = (token: TokenWithPrice, amount: string) => {
 		if (token.id !== buy?.id) {
 			setOrder(undefined);
 		}
-		setBuy({ ...token, amount: amountConverter.floatToBN(amount) });
+		setBuy({ ...token, amount: amountConverter.floatToBN(Number(amount)) });
 	};
 
 	const onCancelOrder = (order: DetailedOrder) => {
@@ -394,6 +393,7 @@ export default function Dex() {
           </Suspense>
 				</div>
 			</div>
+
       <Suspense fallback={<Loading />}>
 			<div className="py-[75px] w-full ">
 				<OrdersList orders={userOrders} cancelOrder={onCancelOrder}

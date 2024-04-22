@@ -8,6 +8,7 @@ import type { Amount, DetailedOrder, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
 import { useEffect, useMemo, useState } from "react";
 import { GrayRuler } from "../common/ruler";
+import { formatPrice } from "@/services/utils";
 
 export interface OrderBookProps {
 	buyToken?: Token;
@@ -172,7 +173,7 @@ export default function OrderBook({
 									className="relative w-full text-GGx-red"
 								>
 									<td className="text-left font-medium text-GGx-red">
-										{orderPrice.toFixed(9)}
+										{formatPrice(orderPrice)}
 									</td>
 									<td className="text-left">
 										<span className="text-GGx-light font-medium bg-GGx-red/50 rounded-[4px] px-[6px]">
@@ -236,7 +237,7 @@ export default function OrderBook({
 								>
 									<td className="relative text-left font-medium text-GGx-green">
 										{selected && <p className="absolute h-full left-0">↠</p>}
-										<p className="pl-3">{orderPrice.toFixed(9)}</p>
+										<p className="pl-3">{formatPrice(orderPrice)}</p>
 									</td>
 									<td className="text-left">
 										<span className="text-GGx-light font-medium bg-GGx-green/50 rounded-[4px] px-[6px]">
