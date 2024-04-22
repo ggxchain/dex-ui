@@ -255,8 +255,6 @@ export default class Contract {
 		endTime: Amount,
 		callback: onFinalize,
 	) {
-		console.log('makeOrder:', pair, amountOffered, amoutRequested, orderType, endTime.toString())
-
 		const _ = this.walletAddress(); // Check if wallet is initialized
 		await this.validateTokenId(pair[0]);
 		await this.validateTokenId(pair[1]);

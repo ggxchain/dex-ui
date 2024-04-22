@@ -15,10 +15,11 @@ import LoadingButton from "@/components/common/loadButton";
 import Contract, { errorHandler } from "@/services/api";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import { toast } from "react-toastify";
-import { checkNumInput, count_decimals, fixDP, lg } from "@/services/utils";
+import { checkNumInput, count_decimals, fixDP, formatter, lg } from "@/services/utils";
 //const wsProviderURL = "ws://127.0.0.1:9944";
 //https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/chainstate
 
+let mesg = '';
 const DAPP_NAME = 'RfQ by GGx'
 const tokenSymbol = "BTC"
 const tokenSymbolOnChain = 'KBTC'
@@ -44,7 +45,6 @@ const BridgeBtc = () => {
   let unsubscribe: () => void; // this is the function of type `() => void` that should be called to unsubscribe
 
   const setup = async () => {
-    //lg("setup()")
     const wsProvider = new WsProvider(GGX_WSS_URL);
     const api = await ApiPromise.create({ provider: wsProvider });
     await api.isReadyOrError;
@@ -54,8 +54,8 @@ const BridgeBtc = () => {
       api.rpc.system.name(),
       api.rpc.system.version(),
     ]);
-    lg(
-      `You are connected to chain ${chain} using ${nodeName} v${nodeVersion}`
+    console.log(
+      `connected to chain ${chain} using ${nodeName} v${nodeVersion}`
     );
     setApi(api);
     getLocalstorageAccounts()
@@ -71,43 +71,36 @@ const BridgeBtc = () => {
   }, [api]);
 
   const checkBalances = async () => {
-    lg("checkBalances()")
     if (!api) {
       console.error("No_API_found");
       return;
     }
     const time = await api.query.timestamp.now();
-    lg("timestamp:", time.toPrimitive());
+    //time.toPrimitive()
 
     const asset = await api.query.assets.metadata(0 /* Asset Id */);
-    lg('asset:', asset)
-    lg("Asset name:", asset.name.toString(), ', symbol:', asset.symbol.toString(), ", decimals:", asset.decimals.toString());
+    //asset.name.toString(), asset.symbol.toString(), asset.decimals.toString()
 
     const meta = api.rpc.system.properties.meta;
-    lg("meta", meta);
 
     const selected = selectedAccount?.address;
-    lg('selectedAccount.address:', selected)
     if (!selected) {
       console.error("SelectedAccount undefined");
       return;
     }
     const entries = await api.query.tokens.accounts.entries(selected)
-    lg('show all detected tokens:')
-    //let box: AnyJson;
+
+    //show all detected tokens
     const userTokList = []
     for (const entry of entries) {
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
       const box: any = entry[0].toHuman();
       if(!box) {
-        lg('token invalid:', box)
         continue;
       }
-      //lg(box, typeof box);//lg(box['0'])
-      lg(box['1'].Token)
+      //box, typeof box, box['0'], box['1'].Token
       userTokList.push(box['1'].Token.toString())
     }
-    lg('userTokList:', userTokList)
     setUserTokenList(userTokList)
 
     let balcFrom = await getBalcToken(selected, 'GGXT');
@@ -126,7 +119,7 @@ const BridgeBtc = () => {
     }
     const { free } = await api.query.tokens.accounts(target, { Token: tokenName });
     //enum= token, foreignasset, lendtoken, lptoken, stablelptoken
-    lg(target.substring(0, 4), tokenName, "balance:", free.toString(), free.toHuman());
+    //target.substring(0, 4), tokenName, "balance:", free.toString(), free.toHuman()
     return free;
   }
   const getLocalstorageAccounts = () => {
@@ -134,15 +127,13 @@ const BridgeBtc = () => {
       "ggx-wallet-selected-account",
     );
     const localstorageAccounts = window.localStorage.getItem("ggx-wallet-accounts");
-    lg('localstorage selectedAccount:', selectedAccount)
-    //lg('localstorage accounts:', accounts)
+    //localstorage selectedAccount:, selectedAccount, accounts
     if (selectedAccount) {
       setSelectedAccount(JSON.parse(selectedAccount))
       if (localstorageAccounts) { setAccounts(JSON.parse(localstorageAccounts)) } else { setAccounts([]) };
     }
   }
   const connectWallet = async () => {
-    lg("connectWallet()")
     if (typeof window !== "undefined") {
       const extensions = await web3Enable(DAPP_NAME);
       if (!extensions) { 
@@ -150,8 +141,7 @@ const BridgeBtc = () => {
         return;
       }
       if (extensions.length === 0) {
-        lg("no extension installed, or the user did not accept the authorization")
-        // in this case we should inform the user and give a link to the extension
+        mesg = "no extension installed. Click the link here to install an extension, or the user did not accept the authorization"
         return;
       }
       const allAccounts = await web3Accounts({
@@ -163,7 +153,7 @@ const BridgeBtc = () => {
             name: info.meta.name,
           };
         }));
-      lg('allAccounts:', allAccounts);
+
       setAccounts(allAccounts);
       window.localStorage.setItem(
         "ggx-wallet-accounts",
@@ -182,9 +172,9 @@ const BridgeBtc = () => {
 
       // we subscribe to any account change and log the new list. note that `web3AccountsSubscribe` returns the function to unsubscribe
       unsubscribe = await web3AccountsSubscribe((injectedAccounts) => {
-        lg('new injected accounts found')
+        //'new injected accounts found'
         injectedAccounts.map((account) => {
-          lg(account.address);
+          //(account.address);
         })
       });
       // don't forget to unsubscribe when needed, e.g when unmounting a component
@@ -195,27 +185,23 @@ const BridgeBtc = () => {
   //const amount = new BN(10).mul(new BN(10).pow(new BN(12)));//.toString();
   const handleAmountChange = async (event: ChangeEvent<HTMLInputElement>) => {
     let input = event?.target.value;
-    lg('handleAmountChange:', input);
-
     const dpLen = count_decimals(input)
     if(dpLen > MAX_DP) {
       input = fixDP(input)
-      lg('over dp limit', input)
+      console.warn('over dp limit', input)
     }
     if(checkNumInput(input)) {
       console.warn("Invalid input:", input)
       return;
     }
-    setAmountIp(Number(input));//TODO
+    setAmountIp(Number(input));//TODO: input should be string
   }
   const handleSendTransaction = async () => {
-    lg("handleSendTransaction")
     if (!api) {
       console.error("No_API_found");
       return;
     }
     const beforeAccountData = await api.query.system.account(selectedAccount?.address);//addrAlice
-    lg("beforeAccountData:", beforeAccountData.toHuman());
     if (!selectedAccount) {
       console.error("No_Selected_Account");
       return;
@@ -227,8 +213,7 @@ const BridgeBtc = () => {
         return;
       }
       if (extensions.length === 0) {
-        lg("no extension installed, or the user did not accept the authorization")
-        // in this case we should inform the user and give a link to the extension
+        mesg = "no extension installed. Click here to install an extension, or the user did not accept the authorization";
         return;
       }
       const injector = await web3FromAddress(selectedAccount?.address);
@@ -243,42 +228,41 @@ const BridgeBtc = () => {
         console.error('amount invalid')
         return;
       }
-      lg('amount:', amount);
       if(!userTokenList) {
         console.error("userTokenList invalid... userTokenList:", userTokenList);
         return;
       }
-      lg('selectedToken:', selectedToken)
+      //amount, selectedToken
       const tokenSymbol = userTokenList.find(token => token === tokenSymbolOnChain)
-      lg('userTokenList:', userTokenList, selectedToken?.symbol)
+      //'userTokenList:', userTokenList, selectedToken?.symbol
       
       if(!tokenSymbol) {
         console.error("tokenSymbol invalid... tokenSymbol:", tokenSymbol);
         return;
       }
-      lg('tokenSymbol:', tokenSymbol)
+      //'tokenSymbol:', tokenSymbol
       //const txHash = api.tx.balances.transfer(BOB, 1000).signAndSend(alice);
       const subscription = await api.tx.tokens.transferKeepAlive(walletTo, { Token: tokenSymbol }, `${amount}`).signAndSend(selectedAccount.address, { signer: injector.signer }, (result) => {
         //if (result.isCompleted)
         //if (result.isFinalized) 
         //if (result.isError)
         if (result.status.isInBlock) {
-          lg(`Completed at block hash #${result.status.asInBlock.toString()}`);
+          console.log(`Completed at block hash #${result.status.asInBlock.toString()}`);
         } else {
-          lg(`Current status: ${result.status.type}`);
+          console.log(`Current status: ${result.status.type}`);
           if(result.status.type === 'Finalized') {
             checkBalances();
           }
         }
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
       }).catch((error: any) => {
-        lg(':( transaction failed', error);
+        console.error(':( transaction failed', error);
       });//addrAlice
-      lg("subscription", subscription);//subscription.unsubscribe()
+      //console.log("subscription", subscription);//subscription.unsubscribe()
     }
   }
 
-  const fiatBalance = 0;
+  const fiatBalance = 1234567890;
   const [selectedToken, setSelectedToken] = useState<Token | undefined>(undefined);
   const isTokenNotSelected = selectedToken === undefined;
   type InteractType = "Deposit" | "Withdraw";
@@ -289,7 +273,6 @@ const BridgeBtc = () => {
   const [modalLoading, setModalLoading] = useState<boolean>(false);
 
   const onModalOpen = async (type: InteractType) => {
-    lg('onModalOpen')
     if (isTokenNotSelected) {
       console.error('No_token_selected')
       return;
@@ -303,10 +286,9 @@ const BridgeBtc = () => {
   const [contract, setContract] = useState<Contract>(new Contract());
   const [tokens, setTokens] = useState<Token[]>([]);
   useEffect(() => {
-    lg('useEffect() ... setTokens')
     const run = async () => {
       const tokens = await contract.allTokensWithInfo()
-      lg('tokens:', tokens)
+      //console.log('tokens:', tokens)
       setTokens(tokens);
       const tokenObj = tokens.find(token =>
         token.symbol === tokenSymbol);
@@ -315,20 +297,19 @@ const BridgeBtc = () => {
         return;
       }
       setSelectedToken(tokenObj);
-      lg('tokenObj:', tokenObj)
+      console.log('tokenObj:', tokenObj)
       //connectWallet();
     }
     run()
   }, [contract]);
 
   const omModalSubmit = async () => {
-    lg('onModalSubmit. selectedToken:', selectedToken, ', modalTitle.current:', modalTitle.current);
     if (isTokenNotSelected || modalAmount <= 0) {
       return;
     }
     setModalLoading(true);
     const amount = new TokenDecimals(selectedToken.decimals).floatToBN(modalAmount);
-    lg('amount:', amount.toString());//BTC has 10 dp??
+    console.log('amount:', amount.toString());
 
     try {
       //Call bridgeAction to make deposit or withdraw action...
@@ -357,13 +338,12 @@ const BridgeBtc = () => {
   const amountPrice = 0;//modalAmount * selectedTokenPrice;
 
   const handleAccountSelection = async (account1: Account) => {
-    lg("handleAccountSelection")
     const account = accounts.find(account => account.address === account1.address)
     if (!account) { 
       console.error("No_account_found")
       return
     }
-    lg('selectedAccount=', account)
+    //'selectedAccount: ', account
 
     setSelectedAccount(account);
     window.localStorage.setItem(
@@ -375,7 +355,7 @@ const BridgeBtc = () => {
     <div className="w-full h-full flex flex-col">
       <div className="flex w-full justify-between items-center">
         <h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">
-          ${fiatBalance.toFixed(2)}
+          {formatter().format(fiatBalance)}
         </h1>
         <div className="flex md:flex-row flex-col gap-5">
           <Button

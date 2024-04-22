@@ -16,7 +16,7 @@ import { BN, BN_ZERO } from "@polkadot/util";
 import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
 import Loading from "./loading";
 import { toast } from "react-toastify";
-import { checkNumInput, count_decimals, fixDP } from "@/services/utils";
+import { checkNumInput, count_decimals, fixDP, formatter } from "@/services/utils";
 import { MAX_DP } from "@/consts";
 
 type InteractType = "Deposit" | "Withdraw";
@@ -273,7 +273,7 @@ export default function Wallet() {
 		<div className="w-full h-full flex flex-col">
 			<div className="flex w-full justify-between items-center">
 				<h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">
-					${total.toFixed(2)}
+					{formatter().format(total)}
 				</h1>
 				<div className="flex xl:flex-row flex-col gap-5">
 					<Button

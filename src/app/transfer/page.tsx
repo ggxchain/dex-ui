@@ -27,6 +27,7 @@ import Ruler from "@/components/common/ruler";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import Loading from "./loading";
 import { errorHandler } from "@/services/api";
+import { formatter } from "@/services/utils";
 
 type ModalTypes = "Deposit" | "Withdraw";
 
@@ -307,12 +308,11 @@ export default function Transfer() {
 	}, 0);
 	const amountPrice =
 		modalAmount * (selectedToken ? prices.get(selectedToken.symbol) ?? 0 : 0);
-
+//{formatter().format(total)}
 	return (
 		<div className="flex flex-col w-full items-center h-full">
 			<div className="flex w-full justify-between items-center">
-				<h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">
-					${total.toFixed(2)}
+				<h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">{formatter().format(total)}
 				</h1>
 				<div className="flex md:flex-row flex-col gap-5">
 					<Button

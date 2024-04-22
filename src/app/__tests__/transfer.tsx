@@ -5,6 +5,7 @@ import { BN_MILLION } from "@polkadot/util";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
 import Transfer from "../transfer/page";
+import { formatter } from "@/services/utils";
 
 jest.mock("../../services/cex", () => ({
 	__esModule: true,
@@ -96,7 +97,7 @@ describe("Transfer", () => {
 	test("renders default component", async () => {
 		await act(() => render(<Transfer />));
 
-		expect(screen.getByText("$1000.00")).toBeInTheDocument();
+		expect(screen.getByText('$1,000.00')).toBeInTheDocument();
 		expect(screen.getByTestId("deposit")).toBeInTheDocument();
 		expect(screen.getByTestId("withdraw")).toBeInTheDocument();
 		expect(screen.getByText("1000 USDT")).toBeInTheDocument();

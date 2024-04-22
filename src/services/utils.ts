@@ -12,6 +12,24 @@ export const strToBn = (str: string): BN => {
   }
   return bn(integer);
 }
+export const formatter = (currencyName = 'usd') => {
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  let formatter: any;
+  switch(currencyName) {
+    case 'usd':
+      formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      });
+      break;
+    default:
+      formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      });
+  }
+  return formatter;
+}
 export const count_decimals = (str: string) => {
   const dpPart= str.split(".")[1] || [];
   return dpPart.length;
@@ -45,7 +63,6 @@ export const checkNumInput = (input: string): boolean => {
 export const translateErrorMesg = (error: string| undefined) => {
   if(error === undefined) return 'Error_Is_Undefined';
   const errorObj = JSON.parse(error);
-  console.log("🚀 ~ translateErrorMesg ~ errorObj:", errorObj)
   let errEasy = '';
   switch(errorObj.token || errorObj.arithmetic) {
     case 'FundsUnavailable':
