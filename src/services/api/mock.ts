@@ -136,9 +136,9 @@ export default class ContractMock implements ApiInterface {
 
 		if (token !== undefined) {
 			return Promise.resolve(token.amount);
-		} else {
-			return Promise.resolve(BN_ZERO);
 		}
+
+		return Promise.resolve(BN_ZERO);
 	}
 
 	tokens(): Promise<TokenId[]> {

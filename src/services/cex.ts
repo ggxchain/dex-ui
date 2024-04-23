@@ -11,11 +11,11 @@ const cryptoCompareFetcher = async (tokens: string[]): Promise<Prices> => {
 	const prices: Prices = new Map();
 	for (const token of tokens) {
 		const key = token.toUpperCase();
-		if (json[key] === undefined || json[key]["USD"] === undefined) {
+		if (!json[key]?.USD) {
 			console.error(`Failed to fetch price of ${token}`);
 			continue;
 		}
-		prices.set(token, json[key]["USD"]);
+		prices.set(token, json[key].USD);
 	}
 	return prices;
 };
@@ -63,18 +63,15 @@ export default class CexService {
 			now - this.lastUpdated < EXCHANGE_PRICE_TTL
 		) {
 			return this.cache;
-		} else {
-			// We need combine the tokens that we already fetched and the new tokens to avoid spamming.
-			const newTokens = tokens.filter(
-				(o) => !this.lastFetchedArray.includes(o),
-			);
-			const allTokens = [...this.lastFetchedArray, ...newTokens];
-			const prices = await cryptoCompareFetcher(allTokens);
-			this.lastUpdated = now;
-			this.cache = prices;
-			this.lastFetchedArray = allTokens;
-			this.save();
 		}
+		// We need combine the tokens that we already fetched and the new tokens to avoid spamming.
+		const newTokens = tokens.filter((o) => !this.lastFetchedArray.includes(o));
+		const allTokens = [...this.lastFetchedArray, ...newTokens];
+		const prices = await cryptoCompareFetcher(allTokens);
+		this.lastUpdated = now;
+		this.cache = prices;
+		this.lastFetchedArray = allTokens;
+		this.save();
 		return this.cache;
 	}
 }

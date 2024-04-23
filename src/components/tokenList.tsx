@@ -1,9 +1,9 @@
+import { formatPrice } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
 import Spinner from "./common/spinner";
-import { formatPrice } from "@/services/utils";
 
 export interface ListElement extends Token {
 	balance: Amount;
@@ -71,7 +71,6 @@ export default function TokenList({
 					const amountConverter = new TokenDecimals(token.decimals);
 
 					return (
-						// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 						<tr
 							key={token.symbol}
 							onClick={() => handleClick(token)}

@@ -32,7 +32,7 @@ export default function SelectLight<Type>({
 	return (
 		<ReactSelect
 			isDisabled={disabled}
-			instanceId={`react-select`}
+			instanceId={"react-select"}
 			value={value}
 			onChange={onChangeValue}
 			options={options}
@@ -94,7 +94,7 @@ export function SelectDark<Type>({
 	return (
 		<ReactSelect
 			isDisabled={disabled}
-			instanceId={`react-select`}
+			instanceId={"react-select"}
 			value={value}
 			onChange={onChangeValue}
 			options={options}

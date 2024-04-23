@@ -336,7 +336,6 @@ function curry<T>(
 	// biome-ignore lint/complexity/noBannedTypes: <explanation>
 	f: Function,
 	_this: ApiInterface,
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	...args: any[]
 ): WrapCall<T> {
 	return (onFinalize: onFinalize) => f.call(_this, ...args, onFinalize);

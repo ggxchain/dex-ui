@@ -23,7 +23,9 @@ jobs:
         with:
           bun-version: 1.0.11
       - run: bun install
-      # checks formatting. to fix formatting run `bun run format`
-      - run: bun run format_check
+      # runs linter & format.
+      # formatter: bun run format
+      # linter   : bun run ci
+      - run: bun run ci
       - run: bun run build
       - run: bun run test

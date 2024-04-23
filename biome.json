@@ -12,7 +12,36 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": {
+					"level": "off"
+				}
+			},
+			"style": {
+				"noNonNullAssertion": {
+					"level": "off"
+				},
+				"useSelfClosingElements": {
+					"level": "off"
+				},
+				"useNodejsImportProtocol": {
+					"level": "off"
+				}
+			},
+			"complexity": {
+				"noForEach": {
+					"level": "off"
+				}
+			},
+			"a11y": {
+				"useKeyWithClickEvents": {
+					"level": "off"
+				},
+				"noSvgWithoutTitle": {
+					"level": "off"
+				}
+			}
 		}
 	},
 	"files": {
