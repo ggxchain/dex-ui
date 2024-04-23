@@ -1,0 +1,5 @@
+bun run format
+bun run biome
+
+# do not let to commit if files are changed
+git diff --quiet --exit-code || (echo "ERROR: git add modified files & commit them" && exit 1)
