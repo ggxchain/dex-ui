@@ -71,7 +71,7 @@ describe("TokenSelector", () => {
 		fireEvent.click(option);
 		const newSelectedToken = tokens[1];
 
-		expect(onChangeMock).toHaveBeenCalledWith(newSelectedToken, '0');
+		expect(onChangeMock).toHaveBeenCalledWith(newSelectedToken, "0");
 	});
 
 	test("calls onChange when amount input changes", () => {
@@ -90,6 +90,6 @@ describe("TokenSelector", () => {
 
 		fireEvent.change(input!, { target: { value: "10" } });
 
-		expect(onChangeMock).toHaveBeenCalledWith(selectedToken, '10');
+		expect(onChangeMock).toHaveBeenCalledWith(selectedToken, "10");
 	});
 });

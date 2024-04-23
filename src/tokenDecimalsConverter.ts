@@ -67,9 +67,9 @@ export default class TokenDecimals {
 		const converter = new TokenDecimals(this.decimalPlaces + extraPrecision);
 		let result = `${converter.BNToFloat(value)}`;
 
-		const dpLen = count_decimals(result)
-		if(dpLen > MAX_DP) {
-			result = fixDP(result)
+		const dpLen = count_decimals(result);
+		if (dpLen > MAX_DP) {
+			result = fixDP(result);
 		}
 		return `${result} ${prefix}${symbol}`;
 	}
@@ -91,8 +91,9 @@ export default class TokenDecimals {
 	divWithPrecision(value1: BN, value2: BN): number {
 		const o = new TokenDecimals(this.decimalPlaces + CALCULATION_PRECISION);
 		const value1Normalized = o.normalize(value1, this.decimalPlaces);
-		return (
-			value1Normalized.div(value2).div(bn(10).pow(bn(CALCULATION_PRECISION))).toNumber() 
-		);//
+		return value1Normalized
+			.div(value2)
+			.div(bn(10).pow(bn(CALCULATION_PRECISION)))
+			.toNumber(); //
 	}
 }

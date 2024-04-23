@@ -29,7 +29,7 @@ type TokenData = TokenWithPrice & {
 };
 
 export default function Dex() {
-	let mesg = ''
+	let mesg = "";
 	const milisecPerYear = new BN(31536000).mul(new BN(1000));
 	const contractRef = useRef<Contract>(new Contract());
 	const [isMaker, setIsMaker] = useState<boolean>(false);
@@ -62,7 +62,7 @@ export default function Dex() {
 	useEffect(() => {
 		updateUserOrders();
 		loadTokens();
-		setIsInitialized(true)
+		setIsInitialized(true);
 	}, []);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
@@ -85,7 +85,7 @@ export default function Dex() {
 		setBuy(undefined);
 		setOrder(undefined);
 		setAvailableBalanceNormalized(BN_ZERO);
-		setExpiration('0', { value: "Minutes" });
+		setExpiration("0", { value: "Minutes" });
 	};
 
 	const onLogin = () => {
@@ -123,7 +123,7 @@ export default function Dex() {
 	const isUserBalanceNotEnough =
 		!isWalletNotConnected && availableBalanceNormalized.lt(sellAmount);
 	const isAmountZero = isSellAmountZero || buyAmount.eq(BN_ZERO);
-	const isExpirationZero = isMaker && expireNumber === '0';
+	const isExpirationZero = isMaker && expireNumber === "0";
 
 	const rate =
 		!isTokenNotSelected && !buyAmount.eq(BN_ZERO) && !sellAmount.eq(BN_ZERO)
@@ -141,7 +141,7 @@ export default function Dex() {
 
 	const onSwap = () => {
 		if (isFormHasErrors) {
-			console.error('isFormHasErrors:', isAmountZero)
+			console.error("isFormHasErrors:", isAmountZero);
 			return;
 		}
 		const pair = [sell.id, buy.id] as Pair;
@@ -152,16 +152,16 @@ export default function Dex() {
 		};
 
 		if (isMaker) {
-			if(sellAmount.lte(BN_ZERO)){
-				mesg = 'Sell amount should be greater than zero';
-				console.warn(mesg)
-				toast.warn(mesg)
+			if (sellAmount.lte(BN_ZERO)) {
+				mesg = "Sell amount should be greater than zero";
+				console.warn(mesg);
+				toast.warn(mesg);
 				return;
 			}
-			if(buyAmount.lte(BN_ZERO)){
-				mesg = 'Buy amount should be greater than zero';
-				console.warn(mesg)
-				toast.warn(mesg)
+			if (buyAmount.lte(BN_ZERO)) {
+				mesg = "Buy amount should be greater than zero";
+				console.warn(mesg);
+				toast.warn(mesg);
 				return;
 			}
 			// Basically, we need to send the amount of tokens that we want to sell but we need to convert it to the decimals of the token.
@@ -174,10 +174,10 @@ export default function Dex() {
 				buy.decimals,
 			);
 			const milisec = convertToMillis();
-			if(milisec.gt(milisecPerYear)){
-				mesg = 'cannot be greater than 1 year';
-				console.warn(mesg)
-				toast.warn(mesg)
+			if (milisec.gt(milisecPerYear)) {
+				mesg = "cannot be greater than 1 year";
+				console.warn(mesg);
+				toast.warn(mesg);
 				return;
 			}
 			contract
@@ -238,7 +238,7 @@ export default function Dex() {
 		<div className="text-GGx-gray flex flex-col w-full items-center">
 			<div className="flex flex-col w-full">
 				<div className="flex text-xl justify-between text-[30px] pb-[10px]">
-					<button onClick={() => setIsMaker(false)} type="button" >
+					<button onClick={() => setIsMaker(false)} type="button">
 						<p className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}>
 							Taker order
 						</p>
@@ -283,7 +283,8 @@ export default function Dex() {
 										The balance is not enough to make this swap
 									</p>
 									{isMaker && ( // Taker can't regulate the amount of the order.
-										<button type="button"
+										<button
+											type="button"
 											className="ml-2 p-1 rounded-2xl border grow-on-hover"
 											onClick={() =>
 												setSell({ ...sell, amount: availableBalanceNormalized })
@@ -380,27 +381,29 @@ export default function Dex() {
 						</div>
 					</div>
 
-          <Suspense fallback={<Loading />}>
-					<div className="md:has-[table]:py-12 md:py-5 pl-5 basis-2/5">
-						<OrderBook
-							orders={orderBookOrders}
-							buyToken={buy}
-							sellToken={sell}
-							onChange={onOrderChange}
-							selectedOrder={order}
-						/>
-					</div>
-          </Suspense>
+					<Suspense fallback={<Loading />}>
+						<div className="md:has-[table]:py-12 md:py-5 pl-5 basis-2/5">
+							<OrderBook
+								orders={orderBookOrders}
+								buyToken={buy}
+								sellToken={sell}
+								onChange={onOrderChange}
+								selectedOrder={order}
+							/>
+						</div>
+					</Suspense>
 				</div>
 			</div>
 
-      <Suspense fallback={<Loading />}>
-			<div className="py-[75px] w-full ">
-				<OrdersList orders={userOrders} cancelOrder={onCancelOrder}
-        isInitialized={isInitialized}
-        />
-			</div>
-      </Suspense>
+			<Suspense fallback={<Loading />}>
+				<div className="py-[75px] w-full ">
+					<OrdersList
+						orders={userOrders}
+						cancelOrder={onCancelOrder}
+						isInitialized={isInitialized}
+					/>
+				</div>
+			</Suspense>
 		</div>
 	);
 }

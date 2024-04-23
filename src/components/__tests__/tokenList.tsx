@@ -39,10 +39,10 @@ describe("OrdersList", () => {
 		},
 	];
 
-	test("render empty token list", async() => {
+	test("render empty token list", async () => {
 		render(<TokenList tokens={[]} />);
 		setTimeout((done) => {
-			expect(screen.getByText("No tokens found")).toBeInTheDocument()
+			expect(screen.getByText("No tokens found")).toBeInTheDocument();
 			done();
 		}, 2000);
 	});
