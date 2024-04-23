@@ -19,12 +19,11 @@ import {
 import type { AccountData, ChainInfo } from "@keplr-wallet/types";
 import { Keyring } from "@polkadot/keyring";
 import { BN, BN_ZERO, u8aToHex } from "@polkadot/util";
-import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
-import { errorHandler } from "@/services/api";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import Loading from "./loading";
 

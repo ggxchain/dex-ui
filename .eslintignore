@@ -1,0 +1,4 @@
+src/interfaces
+node_modules
+.next
+public

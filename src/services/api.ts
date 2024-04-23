@@ -237,6 +237,7 @@ export default class Contract {
 		);
 	}
 
+	// biome-ignore lint: TODO: get rid of async
 	async cancelOrder(counterId: CounterId, callback: onFinalize) {
 		const _ = this.walletAddress(); // Check if wallet is initialized
 		wrapCallWithNotifications(
@@ -293,6 +294,7 @@ export default class Contract {
 		);
 	}
 
+	// biome-ignore lint: TODO: get rid of async
 	async takeOrder(counterId: CounterId, callback: onFinalize) {
 		const _ = this.walletAddress(); // Check if wallet is initialized
 		wrapCallWithNotifications(
