@@ -25,7 +25,8 @@
 			},
 			"suspicious": {
 				"noExplicitAny": "off",
-				"useAwait": "error"
+				"useAwait": "error",
+				"noEmptyBlockStatements": "warn"
 			},
 			"style": {
 				"noNonNullAssertion": "off",

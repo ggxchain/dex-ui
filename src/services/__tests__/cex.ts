@@ -3,6 +3,7 @@
 import CexService from "../cex";
 
 import "@/__utils__/localstore.mock";
+import { describe, expect, it, jest } from "@jest/globals";
 
 import { EXCHANGE_PRICE_TTL } from "@/consts";
 

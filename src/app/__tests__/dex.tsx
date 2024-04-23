@@ -7,6 +7,8 @@ import mockedTokens from "@/mock";
 import Contract from "@/services/api";
 import { act } from "react-dom/test-utils";
 
+import { describe, expect, jest, test } from "@jest/globals";
+
 jest.mock("next/navigation", () => ({
 	useRouter() {
 		return {
