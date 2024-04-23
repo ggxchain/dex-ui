@@ -1,4 +1,4 @@
-import { EXCHANGE_PRICE_TTL } from "@/consts";
+import { EXCHANGE_PRICE_TTL } from "@/settings";
 
 type Prices = Map<string, number>;
 

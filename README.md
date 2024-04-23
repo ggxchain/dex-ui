@@ -20,12 +20,12 @@ bun run build
 bun run dev
 ```
 
-Configure `.env.local` file:
+Configure `.env.local` file(used during running):
 NEXT_PUBLIC_PARACHAIN_URL=ws://127.0.0.1:9944
 NEXT_PUBLIC_WALLET1=YOUR_TEST_WALLET_ADDRESS
 NEXT_PUBLIC_GGX_NETWORK=brooklyn
 
-Copy the `.env.local` file into `.env` file
+Copy the `.env.local` file into `.env` file(used during tests)
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

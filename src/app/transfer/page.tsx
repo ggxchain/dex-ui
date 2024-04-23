@@ -24,6 +24,7 @@ import { toast } from "react-toastify";
 
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
+import { formatter } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import Loading from "./loading";
 
@@ -52,7 +53,6 @@ export default function Transfer() {
 	const [modalSourceChannel, setModalSourceChannel] =
 		useState<string>("channel-0");
 
-	// init chain
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		const a = async () => {
@@ -306,12 +306,12 @@ export default function Transfer() {
 	}, 0);
 	const amountPrice =
 		modalAmount * (selectedToken ? prices.get(selectedToken.symbol) ?? 0 : 0);
-
+	//{formatter().format(total)}
 	return (
 		<div className="flex flex-col w-full items-center h-full">
 			<div className="flex w-full justify-between items-center">
 				<h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">
-					${total.toFixed(2)}
+					{formatter().format(total)}
 				</h1>
 				<div className="flex md:flex-row flex-col gap-5">
 					<Button

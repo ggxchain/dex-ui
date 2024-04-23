@@ -58,7 +58,7 @@ describe("Wallet", () => {
 		await act(() => render(<Wallet />));
 		const balance = 1000 * mockedTokens().length + 1; // 1 token = $1, we have 1000 tokens on chain per token + 1 USDT
 
-		expect(screen.getByText(`$${balance.toFixed(2)}`)).toBeInTheDocument();
+		expect(screen.getByText("$5,001.00")).toBeInTheDocument();
 		expect(screen.getByTestId("deposit")).toBeInTheDocument();
 		expect(screen.getByTestId("withdraw")).toBeInTheDocument();
 		expect(screen.getByText("1 USDT")).toBeInTheDocument();
