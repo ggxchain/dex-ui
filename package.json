@@ -11,10 +11,11 @@
     "start": "next start",
     "lint": "bun run next_lint && bun run biome_check",
     "next_lint": "next lint",
-    "biome_lint": "bunx @biomejs/biome lint src",
-    "biome_check": "bunx @biomejs/biome check --apply src",
+    "biome_lint": "biome lint src",
+    "biome_check": "biome check --apply src",
     "test": "jest",
-    "format": "bunx @biomejs/biome format src --write"
+    "format": "biome format src --write",
+    "format_check": "biome format src"
   },
   "dependencies": {
     "@chain-registry/keplr": "^1.30.0",
@@ -33,7 +34,8 @@
     "react-select": "^5.8.0",
     "react-toastify": "^10.0.4",
     "tailwindcss-safe-area": "^0.4.1",
-    "zod": "^3.22.4","sst":"^3.0.1"
+    "zod": "^3.22.4",
+    "sst": "^3.0.1"
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.3",
