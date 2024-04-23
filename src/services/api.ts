@@ -11,7 +11,7 @@ import type {
 } from "@/types";
 import GGXWallet from "./ggx";
 
-import { CONTRACT_MOCKED, TOKENS_LIST_TTL } from "@/consts";
+import { CONTRACT_MOCKED, TOKENS_LIST_TTL } from "@/settings";
 import type Order from "@/order";
 import { toast } from "react-toastify";
 import GGxNetwork from "./api/ggx";

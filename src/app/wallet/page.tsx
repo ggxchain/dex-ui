@@ -17,7 +17,8 @@ import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
 import Loading from "./loading";
 import { toast } from "react-toastify";
 import { checkNumInput, count_decimals, fixDP, formatter } from "@/services/utils";
-import { MAX_DP } from "@/consts";
+import { MAX_DP } from "@/settings";
+
 
 type InteractType = "Deposit" | "Withdraw";
 

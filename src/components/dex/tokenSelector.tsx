@@ -9,7 +9,7 @@ import { SelectDark } from "../common/select";
 import Spinner from "../common/spinner";
 import { bn, checkNumInput, count_decimals, fixDP } from "@/services/utils";
 import { BN_ZERO, type BN } from "@polkadot/util";
-import { MAX_DP } from "@/consts";
+import { MAX_DP } from "@/settings";
 
 interface TokenSelectorProps {
 	token?: TokenWithPrice;

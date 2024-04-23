@@ -21,12 +21,15 @@ const selectFn = jest.fn();
 jest.mock("../../services/ggx", () => ({
 	__esModule: true,
 	default: class GGXService {
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		async getAccounts(): Promise<any> {
 			return [this.pubkey(), { address: "blahblah", name: "Account 2" }];
 		}
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		selectAccount(a: any) {
 			selectFn();
 		}
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		pubkey(): any {
 			return {
 				address: "5G4Ug9EPQHqk5iJGjUFHeLHYCvX4JRPVrtxxFPmwuk9wj8GC",
@@ -97,6 +100,7 @@ describe("Wallet", () => {
 
 	test("select account", async () => {
 		await act(() => render(<Wallet />));
+		// biome-ignore lint/style/noNonNullAssertion: <explanation>
 		const select = screen.getByTestId("userSelect").lastChild!;
 		expect(select).toBeInTheDocument();
 		fireEvent.keyDown(select, { key: "ArrowDown" });

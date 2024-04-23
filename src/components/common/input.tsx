@@ -18,7 +18,7 @@ export function Input({
 		<div className={`w-full h-full ${wrapperClassName ?? ""}`}>
 			{name && (
 				<p
-					className={`text-GGx-gray text-[14px]`}
+					className="text-GGx-gray text-[14px]"
 					style={{ lineHeight: "1", marginBlockStart: "0" }}
 				>
 					{name}
@@ -52,7 +52,7 @@ export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
 				className={`flex text-14px items-center space-x-1 absolute bottom-1/2 right-2 top-1/2 -translate-y-1/4 ${props.suffixStyle}`}
 			>
 				<p className="hidden md:block">{props.symbol}</p>
-				<span className="text-sm">(${formatPrice(props.price)})</span>
+				<span className="text-sm">({formatPrice(props.price)})</span>
 			</div>
 		</div>
 	);

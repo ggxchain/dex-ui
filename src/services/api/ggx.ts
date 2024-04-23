@@ -2,7 +2,7 @@ import {
 	BLOCK_TIME_IN_MILLIS,
 	GGX_WSS_URL,
 	NATIVE_TOKEN_ID_RESERVED,
-} from "@/consts";
+} from "@/settings";
 
 import type Pair from "@/pair";
 import type { Amount, CounterId, OrderType, Token, TokenId } from "@/types";

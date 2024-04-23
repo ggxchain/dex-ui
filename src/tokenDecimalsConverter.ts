@@ -1,7 +1,8 @@
+// biome-ignore lint/style/useNodejsImportProtocol: <explanation>
 import assert from "assert";
 import { BN_ONE, BN_TEN } from "@polkadot/util";
 import BN from "bn.js";
-import { CALCULATION_PRECISION, MAX_DP } from "./consts";
+import { CALCULATION_PRECISION, MAX_DP } from "./settings";
 import { bn, count_decimals, fixDP } from "./services/utils";
 
 export default class TokenDecimals {

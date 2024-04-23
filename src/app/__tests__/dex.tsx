@@ -70,6 +70,7 @@ describe("Dex", () => {
 		expect(screen.getByText("No asks found")).toBeInTheDocument();
 		expect(screen.getByText("No bids found")).toBeInTheDocument();
 
+		// biome-ignore lint/style/noNonNullAssertion: <explanation>
 		const tokenSelector = screen.getAllByTestId("tokenSelector")[1].firstChild!;
 		fireEvent.keyDown(tokenSelector, { key: "ArrowDown" });
 		const option = screen.getByText(mockedTokens()[1].symbol);
@@ -92,6 +93,7 @@ describe("Dex", () => {
 		expect(screen.getByText("No asks found")).toBeInTheDocument();
 		expect(screen.getByText("No bids found")).toBeInTheDocument();
 
+		// biome-ignore lint/style/noNonNullAssertion: <explanation>
 		const tokenSelector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
 		fireEvent.keyDown(tokenSelector, { key: "ArrowDown" });
 		const option = screen.getByText(mockedTokens()[1].symbol);
@@ -128,6 +130,7 @@ describe("Dex", () => {
 		expect(balance).toBeInTheDocument();
 		expect(balance.textContent).toBe(" 0.00001 USDT");
 
+		// biome-ignore lint/style/noNonNullAssertion: <explanation>
 		const selector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
 		fireEvent.keyDown(selector, { key: "ArrowDown" });
 		const option = screen.getByText(mockedTokens()[1].symbol);
@@ -141,6 +144,7 @@ describe("Dex", () => {
 	test("Clear form", async () => {
 		await act(() => render(<Dex />));
 
+		// biome-ignore lint/style/noNonNullAssertion: <explanation>
 		const selector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
 		fireEvent.keyDown(selector, { key: "ArrowDown" });
 		const option = screen.getByText(mockedTokens()[1].symbol);

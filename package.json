@@ -14,6 +14,7 @@
     "biome_lint": "bunx @biomejs/biome lint src",
     "biome_check": "bunx @biomejs/biome check --apply src",
     "test": "jest",
+    "test1": "jest src/components/__tests__/tokenList.tsx",
     "format": "bunx @biomejs/biome format src --write"
   },
   "dependencies": {

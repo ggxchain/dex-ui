@@ -1,7 +1,8 @@
 import React, { type ChangeEvent, useMemo, useState } from "react";
 import { Input } from "../common/input";
 import SelectLight, { SelectDark } from "../common/select";
-import { bn, strToBn } from "@/services/utils";
+import { bn, checkNumInput, count_decimals, fixDP, strToBn } from "@/services/utils";
+import { MAX_DP } from "@/settings";
 
 interface Props {
 	onChange: (str: string, unit: Option) => void;
@@ -48,7 +49,16 @@ export default function OrderExpireSelect(props: Props) {
 	};
 
 	const onInput = (e: ChangeEvent<HTMLInputElement>) => {
-		props.onChange((e.target.value).replace(/^0+/, ""), props.unit);
+		let input = e.target.value.replace(/^0+/, "");
+		const dpLen = count_decimals(input)
+		if(dpLen > MAX_DP) {
+			input = fixDP(input)
+		}
+		if(checkNumInput(input)) {
+			console.warn("Invalid input:", input)
+			return;
+		}
+		props.onChange(input, props.unit);
 	};
 
 	return (

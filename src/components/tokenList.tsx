@@ -107,7 +107,7 @@ export default function TokenList({
 									/>
 								</td>
 							)}
-							<td>${formatPrice(token.estimatedPrice)}</td>
+							<td data-testid={`price-${token.symbol}`}>{formatPrice(token.estimatedPrice)}</td>
 						</tr>
 					);
 				})}
@@ -137,7 +137,7 @@ function Balance({
 			<p className="mt-1">
 				{amountConverter.BNtoDisplay(balance, symbol)}
 				<sup className="ml-1 font- text-[10px]">
-					(${formatPrice(estimatedPriceWithPrecision)})
+					({formatPrice(estimatedPriceWithPrecision)})
 				</sup>
 			</p>
 		</div>

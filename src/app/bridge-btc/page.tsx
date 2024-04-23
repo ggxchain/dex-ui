@@ -4,7 +4,7 @@ import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { web3Accounts, web3AccountsSubscribe, web3Enable, web3FromAddress, web3FromSource } from '@polkadot/extension-dapp';
 import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import { BN, BN_ZERO } from "@polkadot/util/bn";
-import { GGX_WSS_URL, MAX_DP } from "@/consts";
+import { GGX_WSS_URL, MAX_DP } from "@/settings";
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
@@ -188,7 +188,6 @@ const BridgeBtc = () => {
     const dpLen = count_decimals(input)
     if(dpLen > MAX_DP) {
       input = fixDP(input)
-      console.warn('over dp limit', input)
     }
     if(checkNumInput(input)) {
       console.warn("Invalid input:", input)

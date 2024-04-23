@@ -4,7 +4,7 @@ import CexService from "../cex";
 
 import "@/__utils__/localstore.mock";
 
-import { EXCHANGE_PRICE_TTL } from "@/consts";
+import { EXCHANGE_PRICE_TTL } from "@/settings";
 
 describe("CexService", () => {
 	let cexService: CexService;
