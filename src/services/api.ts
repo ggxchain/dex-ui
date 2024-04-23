@@ -139,7 +139,6 @@ export default class Contract {
 		await this.validateTokenId(pair[0]);
 		await this.validateTokenId(pair[1]);
 
-
 		const orders = await this.api.pairOrders(pair);
 		// TODO: We need to double check this logic after contract will be ready.
 		// Currently we fetch both side tiker orders and then filter out duplicates.
@@ -255,7 +254,14 @@ export default class Contract {
 		endTime: Amount,
 		callback: onFinalize,
 	) {
-		console.log('makeOrder:', pair, amountOffered, amoutRequested, orderType, endTime.toString())
+		console.log(
+			"makeOrder:",
+			pair,
+			amountOffered,
+			amoutRequested,
+			orderType,
+			endTime.toString(),
+		);
 
 		const _ = this.walletAddress(); // Check if wallet is initialized
 		await this.validateTokenId(pair[0]);
@@ -343,7 +349,7 @@ function wrapCallWithNotifications<T>(
 ): ReturnType<typeof toast.promise> {
 	const wrappedOnFinalize = (error: string | undefined) => {
 		if (error !== undefined) {
-      const errEasy = translateErrorMesg(error)
+			const errEasy = translateErrorMesg(error);
 			toast.error(`${errEasy}`);
 		} else {
 			toast.success(`${text} finalized`);

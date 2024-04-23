@@ -54,7 +54,7 @@ export default function TokenSelector({
 }: Readonly<TokenSelectorProps>) {
 	useEffect(() => {
 		if (tokens.length > 0 && token === undefined) {
-			onChange(tokens[0], '0');
+			onChange(tokens[0], "0");
 		}
 	});
 
@@ -73,17 +73,17 @@ export default function TokenSelector({
 			return;
 		}
 
-		onChange(e, '0');
+		onChange(e, "0");
 	};
 
 	const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
 		let input = e.target.value;
-		const dpLen = count_decimals(input)
-		if(dpLen > MAX_DP) {
-			input = fixDP(input)
+		const dpLen = count_decimals(input);
+		if (dpLen > MAX_DP) {
+			input = fixDP(input);
 		}
-		if(checkNumInput(input)) {
-			console.warn("Invalid input:", input)
+		if (checkNumInput(input)) {
+			console.warn("Invalid input:", input);
 			return;
 		}
 		// The question here should we allow decimals or not.

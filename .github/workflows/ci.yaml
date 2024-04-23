@@ -23,6 +23,7 @@ jobs:
         with:
           bun-version: 1.0.11
       - run: bun install
-      - run: bun run format
+      # checks formatting. to fix formatting run `bun run format`
+      - run: bun run format_check
       - run: bun run build
       - run: bun run test

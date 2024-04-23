@@ -118,21 +118,21 @@ export default function OrdersList({
 								>
 									<td className="flex xl:pl-10">
 										<div className="flex flex-col xl:flex-row">
-										<Image
-											alt="Sell"
-											width={0}
-											height={0}
-											className="w-[24px] h-[24px] xl:mr-2"
-											src={`/svg/${ownedToken.symbol.toLowerCase()}.svg`}
-										/>
-										<span>{">"}</span>
-										<Image
-											alt="Buy"
-											width={0}
-											height={0}
-											className="w-[24px] h-[24px] xl:ml-2"
-											src={`/svg/${desiredToken.symbol.toLowerCase()}.svg`}
-										/>
+											<Image
+												alt="Sell"
+												width={0}
+												height={0}
+												className="w-[24px] h-[24px] xl:mr-2"
+												src={`/svg/${ownedToken.symbol.toLowerCase()}.svg`}
+											/>
+											<span>{">"}</span>
+											<Image
+												alt="Buy"
+												width={0}
+												height={0}
+												className="w-[24px] h-[24px] xl:ml-2"
+												src={`/svg/${desiredToken.symbol.toLowerCase()}.svg`}
+											/>
 										</div>
 									</td>
 
@@ -159,7 +159,8 @@ export default function OrdersList({
 									</td>
 									<td className="text-left">{expiredText}</td>
 									<td className="rounded-r-xl">
-										<button type="button"
+										<button
+											type="button"
 											onClick={() => cancelOrder(order)}
 											className="flex items-center text-GGx-yellow"
 										>

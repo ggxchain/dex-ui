@@ -15,7 +15,7 @@ type Days = { value: "Days" };
 type Option = Minutes | Hours | Days;
 
 export function useExpire() {
-	const [expNum, setExpNum] = useState<string>('0');
+	const [expNum, setExpNum] = useState<string>("0");
 	const [unit, setUnit] = useState<Option>({ value: "Minutes" });
 
 	const onChange = (str: string, unit: Option) => {
@@ -44,11 +44,11 @@ export default function OrderExpireSelect(props: Props) {
 	);
 
 	const onSelectChange = (value: Option) => {
-		props.onChange('0', value);
+		props.onChange("0", value);
 	};
 
 	const onInput = (e: ChangeEvent<HTMLInputElement>) => {
-		props.onChange((e.target.value).replace(/^0+/, ""), props.unit);
+		props.onChange(e.target.value.replace(/^0+/, ""), props.unit);
 	};
 
 	return (

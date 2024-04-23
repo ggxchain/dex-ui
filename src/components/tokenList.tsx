@@ -48,18 +48,23 @@ export default function TokenList({
 				</tr>
 			</thead>
 			<tbody>
-				{(!isInitialized && tokens.length === 0) ?
-					<tr><td><div className="flex w-full justify-center">
-						<div className="w-20 h-20 mt-5">
-							<Spinner />
-						</div>
-					</div></td></tr> : null}
+				{!isInitialized && tokens.length === 0 ? (
+					<tr>
+						<td>
+							<div className="flex w-full justify-center">
+								<div className="w-20 h-20 mt-5">
+									<Spinner />
+								</div>
+							</div>
+						</td>
+					</tr>
+				) : null}
 
-				{(isInitialized && tokens.length === 0) ? (
+				{isInitialized && tokens.length === 0 ? (
 					<tr>
 						<td className="text-center">No tokens found</td>
-					</tr>) : null
-				}
+					</tr>
+				) : null}
 
 				{tokens.map((token) => {
 					const isSelected = token.id === selected?.id;
@@ -147,10 +152,13 @@ interface TokenDetailInterface {
 	tokenName: string;
 	tokenNetwork: string;
 }
-const TokenDetail = ({tokenName, tokenNetwork}: TokenDetailInterface) => {
-	return <>
-    <p className="font-bold">{tokenName}
-		<sup className="pl-1 font-normal text-[10px]">{tokenNetwork}</sup>
-		</p>
-	</>
-}
+const TokenDetail = ({ tokenName, tokenNetwork }: TokenDetailInterface) => {
+	return (
+		<>
+			<p className="font-bold">
+				{tokenName}
+				<sup className="pl-1 font-normal text-[10px]">{tokenNetwork}</sup>
+			</p>
+		</>
+	);
+};

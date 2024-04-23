@@ -55,11 +55,11 @@ export default function Transfer() {
 
 	// init chain
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-		useEffect(() => {
+	useEffect(() => {
 		const a = async () => {
 			await connectWallet();
 			await connectGGxWallet();
-			setIsInitialized(true)
+			setIsInitialized(true);
 		};
 		a();
 	}, [chain]);
@@ -235,7 +235,7 @@ export default function Transfer() {
 
 			if (result.code === 0) {
 				console.log(
-					`transfer success, height: ${result.height}, hash: ${result.transactionHash}`
+					`transfer success, height: ${result.height}, hash: ${result.transactionHash}`,
 				);
 
 				setTx(result.transactionHash);
@@ -249,7 +249,7 @@ export default function Transfer() {
 		setModalGGxAccount(account);
 		const ggx = new GGXWallet();
 		try {
-			ggx.selectAccount(account)
+			ggx.selectAccount(account);
 		} catch (err) {
 			console.warn(err);
 			toast.warn(`${err}`);
@@ -365,17 +365,17 @@ export default function Transfer() {
 						/>
 					</div>
 				</div>
-        <Suspense fallback={<Loading />}>
-				<TokenList
-					selected={selectedToken}
-					onClick={setSelectedToken}
-					className={`w-full mt-2 ${
-						walletIsNotInitialized ? "opacity-50" : "opacity-100"
-					}`}
-					tokens={tokens}
-          isInitialized={isInitialized}
-				/>
-        </Suspense>
+				<Suspense fallback={<Loading />}>
+					<TokenList
+						selected={selectedToken}
+						onClick={setSelectedToken}
+						className={`w-full mt-2 ${
+							walletIsNotInitialized ? "opacity-50" : "opacity-100"
+						}`}
+						tokens={tokens}
+						isInitialized={isInitialized}
+					/>
+				</Suspense>
 			</div>
 
 			<Modal

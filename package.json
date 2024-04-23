@@ -14,7 +14,8 @@
     "biome_lint": "bunx @biomejs/biome lint src",
     "biome_check": "bunx @biomejs/biome check --apply src",
     "test": "jest",
-    "format": "bunx @biomejs/biome format src --write"
+    "format": "bunx @biomejs/biome format src --write",
+    "format_check": "bunx @biomejs/biome format src"
   },
   "dependencies": {
     "@chain-registry/keplr": "^1.30.0",
@@ -27,13 +28,14 @@
     "@polkadot/util": "^12.6.2",
     "chain-registry": "^1.25.0",
     "cryptocurrency-icons": "^0.18.1",
-    "next": "14.0.4",
-    "react": "^18",
-    "react-dom": "^18",
+    "next": "14.2.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-select": "^5.8.0",
     "react-toastify": "^10.0.4",
     "tailwindcss-safe-area": "^0.4.1",
-    "zod": "^3.22.4","sst":"^3.0.1"
+    "zod": "^3.22.4",
+    "sst": "^3.0.1"
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.3",
@@ -43,8 +45,8 @@
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.1.2",
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react": "18.2.0",
+    "@types/react-dom": "18.2.0",
     "autoprefixer": "^10.0.1",
     "babel-jest": "^29.7.0",
     "eslint": "^8",
