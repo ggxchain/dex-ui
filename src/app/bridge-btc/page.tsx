@@ -16,9 +16,7 @@ import {
 	web3AccountsSubscribe,
 	web3Enable,
 	web3FromAddress,
-	web3FromSource,
 } from "@polkadot/extension-dapp";
-import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { BN, BN_ZERO } from "@polkadot/util/bn";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
@@ -220,6 +218,7 @@ const BridgeBtc = () => {
 	};
 
 	//const amount = new BN(10).mul(new BN(10).pow(new BN(12)));//.toString();
+	// biome-ignore lint: TODO: get rid of async
 	const handleAmountChange = async (event: ChangeEvent<HTMLInputElement>) => {
 		let input = event?.target.value;
 		lg("handleAmountChange:", input);
@@ -331,6 +330,7 @@ const BridgeBtc = () => {
 	const [modalAmount, setModalAmount] = useState<number>(0);
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 
+	// biome-ignore lint: TODO: get rid of async
 	const onModalOpen = async (type: InteractType) => {
 		lg("onModalOpen");
 		if (isTokenNotSelected) {
@@ -363,6 +363,7 @@ const BridgeBtc = () => {
 		run();
 	}, [contract]);
 
+	// biome-ignore lint: TODO: get rid of async
 	const omModalSubmit = async () => {
 		lg(
 			"onModalSubmit. selectedToken:",

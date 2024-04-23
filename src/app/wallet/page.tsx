@@ -5,7 +5,7 @@ import { InputWithPriceInfo } from "@/components/common/input";
 import LoadingButton from "@/components/common/loadButton";
 import Modal from "@/components/common/modal";
 import Ruler from "@/components/common/ruler";
-import SelectLight, { SelectDark } from "@/components/common/select";
+import { SelectDark } from "@/components/common/select";
 import TokenList from "@/components/tokenList";
 import { MAX_DP } from "@/consts";
 import Contract, { errorHandler } from "@/services/api";
@@ -91,6 +91,7 @@ export default function Wallet() {
 	const modalTitle = useRef<InteractType>("Deposit");
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 
+	// biome-ignore lint: TODO: get rid of async
 	const refreshBalances = async () => {
 		refreshDexBalances();
 		refreshChainBalances();

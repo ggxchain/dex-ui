@@ -12,10 +12,11 @@
     "lint": "bun run next_lint && bun run biome_check",
     "next_lint": "next lint",
     "test": "jest",
-    "biome": "biome lint src --apply",
+    "biome_check_errors": "biome check src --apply --diagnostic-level=error",
     "biome_check": "biome check --apply src",
     "format": "biome format src --write",
     "format_check": "biome format src",
+    "ci_errors": "biome ci src --diagnostic-level=error",
     "ci": "biome ci src",
     "prepare": "husky"
   },
@@ -40,7 +41,7 @@
     "sst": "^3.0.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.6.3",
+    "@biomejs/biome": "1.7.1",
     "@polkadot/dev": "^0.78.8",
     "@polkadot/dev-test": "^0.78.8",
     "@polkadot/typegen": "^10.11.2",

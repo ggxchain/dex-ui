@@ -8,7 +8,6 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import Close from "../common/close";
 import Ruler, { GrayRuler } from "../common/ruler";
-import Spinner from "../common/spinner";
 
 export const useUserOrders = (contract: Contract) => {
 	const [orders, setOrders] = useState<DetailedOrder[]>([]);
