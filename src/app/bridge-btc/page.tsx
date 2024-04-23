@@ -218,7 +218,8 @@ const BridgeBtc = () => {
 	};
 
 	//const amount = new BN(10).mul(new BN(10).pow(new BN(12)));//.toString();
-	const handleAmountChange = (event: ChangeEvent<HTMLInputElement>) => {
+	// biome-ignore lint: TODO: get rid of async
+	const handleAmountChange = async (event: ChangeEvent<HTMLInputElement>) => {
 		let input = event?.target.value;
 		lg("handleAmountChange:", input);
 
@@ -329,7 +330,8 @@ const BridgeBtc = () => {
 	const [modalAmount, setModalAmount] = useState<number>(0);
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 
-	const onModalOpen = (type: InteractType) => {
+	// biome-ignore lint: TODO: get rid of async
+	const onModalOpen = async (type: InteractType) => {
 		lg("onModalOpen");
 		if (isTokenNotSelected) {
 			console.error("No_token_selected");
@@ -361,7 +363,8 @@ const BridgeBtc = () => {
 		run();
 	}, [contract]);
 
-	const omModalSubmit = () => {
+	// biome-ignore lint: TODO: get rid of async
+	const omModalSubmit = async () => {
 		lg(
 			"onModalSubmit. selectedToken:",
 			selectedToken,

@@ -21,7 +21,8 @@ const selectFn = jest.fn();
 jest.mock("../../services/ggx", () => ({
 	__esModule: true,
 	default: class GGXService {
-		getAccounts(): any {
+		// biome-ignore lint: TODO: get rid of async
+		async getAccounts(): Promise<any> {
 			return [this.pubkey(), { address: "blahblah", name: "Account 2" }];
 		}
 		selectAccount(a: any) {

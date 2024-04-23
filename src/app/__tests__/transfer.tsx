@@ -26,7 +26,8 @@ const keplrMock = {
 	// @ts-ignore
 	getOfflineSigner() {
 		return new (class A {
-			getAccounts() {
+			// biome-ignore lint: TODO: get rid of async
+			async getAccounts() {
 				return [{ address: "blahblah" }, { address: "meowmeow" }];
 			}
 		})();
@@ -61,7 +62,8 @@ const selectFn = jest.fn();
 jest.mock("../../services/ggx", () => ({
 	__esModule: true,
 	default: class GGXService {
-		getAccounts(): Promise<any> {
+		// biome-ignore lint: get rid of async
+		async getAccounts(): Promise<any> {
 			return [this.pubkey(), { address: "blahblah", name: "Account 2" }];
 		}
 		selectAccount(a: any) {

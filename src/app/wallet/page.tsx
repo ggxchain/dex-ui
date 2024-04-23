@@ -91,7 +91,8 @@ export default function Wallet() {
 	const modalTitle = useRef<InteractType>("Deposit");
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 
-	const refreshBalances = () => {
+	// biome-ignore lint: TODO: get rid of async
+	const refreshBalances = async () => {
 		refreshDexBalances();
 		refreshChainBalances();
 	};
