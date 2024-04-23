@@ -21,8 +21,8 @@ import { BN, BN_ZERO } from "@polkadot/util";
 import { useRouter } from "next/navigation";
 import { Rule } from "postcss";
 import { Suspense, useEffect, useRef, useState } from "react";
-import Loading from "./loading";
 import { toast } from "react-toastify";
+import Loading from "./loading";
 
 type TokenData = TokenWithPrice & {
 	amount: Amount;

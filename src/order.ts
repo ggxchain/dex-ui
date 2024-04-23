@@ -13,12 +13,12 @@ type Order = {
 
 export default Order;
 
-export class OrderUtils {
-	static ownedToken(order: Order): TokenId {
+export const OrderUtils = {
+	ownedToken(order: Order): TokenId {
 		return order.orderType === "SELL" ? order.pair[0] : order.pair[1];
-	}
+	},
 
-	static desiredToken(order: Order): TokenId {
+	desiredToken(order: Order): TokenId {
 		return order.orderType === "SELL" ? order.pair[1] : order.pair[0];
-	}
-}
+	},
+};

@@ -1,7 +1,7 @@
+import { bn, strToBn } from "@/services/utils";
 import React, { type ChangeEvent, useMemo, useState } from "react";
 import { Input } from "../common/input";
 import SelectLight, { SelectDark } from "../common/select";
-import { bn, strToBn } from "@/services/utils";
 
 interface Props {
 	onChange: (str: string, unit: Option) => void;

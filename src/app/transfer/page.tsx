@@ -24,9 +24,9 @@ import { toast } from "react-toastify";
 
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
+import { errorHandler } from "@/services/api";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import Loading from "./loading";
-import { errorHandler } from "@/services/api";
 
 type ModalTypes = "Deposit" | "Withdraw";
 

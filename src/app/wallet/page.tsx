@@ -7,17 +7,17 @@ import Modal from "@/components/common/modal";
 import Ruler from "@/components/common/ruler";
 import SelectLight, { SelectDark } from "@/components/common/select";
 import TokenList from "@/components/tokenList";
+import { MAX_DP } from "@/consts";
 import Contract, { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
 import GGXWallet, { type Account } from "@/services/ggx";
+import { checkNumInput, count_decimals, fixDP } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token, TokenId } from "@/types";
 import { BN, BN_ZERO } from "@polkadot/util";
 import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
-import Loading from "./loading";
 import { toast } from "react-toastify";
-import { checkNumInput, count_decimals, fixDP } from "@/services/utils";
-import { MAX_DP } from "@/consts";
+import Loading from "./loading";
 
 type InteractType = "Deposit" | "Withdraw";
 

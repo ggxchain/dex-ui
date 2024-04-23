@@ -1,8 +1,8 @@
+import { bn } from "@/services/utils";
 import { fireEvent, render, renderHook, screen } from "@testing-library/react";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import OrderExpireSelect, { useExpire } from "../orderExpireSelect";
-import { bn } from "@/services/utils";
 
 describe("OrderExpireSelect", () => {
 	beforeEach(() => {
@@ -58,7 +58,6 @@ describe("OrderExpireSelect", () => {
 		const { result } = renderHook(() => useExpire());
 
 		const convertToMillis = () => result.current[2]();
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		const onChange = (number: number, unit: any) =>
 			result.current[3](number.toString(), unit);
 		expect(convertToMillis().toString()).toBe("0");

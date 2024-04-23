@@ -1,15 +1,15 @@
+import { MAX_DP } from "@/consts";
 import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
+import { bn, checkNumInput, count_decimals, fixDP } from "@/services/utils";
 import type { Token } from "@/types";
+import { type BN, BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { InputWithPriceInfo } from "../common/input";
 import { SelectDark } from "../common/select";
 import Spinner from "../common/spinner";
-import { bn, checkNumInput, count_decimals, fixDP } from "@/services/utils";
-import { BN_ZERO, type BN } from "@polkadot/util";
-import { MAX_DP } from "@/consts";
 
 interface TokenSelectorProps {
 	token?: TokenWithPrice;

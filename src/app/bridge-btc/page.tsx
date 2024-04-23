@@ -1,6 +1,16 @@
 "use client";
-import { WsProvider, ApiPromise } from "@polkadot/api";
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/common/button";
+import { InputWithPriceInfo } from "@/components/common/input";
+import LoadingButton from "@/components/common/loadButton";
+import Modal from "@/components/common/modal";
+import Ruler from "@/components/common/ruler";
+import { SelectDark } from "@/components/common/select";
+import { GGX_WSS_URL, MAX_DP } from "@/consts";
+import Contract, { errorHandler } from "@/services/api";
+import { checkNumInput, count_decimals, fixDP, lg } from "@/services/utils";
+import TokenDecimals from "@/tokenDecimalsConverter";
+import type { PubKey, Token } from "@/types";
+import { ApiPromise, WsProvider } from "@polkadot/api";
 import {
 	web3Accounts,
 	web3AccountsSubscribe,
@@ -10,18 +20,8 @@ import {
 } from "@polkadot/extension-dapp";
 import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { BN, BN_ZERO } from "@polkadot/util/bn";
-import { GGX_WSS_URL, MAX_DP } from "@/consts";
-import { Button } from "@/components/common/button";
-import Ruler from "@/components/common/ruler";
-import { SelectDark } from "@/components/common/select";
-import type { PubKey, Token } from "@/types";
-import Modal from "@/components/common/modal";
-import { InputWithPriceInfo } from "@/components/common/input";
-import LoadingButton from "@/components/common/loadButton";
-import Contract, { errorHandler } from "@/services/api";
-import TokenDecimals from "@/tokenDecimalsConverter";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { checkNumInput, count_decimals, fixDP, lg } from "@/services/utils";
 //const wsProviderURL = "ws://127.0.0.1:9944";
 //https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/chainstate
 
@@ -108,7 +108,6 @@ const BridgeBtc = () => {
 		//let box: AnyJson;
 		const userTokList = [];
 		for (const entry of entries) {
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			const box: any = entry[0].toHuman();
 			if (!box) {
 				lg("token invalid:", box);
@@ -311,7 +310,6 @@ const BridgeBtc = () => {
 								checkBalances();
 							}
 						}
-						// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 					},
 				)
 				.catch((error: any) => {
@@ -386,7 +384,6 @@ const BridgeBtc = () => {
 			setModal(false);
 			checkBalances();
 			toast.success(`${modalTitle.current} finalized`);
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		} catch (error: any) {
 			setModal(false);
 			errorHandler(error);
@@ -403,8 +400,8 @@ const BridgeBtc = () => {
 	};
 	const walletIsNotInitialized = accounts.length === 0;
 	/*const selectedTokenPrice = selectedToken
-    ? tokenPrices.get(selectedToken.id) ?? 0
-    : 0;*/
+	? tokenPrices.get(selectedToken.id) ?? 0
+	: 0;*/
 	const amountPrice = 0; //modalAmount * selectedTokenPrice;
 
 	const handleAccountSelection = async (account1: Account) => {

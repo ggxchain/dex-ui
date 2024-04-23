@@ -1,6 +1,7 @@
 import { OrderUtils } from "@/order";
 import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
+import { formatPrice } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { DetailedOrder } from "@/types";
 import Image from "next/image";
@@ -8,7 +9,6 @@ import { useEffect, useState } from "react";
 import Close from "../common/close";
 import Ruler, { GrayRuler } from "../common/ruler";
 import Spinner from "../common/spinner";
-import { formatPrice } from "@/services/utils";
 
 export const useUserOrders = (contract: Contract) => {
 	const [orders, setOrders] = useState<DetailedOrder[]>([]);

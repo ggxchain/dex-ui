@@ -11,11 +11,12 @@
     "start": "next start",
     "lint": "bun run next_lint && bun run biome_check",
     "next_lint": "next lint",
-    "biome_lint": "biome lint src",
-    "biome_check": "biome check --apply src",
     "test": "jest",
+    "biome": "biome lint src --apply",
+    "biome_check": "biome check --apply src",
     "format": "biome format src --write",
-    "format_check": "biome format src"
+    "format_check": "biome format src",
+    "ci": "biome ci src"
   },
   "dependencies": {
     "@chain-registry/keplr": "^1.30.0",

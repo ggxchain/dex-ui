@@ -20,8 +20,6 @@ import type { ApiInterface, onFinalize } from "../api";
 export default class GGxNetwork implements ApiInterface {
 	api: ApiPromise | undefined;
 
-	constructor() {}
-
 	async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
 		const api = await this.apiPromise();
 
@@ -160,7 +158,7 @@ export default class GGxNetwork implements ApiInterface {
 		}
 
 		const result = await api.query.assets.account(tokenId, addressParam);
-		if (result !== undefined && result.isSome) {
+		if (result?.isSome) {
 			return Promise.resolve(result.unwrap().balance.toBn());
 		}
 		return Promise.resolve(BN_ZERO);

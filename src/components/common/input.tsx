@@ -1,3 +1,5 @@
+import type React from "react";
+
 type InputProps = React.ComponentPropsWithRef<"input"> & {
 	name?: string;
 	wrapperClassName?: string;
@@ -16,7 +18,7 @@ export function Input({
 		<div className={`w-full h-full ${wrapperClassName ?? ""}`}>
 			{name && (
 				<p
-					className={`text-GGx-gray text-[14px]`}
+					className={"text-GGx-gray text-[14px]"}
 					style={{ lineHeight: "1", marginBlockStart: "0" }}
 				>
 					{name}

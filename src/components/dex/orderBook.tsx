@@ -3,12 +3,12 @@ import { OrderUtils } from "@/order";
 import type Pair from "@/pair";
 import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
+import { formatPrice } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, DetailedOrder, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
 import { useEffect, useMemo, useState } from "react";
 import { GrayRuler } from "../common/ruler";
-import { formatPrice } from "@/services/utils";
 
 export interface OrderBookProps {
 	buyToken?: Token;
@@ -41,7 +41,7 @@ export function useOrderBookOrders(
 				setOrders(orders);
 			})
 			.catch(errorHandler);
-	}, [buyToken, sellToken]);
+	}, [buyToken, sellToken, contract.allOrders]);
 
 	return orders;
 }
@@ -88,38 +88,44 @@ export default function OrderBook({
 					),
 				};
 			}),
-		[orders],
+		[orders, amountConverter.normalize],
 	);
 
 	const buyOrders = useMemo<NormalizedOrder[]>(
 		() =>
 			normalizedOrders
 				.filter((order: Order) => order.orderType === "BUY")
-				.sort((a, b) => sortCmp(a, b)),
-		[normalizedOrders],
+				.sort((a: NormalizedOrder, b: NormalizedOrder) => sortCmp(a, b)),
+		[normalizedOrders, sortCmp],
 	);
 	const sellOrders = useMemo<NormalizedOrder[]>(
 		() =>
 			normalizedOrders
 				.filter((order: Order) => order.orderType !== "BUY")
-				.sort((a, b) => sortCmp(b, a)),
-		[normalizedOrders],
+				.sort((a: NormalizedOrder, b: NormalizedOrder) => sortCmp(b, a)),
+		[normalizedOrders, sortCmp],
 	);
 
 	useEffect(() => {
 		if (buyOrders.length > 0) {
 			onChange(buyOrders[0]);
 		}
-	}, [normalizedOrders]);
+	}, [onChange, buyOrders]);
 
 	const buyTotalVolume = useMemo<Amount>(
 		() =>
-			buyOrders.reduce((acc, order) => order.amoutRequested.add(acc), BN_ZERO),
+			buyOrders.reduce(
+				(acc, order: NormalizedOrder) => order.amoutRequested.add(acc),
+				BN_ZERO,
+			),
 		[buyOrders],
 	);
 	const sellTotalVolume = useMemo<Amount>(
 		() =>
-			sellOrders.reduce((acc, order) => order.amountOffered.add(acc), BN_ZERO),
+			sellOrders.reduce(
+				(acc, order: NormalizedOrder) => order.amountOffered.add(acc),
+				BN_ZERO,
+			),
 		[sellOrders],
 	);
 
@@ -223,7 +229,7 @@ export default function OrderBook({
 							<td className="text-GGx-green">No bids found</td>
 						</tr>
 					) : (
-						buyOrders.map((order) => {
+						buyOrders.map((order: NormalizedOrder) => {
 							const selected = order.counter === selectedOrder?.counter;
 							const orderPrice = amountConverter.divWithPrecision(
 								order.amountOfferedNormalized,

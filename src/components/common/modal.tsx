@@ -18,7 +18,9 @@ export default function Modal({
 		<div
 			data-testid="modal"
 			style={{ display: isOpen ? "block" : "none" }}
-			className={`fixed left-0 top-0 z-50 h-full w-full overflow-y-auto overflow-x-hidden outline-none`}
+			className={
+				"fixed left-0 top-0 z-50 h-full w-full overflow-y-auto overflow-x-hidden outline-none"
+			}
 			aria-modal="true"
 		>
 			<div className="relative flex left-1/2 top-1/2 md:w-2/5 w-4/5 h-fit -translate-x-1/2 -translate-y-1/2">
@@ -29,6 +31,7 @@ export default function Modal({
 						</h1>
 						<div className="w-1/12 flex flex-col items-end">
 							<button
+								type="button"
 								onClick={onClose}
 								className="w-[42px] h-[42px] grow-on-hover"
 							>
