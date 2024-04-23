@@ -1,5 +1,7 @@
 bun run format
-bun run biome
+
+# show only biome errors, not warnings
+bun run biome_check_errors
 
 # do not let to commit if files are changed
 git diff --quiet --exit-code || (echo "ERROR: git add modified files & commit them" && exit 1)

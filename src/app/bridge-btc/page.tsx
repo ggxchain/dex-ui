@@ -16,9 +16,7 @@ import {
 	web3AccountsSubscribe,
 	web3Enable,
 	web3FromAddress,
-	web3FromSource,
 } from "@polkadot/extension-dapp";
-import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { BN, BN_ZERO } from "@polkadot/util/bn";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
@@ -220,7 +218,7 @@ const BridgeBtc = () => {
 	};
 
 	//const amount = new BN(10).mul(new BN(10).pow(new BN(12)));//.toString();
-	const handleAmountChange = async (event: ChangeEvent<HTMLInputElement>) => {
+	const handleAmountChange = (event: ChangeEvent<HTMLInputElement>) => {
 		let input = event?.target.value;
 		lg("handleAmountChange:", input);
 
@@ -331,7 +329,7 @@ const BridgeBtc = () => {
 	const [modalAmount, setModalAmount] = useState<number>(0);
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 
-	const onModalOpen = async (type: InteractType) => {
+	const onModalOpen = (type: InteractType) => {
 		lg("onModalOpen");
 		if (isTokenNotSelected) {
 			console.error("No_token_selected");
@@ -363,7 +361,7 @@ const BridgeBtc = () => {
 		run();
 	}, [contract]);
 
-	const omModalSubmit = async () => {
+	const omModalSubmit = () => {
 		lg(
 			"onModalSubmit. selectedToken:",
 			selectedToken,

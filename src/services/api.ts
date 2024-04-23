@@ -237,7 +237,7 @@ export default class Contract {
 		);
 	}
 
-	async cancelOrder(counterId: CounterId, callback: onFinalize) {
+	cancelOrder(counterId: CounterId, callback: onFinalize) {
 		const _ = this.walletAddress(); // Check if wallet is initialized
 		wrapCallWithNotifications(
 			curry(this.api.cancelOrder, this.api, counterId),
@@ -293,7 +293,7 @@ export default class Contract {
 		);
 	}
 
-	async takeOrder(counterId: CounterId, callback: onFinalize) {
+	takeOrder(counterId: CounterId, callback: onFinalize) {
 		const _ = this.walletAddress(); // Check if wallet is initialized
 		wrapCallWithNotifications(
 			curry(this.api.takeOrder, this.api, counterId),

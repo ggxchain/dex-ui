@@ -20,7 +20,7 @@ const selectFn = jest.fn();
 jest.mock("../../services/ggx", () => ({
 	__esModule: true,
 	default: class GGXService {
-		async getAccounts(): Promise<any> {
+		getAccounts(): any {
 			return [this.pubkey(), { address: "blahblah", name: "Account 2" }];
 		}
 		selectAccount(a: any) {

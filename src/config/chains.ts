@@ -1,6 +1,6 @@
 import { chainRegistryChainToKeplr } from "@chain-registry/keplr";
 import type { ChainInfo } from "@keplr-wallet/types";
-import { assets, chains, ibc } from "chain-registry";
+import { assets, chains } from "chain-registry";
 
 const axelar = ((): ChainInfo => {
 	const chain = chains.find(

@@ -12,7 +12,7 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -35,10 +35,10 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/interfaces/dex/definitions.mjs",
-    "src/interfaces/definitions.mjs",
     "src/interfaces/definitions.mjs"
   ],
   "exclude": [
-    "node_modules","sst.config.ts"
+    "node_modules",
+    "sst.config.ts"
   ]
 }
