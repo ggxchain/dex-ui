@@ -5,6 +5,7 @@ import LoadingButton from "@/components/common/loadButton";
 import Modal from "@/components/common/modal";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
+import { useParachain } from "@/parachain_provider";
 import Contract, { errorHandler } from "@/services/api";
 import {
 	checkNumInput,
@@ -12,10 +13,9 @@ import {
 	fixDP,
 	formatter,
 } from "@/services/utils";
-import { GGX_WSS_URL, MAX_DP } from "@/settings";
+import { MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { PubKey, Token } from "@/types";
-import { ApiPromise, WsProvider } from "@polkadot/api";
 import {
 	web3Accounts,
 	web3AccountsSubscribe,
@@ -37,7 +37,8 @@ export type Account = {
 	name?: string;
 };
 const BridgeBtc = () => {
-	const [api, setApi] = useState<ApiPromise>();
+	const { isConnected, error, api } = useParachain();
+
 	const [accounts, setAccounts] = useState<Account[]>([]);
 	const [selectedAccount, setSelectedAccount] = useState<Account>();
 	//InjectedAccountWithMeta
@@ -53,37 +54,15 @@ const BridgeBtc = () => {
 
 	let unsubscribe: () => void; // this is the function of type `() => void` that should be called to unsubscribe
 
-	const setup = async () => {
-		const wsProvider = new WsProvider(GGX_WSS_URL);
-		const api = await ApiPromise.create({ provider: wsProvider });
-		await api.isReadyOrError;
-
-		const [chain, nodeName, nodeVersion] = await Promise.all([
-			api.rpc.system.chain(),
-			api.rpc.system.name(),
-			api.rpc.system.version(),
-		]);
-		console.log(
-			`connected to chain ${chain} using ${nodeName} v${nodeVersion}`,
-		);
-		setApi(api);
-		getLocalstorageAccounts();
-		//await connectWallet()
-	};
+	//await connectWallet()
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		setup();
+		getLocalstorageAccounts();
+		checkBalances();
 	}, []);
-	useEffect(() => {
-		if (api) checkBalances();
-	}, [api]);
 
 	const checkBalances = async () => {
-		if (!api) {
-			console.error("No_API_found");
-			return;
-		}
 		const asset = await api.query.assets.metadata(0 /* Asset Id */);
 		//asset.name.toString(), asset.symbol.toString(), asset.decimals.toString()
 
@@ -312,7 +291,7 @@ const BridgeBtc = () => {
 		setModal(true);
 	};
 
-	const [contract, setContract] = useState<Contract>(new Contract());
+	const contract = new Contract(api!);
 	const [tokens, setTokens] = useState<Token[]>([]);
 	useEffect(() => {
 		const run = async () => {
@@ -363,8 +342,8 @@ const BridgeBtc = () => {
 	};
 	const walletIsNotInitialized = accounts.length === 0;
 	/*const selectedTokenPrice = selectedToken
-    ? tokenPrices.get(selectedToken.id) ?? 0
-    : 0;*/
+	? tokenPrices.get(selectedToken.id) ?? 0
+	: 0;*/
 	const amountPrice = 0; //modalAmount * selectedTokenPrice;
 
 	const handleAccountSelection = async (account1: Account) => {

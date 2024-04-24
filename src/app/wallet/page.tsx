@@ -7,6 +7,7 @@ import Modal from "@/components/common/modal";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
 import TokenList from "@/components/tokenList";
+import { useParachain } from "@/parachain_provider";
 import Contract, { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
 import GGXWallet, { type Account } from "@/services/ggx";
@@ -61,8 +62,9 @@ const useOwnedTokens = (
 };
 
 export default function Wallet() {
+	const { api } = useParachain();
 	const [isInitialized, setIsInitialized] = useState(false);
-	const [contract, setContract] = useState<Contract>(new Contract());
+	const contract = new Contract(api!);
 
 	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
 		Contract.prototype.allTokensOfOwner,
@@ -254,7 +256,6 @@ export default function Wallet() {
 
 	const onContractTypeChange = () => {
 		Contract.setMocked(!Contract.isMocked());
-		setContract(new Contract());
 	};
 
 	const selectedTokenPrice = selectedToken

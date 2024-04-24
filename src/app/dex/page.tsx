@@ -13,6 +13,7 @@ import TokenSelector, {
 } from "@/components/dex/tokenSelector";
 import type Order from "@/order";
 import type Pair from "@/pair";
+import { useParachain } from "@/parachain_provider";
 import Contract, { errorHandler } from "@/services/api";
 import GGXWallet from "@/services/ggx";
 import { formatPrice } from "@/services/utils";
@@ -28,10 +29,12 @@ type TokenData = TokenWithPrice & {
 	amount: Amount;
 };
 
+const milisecPerYear = new BN(31536000).mul(new BN(1000));
+
 export default function Dex() {
 	let mesg = "";
-	const milisecPerYear = new BN(31536000).mul(new BN(1000));
-	const contractRef = useRef<Contract>(new Contract());
+	const { api } = useParachain();
+	const contractRef = useRef<Contract>(new Contract(api!));
 	const [isMaker, setIsMaker] = useState<boolean>(false);
 	const [sell, setSell] = useState<TokenData>();
 	const [buy, setBuy] = useState<TokenData>();

@@ -13,6 +13,7 @@ import GGXWallet from "./ggx";
 
 import type Order from "@/order";
 import { CONTRACT_MOCKED, TOKENS_LIST_TTL } from "@/settings";
+import type { ApiPromise } from "@polkadot/api";
 import { toast } from "react-toastify";
 import GGxNetwork from "./api/ggx";
 import ContractMock from "./api/mock";
@@ -66,7 +67,7 @@ export default class Contract {
 	tokenList: TokenId[] = new Array<TokenId>();
 	lastUpdated = 0;
 
-	constructor() {
+	constructor(api: ApiPromise) {
 		let mocked = CONTRACT_MOCKED;
 		if (typeof window !== "undefined" && window.localStorage) {
 			// Get info from local storage
@@ -76,7 +77,7 @@ export default class Contract {
 			}
 		}
 
-		this.api = mocked ? new ContractMock() : new GGxNetwork();
+		this.api = mocked ? new ContractMock() : new GGxNetwork(api);
 	}
 
 	changeContract() {
