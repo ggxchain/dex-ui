@@ -1,7 +1,7 @@
 "use client";
 
 import { ApiPromise, WsProvider } from "@polkadot/api";
-import { createContext, useEffect, useRef, useState } from "react";
+import { createContext, useLayoutEffect, useRef, useState } from "react";
 import React from "react";
 import { env } from "./env";
 
@@ -23,7 +23,9 @@ type ParachainProviderContextType =
 
 const ParachainProviderContext = createContext<ParachainProviderContextType>({
 	isConnected: false,
-} as ParachainProviderContextType);
+	api: undefined,
+	error: undefined,
+});
 
 export function ParachainProviderProvider({
 	children,
@@ -32,9 +34,11 @@ export function ParachainProviderProvider({
 
 	const [ctx, setCtx] = useState<ParachainProviderContextType>({
 		isConnected: false,
-	} as ParachainProviderContextType);
+		api: undefined,
+		error: undefined,
+	});
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		let ignore = false;
 
 		async function connectParachain() {

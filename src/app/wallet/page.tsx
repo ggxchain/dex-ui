@@ -63,8 +63,9 @@ const useOwnedTokens = (
 
 export default function Wallet() {
 	const { api } = useParachain();
-	const [isInitialized, setIsInitialized] = useState(false);
 	const contract = new Contract(api!);
+
+	const [isInitialized, setIsInitialized] = useState(false);
 
 	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
 		Contract.prototype.allTokensOfOwner,
@@ -103,6 +104,7 @@ export default function Wallet() {
 		refreshChainBalances();
 	};
 
+	// biome-ignore lint: do not include` contract` as a dependency of this effect, as it causes an inf loop
 	useEffect(() => {
 		setTokens([]);
 		contract
@@ -133,12 +135,14 @@ export default function Wallet() {
 			});
 
 		connectWallet();
-	}, [contract]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+		// do not add `contract` to dependencies here.
+		// it causes an infinite loop.
+	}, []);
+
 	useEffect(() => {
 		refreshBalances();
-	}, [selectedAccount]);
+	}, [refreshBalances]);
 
 	const onSearch = (e: ChangeEvent<HTMLInputElement>) => {
 		setSearch(e.target.value);
