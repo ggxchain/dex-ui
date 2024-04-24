@@ -5,12 +5,12 @@ import LoadingButton from "@/components/common/loadButton";
 import Modal from "@/components/common/modal";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
-import { GGX_WSS_URL, MAX_DP } from "@/consts";
+import { MAX_DP } from "@/consts";
+import { useParachain } from "@/parachainProvider";
 import Contract, { errorHandler } from "@/services/api";
 import { checkNumInput, count_decimals, fixDP, lg } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { PubKey, Token } from "@/types";
-import { ApiPromise, WsProvider } from "@polkadot/api";
 import {
 	web3Accounts,
 	web3AccountsSubscribe,
@@ -31,7 +31,7 @@ export type Account = {
 	name?: string;
 };
 const BridgeBtc = () => {
-	const [api, setApi] = useState<ApiPromise>();
+	const { api } = useParachain();
 	const [accounts, setAccounts] = useState<Account[]>([]);
 	const [selectedAccount, setSelectedAccount] = useState<Account>();
 	//InjectedAccountWithMeta
@@ -40,37 +40,18 @@ const BridgeBtc = () => {
 	const [balcWalletToGGXT, setBalcWalletToGGXT] = useState<BN>(new BN(0));
 	const [balcWalletToKBTC, setBalcWalletToKBTC] = useState<BN>(new BN(0));
 	const [userTokenList, setUserTokenList] = useState<string[]>();
-	const addrAlice = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 	const walletTo = process.env.NEXT_PUBLIC_WALLET1 || "INVALID_WALLET_ADDRESS";
 
 	//const amount = new BN(10).mul(new BN(10).pow(new BN(12)));//.toString();
 
 	let unsubscribe: () => void; // this is the function of type `() => void` that should be called to unsubscribe
 
-	const setup = async () => {
-		//lg("setup()")
-		const wsProvider = new WsProvider(GGX_WSS_URL);
-		const api = await ApiPromise.create({ provider: wsProvider });
-		await api.isReadyOrError;
-
-		const [chain, nodeName, nodeVersion] = await Promise.all([
-			api.rpc.system.chain(),
-			api.rpc.system.name(),
-			api.rpc.system.version(),
-		]);
-		lg(`You are connected to chain ${chain} using ${nodeName} v${nodeVersion}`);
-		setApi(api);
-		getLocalstorageAccounts();
-		//await connectWallet()
-	};
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		setup();
+		getLocalstorageAccounts();
 	}, []);
 	useEffect(() => {
-		if (api) checkBalances();
-	}, [api]);
+		checkBalances();
+	}, []);
 
 	const checkBalances = async () => {
 		lg("checkBalances()");
@@ -343,7 +324,7 @@ const BridgeBtc = () => {
 		setModal(true);
 	};
 
-	const [contract, setContract] = useState<Contract>(new Contract());
+	const [contract, setContract] = useState<Contract>(new Contract(api!));
 	const [tokens, setTokens] = useState<Token[]>([]);
 	useEffect(() => {
 		lg("useEffect() ... setTokens");

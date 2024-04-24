@@ -36,9 +36,10 @@
     "react-dom": "^18",
     "react-select": "^5.8.0",
     "react-toastify": "^10.0.4",
+    "sst": "^3.0.1",
     "tailwindcss-safe-area": "^0.4.1",
     "zod": "^3.22.4",
-    "sst": "^3.0.1"
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@biomejs/biome": "1.7.1",

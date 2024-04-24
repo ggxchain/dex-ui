@@ -8,6 +8,7 @@ import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
 import TokenList from "@/components/tokenList";
 import { MAX_DP } from "@/consts";
+import { useParachain } from "@/parachainProvider";
 import Contract, { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
 import GGXWallet, { type Account } from "@/services/ggx";
@@ -56,8 +57,9 @@ const useOwnedTokens = (
 };
 
 export default function Wallet() {
+	const { api } = useParachain();
 	const [isInitialized, setIsInitialized] = useState(false);
-	const [contract, setContract] = useState<Contract>(new Contract());
+	const contract = new Contract(api!);
 
 	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
 		Contract.prototype.allTokensOfOwner,
@@ -129,10 +131,9 @@ export default function Wallet() {
 		connectWallet();
 	}, [contract]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		refreshBalances();
-	}, [selectedAccount]);
+	}, [refreshBalances]);
 
 	const onSearch = (e: ChangeEvent<HTMLInputElement>) => {
 		setSearch(e.target.value);
@@ -250,7 +251,6 @@ export default function Wallet() {
 
 	const onContractTypeChange = () => {
 		Contract.setMocked(!Contract.isMocked());
-		setContract(new Contract());
 	};
 
 	const selectedTokenPrice = selectedToken

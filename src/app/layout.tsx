@@ -2,9 +2,11 @@ import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
 import HeaderWithNavbar from "@/components/header";
+import { ParachainProviderProvider } from "@/parachainProvider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ToastContainer } from "react-toastify";
+import ChainPicker from "./chain_picker";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,16 +23,24 @@ export default function Layout({
 	return (
 		<html lang="en">
 			<body className={`${inter.className} relative min-h-dvh`}>
-				<main className="h-dvh flex flex-col">
-					<ToastContainer position="top-right" closeOnClick theme="colored" />
+				<ParachainProviderProvider>
+					<ChainPicker>
+						<main className="h-dvh flex flex-col">
+							<ToastContainer
+								position="top-right"
+								closeOnClick
+								theme="colored"
+							/>
 
-					<HeaderWithNavbar />
-					<div className="flex h-dvh flex-col items-center justify-between lg:ml-80">
-						<div className="text-GGx-light flex lg:h-[80vh] w-[90%] p-5 lg:mt-10">
-							{children}
-						</div>
-					</div>
-				</main>
+							<HeaderWithNavbar />
+							<div className="flex h-dvh flex-col items-center justify-between lg:ml-80">
+								<div className="text-GGx-light flex lg:h-[80vh] w-[90%] p-5 lg:mt-10">
+									{children}
+								</div>
+							</div>
+						</main>
+					</ChainPicker>
+				</ParachainProviderProvider>
 			</body>
 		</html>
 	);
