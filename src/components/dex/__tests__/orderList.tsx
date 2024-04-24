@@ -54,7 +54,13 @@ describe("OrdersList", () => {
 	];
 
 	test("renders the order list correctly", () => {
-		render(<OrdersList orders={orders} cancelOrder={jest.fn()} />);
+		render(
+			<OrdersList
+				orders={orders}
+				cancelOrder={jest.fn()}
+				isInitialized={true}
+			/>,
+		);
 
 		expect(screen.getByText("My orders")).toBeInTheDocument();
 
@@ -70,7 +76,9 @@ describe("OrdersList", () => {
 	});
 
 	test("empty order list", () => {
-		render(<OrdersList orders={[]} cancelOrder={jest.fn()} />);
+		render(
+			<OrdersList orders={[]} cancelOrder={jest.fn()} isInitialized={true} />,
+		);
 		expect(screen.getByText("My orders")).toBeInTheDocument();
 		expect(screen.getByText("No orders found")).toBeInTheDocument();
 	});

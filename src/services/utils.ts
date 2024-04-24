@@ -1,4 +1,4 @@
-import { MAX_DP, maxNumericInput } from "@/consts";
+import { MAX_DP, maxNumericInput } from "@/settings";
 import { BN, BN_ZERO } from "@polkadot/util";
 
 export const lg = console.log;
@@ -12,24 +12,55 @@ export const strToBn = (str: string): BN => {
 	}
 	return bn(integer);
 };
+export const formatter = (mfd = 2, currencyName = "usd") => {
+	let formatter: any;
+	switch (currencyName) {
+		case "usd":
+			formatter = new Intl.NumberFormat("en-US", {
+				style: "currency",
+				currency: "USD",
+				minimumFractionDigits: mfd,
+				//maximumSignificantDigits: 3
+			});
+			break;
+		default:
+			formatter = new Intl.NumberFormat("en-US", {
+				style: "currency",
+				currency: "USD",
+			});
+	}
+	return formatter;
+};
 export const count_decimals = (str: string) => {
 	const dpPart = str.split(".")[1] || [];
 	return dpPart.length;
 };
 export const fixDP = (str: string, dp = MAX_DP) => {
-	const splitted = str.split(".");
-	if (splitted.length === 1) return `${splitted[0]}.00`;
+	if (str === ".") return "0.00";
+	const arr = str.split(".");
+	if (str.charAt(0) === ".") return `0.${arr[1].substring(0, dp)}`;
 
-	return `${splitted[0]}.${splitted[1].substring(0, dp)}`;
+	if (str.slice(-1) === "." || arr.length === 1)
+		return `${arr[0]}.+${"0".repeat(dp)}`;
+	return `${arr[0]}.${arr[1].substring(0, dp)}`;
 };
-export const formatPrice = (n: number) => {
-	if (n >= 1) {
-		return fixDP(`${n}`, 2);
+export const formatPrice = (n: number, symbol = "na") => {
+	if (["dai"].includes(symbol.toLowerCase())) {
+		return formatter(8).format(n);
+	}
+	if (["doge", "trx"].includes(symbol.toLowerCase())) {
+		return formatter(5).format(n);
+	}
+	if (n > 1) {
+		return formatter().format(n);
+	}
+	if (n === 1) {
+		return "$1.00";
 	}
 	if (n === 0) {
-		return "0.00";
+		return "$0.00";
 	}
-	return sigFig(n, 4);
+	return `$${sigFig(n, 4)}`;
 };
 export const sigFig = (n: number, sig: number) => {
 	const mult = 10 ** (sig - Math.floor(Math.log(n) / Math.LN10) - 1);
@@ -45,7 +76,6 @@ export const checkNumInput = (input: string): boolean => {
 export const translateErrorMesg = (error: string | undefined) => {
 	if (error === undefined) return "Error_Is_Undefined";
 	const errorObj = JSON.parse(error);
-	console.log("🚀 ~ translateErrorMesg ~ errorObj:", errorObj);
 	let errEasy = "";
 	switch (errorObj.token || errorObj.arithmetic) {
 		case "FundsUnavailable":

@@ -15,6 +15,7 @@ import type Order from "@/order";
 import type Pair from "@/pair";
 import Contract, { errorHandler } from "@/services/api";
 import GGXWallet from "@/services/ggx";
+import { formatPrice } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, DetailedOrder } from "@/types";
 import { BN, BN_ZERO } from "@polkadot/util";
@@ -328,12 +329,12 @@ export default function Dex() {
 								{rate > 0 && !isTokenNotSelected && !isTokenSame ? (
 									<div className="flex flex-col text-GGx-light">
 										<p className="font-semibold">
-											1 {sell.name} = {rate.toFixed(3)} {buy.name} ≈ $
-											{buyPriceRate.toFixed(2)}
+											1 {sell.name} = {formatPrice(rate)} {buy.name} ≈ $
+											{formatPrice(buyPriceRate)}
 										</p>
 										<p className="text-base text-right text-GGx-gray">
-											1 {buy.name} = {reverseRate.toFixed(3)} {sell.name} ≈ $
-											{sellPriceRate.toFixed(2)}
+											1 {buy.name} = {formatPrice(reverseRate)} {sell.name} ≈ $
+											{formatPrice(sellPriceRate)}
 										</p>
 									</div>
 								) : (
@@ -352,7 +353,7 @@ export default function Dex() {
 												: ""
 									}`}
 								>
-									{Math.abs(comparedToMarket).toFixed(1)}%
+									{formatPrice(Math.abs(comparedToMarket))}%
 								</p>
 							</div>
 

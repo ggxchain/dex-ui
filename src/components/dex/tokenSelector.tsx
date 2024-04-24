@@ -1,8 +1,8 @@
-import { MAX_DP } from "@/consts";
 import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
 import { checkNumInput, count_decimals, fixDP } from "@/services/utils";
+import { MAX_DP } from "@/settings";
 import type { Token } from "@/types";
 import Image from "next/image";
 import { type ChangeEvent, useEffect, useState } from "react";

@@ -98,7 +98,7 @@ describe("Transfer", () => {
 	test("renders default component", async () => {
 		await act(() => render(<Transfer />));
 
-		expect(screen.getByText("$1000.00")).toBeInTheDocument();
+		expect(screen.getByText("$1,000.00")).toBeInTheDocument();
 		expect(screen.getByTestId("deposit")).toBeInTheDocument();
 		expect(screen.getByTestId("withdraw")).toBeInTheDocument();
 		expect(screen.getByText("1000 USDT")).toBeInTheDocument();

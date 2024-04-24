@@ -1,8 +1,8 @@
 import assert from "assert";
 import { BN_ONE, BN_TEN } from "@polkadot/util";
 import BN from "bn.js";
-import { CALCULATION_PRECISION, MAX_DP } from "./consts";
 import { bn, count_decimals, fixDP } from "./services/utils";
+import { CALCULATION_PRECISION, MAX_DP } from "./settings";
 
 export default class TokenDecimals {
 	private decimalPlaces: number;

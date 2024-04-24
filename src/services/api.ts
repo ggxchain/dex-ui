@@ -11,8 +11,8 @@ import type {
 } from "@/types";
 import GGXWallet from "./ggx";
 
-import { CONTRACT_MOCKED, TOKENS_LIST_TTL } from "@/consts";
 import type Order from "@/order";
+import { CONTRACT_MOCKED, TOKENS_LIST_TTL } from "@/settings";
 import { toast } from "react-toastify";
 import GGxNetwork from "./api/ggx";
 import ContractMock from "./api/mock";
@@ -255,15 +255,6 @@ export default class Contract {
 		endTime: Amount,
 		callback: onFinalize,
 	) {
-		console.log(
-			"makeOrder:",
-			pair,
-			amountOffered,
-			amoutRequested,
-			orderType,
-			endTime.toString(),
-		);
-
 		const _ = this.walletAddress(); // Check if wallet is initialized
 		await this.validateTokenId(pair[0]);
 		await this.validateTokenId(pair[1]);

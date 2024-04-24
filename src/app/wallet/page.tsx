@@ -7,11 +7,16 @@ import Modal from "@/components/common/modal";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
 import TokenList from "@/components/tokenList";
-import { MAX_DP } from "@/consts";
 import Contract, { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
 import GGXWallet, { type Account } from "@/services/ggx";
-import { checkNumInput, count_decimals, fixDP } from "@/services/utils";
+import {
+	checkNumInput,
+	count_decimals,
+	fixDP,
+	formatter,
+} from "@/services/utils";
+import { MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token, TokenId } from "@/types";
 import { BN, BN_ZERO } from "@polkadot/util";
@@ -91,8 +96,7 @@ export default function Wallet() {
 	const modalTitle = useRef<InteractType>("Deposit");
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 
-	// biome-ignore lint: TODO: get rid of async
-	const refreshBalances = async () => {
+	const refreshBalances = () => {
 		refreshDexBalances();
 		refreshChainBalances();
 	};
@@ -277,7 +281,7 @@ export default function Wallet() {
 		<div className="w-full h-full flex flex-col">
 			<div className="flex w-full justify-between items-center">
 				<h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">
-					${total.toFixed(2)}
+					{formatter().format(total)}
 				</h1>
 				<div className="flex xl:flex-row flex-col gap-5">
 					<Button
