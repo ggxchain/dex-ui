@@ -5,6 +5,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import "@/__utils__/localstore.mock";
 import mockedTokens from "@/mock";
 import Contract from "@/services/api";
+import GgxNetworkMock from "@/services/api/mock";
 import { act } from "react-dom/test-utils";
 
 jest.mock("next/navigation", () => ({
@@ -35,9 +36,8 @@ describe("Dex", () => {
 			}),
 		);
 
-		Contract.setMocked(true);
-
-		const contract = new Contract();
+		const mockapi = new GgxNetworkMock();
+		const contract = new Contract(mockapi);
 		contract.deposit(0, BN_TEN.muln(2), () => {});
 		contract.makeOrder([0, 1], BN_TEN, BN_TEN, "SELL", BN_ONE, () => {});
 	});

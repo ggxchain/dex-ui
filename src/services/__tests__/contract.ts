@@ -2,6 +2,7 @@ import Contract, { Errors } from "../api";
 
 import "@/__utils__/localstore.mock";
 import { BN_ONE, BN_ZERO } from "@polkadot/util";
+import GgxNetworkMock from "../api/mock";
 
 // We are going to test the GGx API using the mock implementation
 // This set of tests will test input validation and error handling
@@ -17,10 +18,9 @@ describe("Contract", () => {
 				address: "5G4Ug9EPQHqk5iJGjUFHeLHYCvX4JRPVrtxxFPmwuk9wj8GC",
 			}),
 		);
-		Contract.setMocked(true);
 
-		contract = new Contract();
-		contract.changeContract();
+		const mock = new GgxNetworkMock();
+		contract = new Contract(mock);
 	});
 
 	const mockedTokenId = 0;

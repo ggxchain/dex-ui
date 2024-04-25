@@ -14,7 +14,7 @@ import type Order from "@/order";
 import type { ApiInterface, onFinalize } from "../api";
 
 export default class GGxNetwork implements ApiInterface {
-	api: ApiPromise;
+	private api: ApiPromise;
 
 	constructor(api: ApiPromise) {
 		this.api = api;
