@@ -1,7 +1,12 @@
 import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
-import { checkNumInput, count_decimals, fixDP } from "@/services/utils";
+import {
+	checkNumInput,
+	count_decimals,
+	fixDP,
+	strToNum,
+} from "@/services/utils";
 import { MAX_DP } from "@/settings";
 import type { Token } from "@/types";
 import Image from "next/image";
@@ -13,7 +18,7 @@ import Spinner from "../common/spinner";
 interface TokenSelectorProps {
 	token?: TokenWithPrice;
 	tokens: TokenWithPrice[];
-	amount?: number;
+	amount: string;
 	lockedAmount?: boolean;
 	onChange: (tokenId: TokenWithPrice, amount: string) => void;
 }
@@ -52,8 +57,9 @@ export default function TokenSelector({
 	lockedAmount,
 }: Readonly<TokenSelectorProps>) {
 	useEffect(() => {
+		//lg('tokenSelector', token, amount, tokens, lockedAmount)
 		if (tokens.length > 0 && token === undefined) {
-			onChange(tokens[0], "0");
+			onChange(tokens[0], "");
 		}
 	});
 
@@ -72,7 +78,7 @@ export default function TokenSelector({
 			return;
 		}
 
-		onChange(e, "0");
+		onChange(e, "");
 	};
 
 	const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -91,7 +97,7 @@ export default function TokenSelector({
 		onChange(token, input);
 	};
 
-	const price = (amount ?? 0) * token.price;
+	const price = strToNum(amount) * token.price;
 
 	return (
 		<div
@@ -123,7 +129,7 @@ export default function TokenSelector({
 				symbol=""
 				wrapperClassName="basis-4/6"
 				price={price}
-				value={amount?.toString()}
+				value={amount}
 				suffixStyle="text-GGx-black2"
 				step="2"
 				className="w-full bg-GGx-gray text-GGx-black2 px-[15px] py-[16px] rounded-r-[4px] border-GGx-gray border text-left disabled:cursor-not-allowed"

@@ -1,8 +1,11 @@
 import { MAX_DP, maxNumericInput } from "@/settings";
-import { BN, BN_ZERO } from "@polkadot/util";
+import { BN, BN_TEN, BN_ZERO } from "@polkadot/util";
 
 export const lg = console.log;
 export const bn = (n: number | string | number[]) => new BN(n);
+export const bn18 = BN_TEN.pow(bn(18));
+export const bn15 = BN_TEN.pow(bn(15));
+export const bn9 = BN_TEN.pow(bn(9));
 
 export const strToBn = (str: string): BN => {
 	const integer: number = Number.parseInt(str);
@@ -12,6 +15,7 @@ export const strToBn = (str: string): BN => {
 	}
 	return bn(integer);
 };
+
 export const formatter = (mfd = 2, currencyName = "usd") => {
 	let formatter: any;
 	switch (currencyName) {
@@ -69,6 +73,11 @@ export const sigFig = (n: number, sig: number) => {
 export const checkNumInput = (input: string): boolean => {
 	const num = Number(input);
 	return Number.isNaN(num) || num < 0 || num > maxNumericInput;
+};
+export const strToNum = (input: string) => {
+	const num = Number(input);
+	if (Number.isNaN(num)) return 0;
+	return num;
 };
 /** interfaces/lookup.ts
     _enum: ['FundsUnavailable', 'OnlyProvider', 'BelowMinimum', 'CannotCreate', 'UnknownAsset', 'Frozen', 'Unsupported', 'CannotCreateHold', 'NotExpendable', 'Blocked']

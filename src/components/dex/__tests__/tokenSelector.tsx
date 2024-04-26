@@ -28,7 +28,7 @@ describe("TokenSelector", () => {
 	});
 
 	test("renders loading spinner when token is undefined", () => {
-		render(<TokenSelector tokens={tokens} onChange={onChangeMock} />);
+		render(<TokenSelector tokens={tokens} onChange={onChangeMock} amount="" />);
 		const spinnerElement = screen.getByTestId("spinner");
 		expect(spinnerElement).toBeInTheDocument();
 	});
@@ -40,6 +40,7 @@ describe("TokenSelector", () => {
 				token={selectedToken}
 				tokens={tokens}
 				onChange={onChangeMock}
+				amount=""
 			/>,
 		);
 
@@ -57,6 +58,7 @@ describe("TokenSelector", () => {
 				token={selectedToken}
 				tokens={tokens}
 				onChange={onChangeMock}
+				amount=""
 			/>,
 		);
 
@@ -71,7 +73,7 @@ describe("TokenSelector", () => {
 		fireEvent.click(option);
 		const newSelectedToken = tokens[1];
 
-		expect(onChangeMock).toHaveBeenCalledWith(newSelectedToken, "0");
+		expect(onChangeMock).toHaveBeenCalledWith(newSelectedToken, "");
 	});
 
 	test("calls onChange when amount input changes", () => {
@@ -81,7 +83,7 @@ describe("TokenSelector", () => {
 				token={selectedToken}
 				tokens={tokens}
 				onChange={onChangeMock}
-				amount={1}
+				amount={"1"}
 			/>,
 		);
 

@@ -33,6 +33,8 @@ export default function Dex() {
 	const milisecPerYear = new BN(31536000).mul(new BN(1000));
 	const contractRef = useRef<Contract>(new Contract());
 	const [isMaker, setIsMaker] = useState<boolean>(false);
+	const [sellAmountStr, setSellAmountStr] = useState("");
+	const [buyAmountStr, setbuyAmountStr] = useState("");
 	const [sell, setSell] = useState<TokenData>();
 	const [buy, setBuy] = useState<TokenData>();
 	const [availableBalanceNormalized, setAvailableBalanceNormalized] =
@@ -109,15 +111,14 @@ export default function Dex() {
 
 	const sellAmount = !isTokenNotSelected
 		? isMaker
-			? sell.amount
+			? amountConverter.floatToBN(Number(sellAmountStr))
 			: orderRequested
-		: BN_ZERO;
-
+		: BN_ZERO; //sell.amount
 	const buyAmount = !isTokenNotSelected
 		? isMaker
-			? buy.amount
+			? amountConverter.floatToBN(Number(buyAmountStr))
 			: orderOffered
-		: BN_ZERO;
+		: BN_ZERO; //buy.amount
 
 	const isSellAmountZero = sellAmount.eq(BN_ZERO);
 	const isUserBalanceNotEnough =
@@ -140,8 +141,20 @@ export default function Dex() {
 		(isTaker && isOrderNotChosen);
 
 	const onSwap = () => {
+		if (sellAmount.lte(BN_ZERO)) {
+			mesg = "Sell amount should be greater than zero";
+			console.warn(mesg);
+			toast.warn(mesg);
+			return;
+		}
+		if (buyAmount.lte(BN_ZERO)) {
+			mesg = "Buy amount should be greater than zero";
+			console.warn(mesg);
+			toast.warn(mesg);
+			return;
+		}
 		if (isFormHasErrors) {
-			console.error("isFormHasErrors:", isAmountZero);
+			console.error("onSwap(): form has errors:", isAmountZero);
 			return;
 		}
 		const pair = [sell.id, buy.id] as Pair;
@@ -152,18 +165,6 @@ export default function Dex() {
 		};
 
 		if (isMaker) {
-			if (sellAmount.lte(BN_ZERO)) {
-				mesg = "Sell amount should be greater than zero";
-				console.warn(mesg);
-				toast.warn(mesg);
-				return;
-			}
-			if (buyAmount.lte(BN_ZERO)) {
-				mesg = "Buy amount should be greater than zero";
-				console.warn(mesg);
-				toast.warn(mesg);
-				return;
-			}
 			// Basically, we need to send the amount of tokens that we want to sell but we need to convert it to the decimals of the token.
 			const sellTokenAmount = amountConverter.denormalize(
 				sellAmount,
@@ -202,14 +203,19 @@ export default function Dex() {
 		if (token.id !== sell?.id) {
 			setOrder(undefined);
 		}
-		setSell({ ...token, amount: amountConverter.floatToBN(Number(amount)) });
+		const amtBn = amountConverter.floatToBN2(amount);
+		//lg('amtBn:', amtBn.toString(), amtBn.div(bn9).toString())
+		setSellAmountStr(amount);
+		setSell({ ...token, amount: amtBn });
 	};
 
 	const onBuyChange = (token: TokenWithPrice, amount: string) => {
 		if (token.id !== buy?.id) {
 			setOrder(undefined);
 		}
-		setBuy({ ...token, amount: amountConverter.floatToBN(Number(amount)) });
+		const amtBn = amountConverter.floatToBN2(amount);
+		setbuyAmountStr(amount);
+		setBuy({ ...token, amount: amtBn });
 	};
 
 	const onCancelOrder = (order: DetailedOrder) => {
@@ -273,7 +279,7 @@ export default function Dex() {
 							token={sell}
 							tokens={tokens}
 							lockedAmount={isTaker}
-							amount={amountConverter.BNToFloat(sellAmount)}
+							amount={sellAmountStr}
 							onChange={onSellChange}
 						/>
 						<div className="flex flex-col text-xs text-GGx-yellow">
@@ -306,7 +312,7 @@ export default function Dex() {
 							token={buy}
 							tokens={tokens}
 							lockedAmount={isTaker}
-							amount={amountConverter.BNToFloat(buyAmount)}
+							amount={buyAmountStr}
 							onChange={onBuyChange}
 						/>
 
