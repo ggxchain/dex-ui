@@ -272,7 +272,12 @@ export default function Transfer() {
 
 	const onModalSubmit = () => {
 		if (!modalGGxAccount) return;
-		if (strFloatToBN(modalAmount).lte(BN_ZERO)) return;
+		try {
+			if (strFloatToBN(modalAmount).lte(BN_ZERO)) return;
+		} catch (err) {
+			console.error(err);
+			return;
+		}
 		if (!selectedToken) return;
 		if (modalSourceChannel === "") return;
 
@@ -309,7 +314,15 @@ export default function Transfer() {
 	if (selectedToken) {
 		price = prices.get(selectedToken.symbol) ?? 0;
 	}
-	const amountPrice = strFloatToBN(modalAmount).mul(strFloatToBN(`${price}`));
+	let modalAmountBn = BN_ZERO;
+	let pricenBn = BN_ZERO;
+	try {
+		modalAmountBn = strFloatToBN(modalAmount);
+		pricenBn = strFloatToBN(`${price}`);
+	} catch (err) {
+		console.error(err);
+	}
+	const amountPrice = modalAmountBn.mul(pricenBn);
 
 	return (
 		<div className="flex flex-col w-full items-center h-full">
@@ -463,7 +476,7 @@ export default function Transfer() {
 					<div className="w-full flex justify-center mt-2">
 						<LoadingButton
 							disabled={
-								strFloatToBN(modalAmount).lte(BN_ZERO) ||
+								modalAmountBn.lte(BN_ZERO) ||
 								isGGxWalletNotConnected ||
 								walletIsNotInitialized
 							}

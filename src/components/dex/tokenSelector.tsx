@@ -9,6 +9,7 @@ import {
 } from "@/services/utils";
 import { MAX_DP } from "@/settings";
 import type { Token } from "@/types";
+import { BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { InputWithPriceInfo } from "../common/input";
@@ -96,8 +97,12 @@ export default function TokenSelector({
 		// So probably tokens will be more like satoshi/gwei/wei and not like eth/btc.
 		onChange(token, input);
 	};
-
-	const priceBn = strFloatToBN(amount).mul(strFloatToBN(`${token.price}`));
+	let priceBn = BN_ZERO;
+	try {
+		priceBn = strFloatToBN(amount).mul(strFloatToBN(`${token.price}`));
+	} catch (err) {
+		console.error(err);
+	}
 
 	return (
 		<div

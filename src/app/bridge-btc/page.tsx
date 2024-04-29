@@ -334,7 +334,13 @@ const BridgeBtc = () => {
 
 	// biome-ignore lint: TODO: get rid of async
 	const omModalSubmit = async () => {
-		if (isTokenNotSelected || strFloatToBN(modalAmount).lte(BN_ZERO)) {
+		if (isTokenNotSelected) {
+			return;
+		}
+		try {
+			if (strFloatToBN(modalAmount).lte(BN_ZERO)) return;
+		} catch (err) {
+			console.error(err);
 			return;
 		}
 		setModalLoading(true);

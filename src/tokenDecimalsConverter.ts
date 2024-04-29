@@ -21,8 +21,8 @@ export default class TokenDecimals {
 	strToBN(str: string): BN {
 		try {
 			return strFloatToBN(str, this.decimalPlaces);
-		} catch (error) {
-			console.warn(error);
+		} catch (err) {
+			console.warn(err);
 			return BN_ZERO;
 		}
 	}

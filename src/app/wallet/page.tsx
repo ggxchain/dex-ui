@@ -268,8 +268,8 @@ export default function Wallet() {
 		amountPrice = strFloatToBN(modalAmount).mul(
 			strFloatToBN(`${selectedTokenPrice}`),
 		);
-	} catch (error) {
-		console.warn(error);
+	} catch (err) {
+		console.warn(err);
 	}
 	const selectedTokenBalance = selectedToken
 		? new BN(dexBalances.get(selectedToken.id) ?? 0)
