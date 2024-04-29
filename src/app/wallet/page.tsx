@@ -11,7 +11,7 @@ import Contract, { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
 import GGXWallet, { type Account } from "@/services/ggx";
 import {
-	checkNumInput,
+	checkBnStr,
 	count_decimals,
 	fixDP,
 	formatter,
@@ -288,9 +288,9 @@ export default function Wallet() {
 		if (dpLen > MAX_DP) {
 			input = fixDP(input);
 		}
-		if (checkNumInput(input)) {
-			console.warn("input invalid:", input);
-			toast.warn("input invalid");
+		const { amount, isValid } = checkBnStr(input);
+		if (!isValid) {
+			toast.warn("amount invalid");
 			return;
 		}
 		setModalAmount(input);

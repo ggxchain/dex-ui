@@ -6,12 +6,7 @@ import Modal from "@/components/common/modal";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
 import Contract, { errorHandler } from "@/services/api";
-import {
-	checkNumInput,
-	count_decimals,
-	fixDP,
-	formatter,
-} from "@/services/utils";
+import { checkBnStr, count_decimals, fixDP, formatter } from "@/services/utils";
 import { GGX_WSS_URL, MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { PubKey, Token } from "@/types";
@@ -42,7 +37,7 @@ const BridgeBtc = () => {
 	const [selectedAccount, setSelectedAccount] = useState<Account>();
 	//InjectedAccountWithMeta
 
-	const [amountIp, setAmountIp] = useState(0);
+	const [amountStr, setAmountStr] = useState("");
 	const [balcWalletToGGXT, setBalcWalletToGGXT] = useState<BN>(new BN(0));
 	const [balcWalletToKBTC, setBalcWalletToKBTC] = useState<BN>(new BN(0));
 	const [userTokenList, setUserTokenList] = useState<string[]>();
@@ -203,11 +198,11 @@ const BridgeBtc = () => {
 		if (dpLen > MAX_DP) {
 			input = fixDP(input);
 		}
-		if (checkNumInput(input)) {
-			console.warn("Invalid input:", input);
+		if (!checkBnStr(input).isValid) {
+			toast.warn("amount invalid");
 			return;
 		}
-		setAmountIp(Number(input)); //TODO: input should be string
+		setAmountStr(input);
 	};
 	const handleSendTransaction = async () => {
 		if (!api) {
@@ -235,15 +230,12 @@ const BridgeBtc = () => {
 			const injector = await web3FromAddress(selectedAccount?.address);
 			//const injector = await web3FromSource(selectedAccount?.meta.source);
 
-			const amount = Number.parseInt(amountIp.toString()); //TODO: handle parseFloat
-			if (Number.isNaN(amount)) {
-				console.error("parseInt failed");
+			const { amount, isValid } = checkBnStr(amountStr);
+			if (!isValid) {
+				toast.warn("amount invalid");
 				return;
 			}
-			if (amount <= 0) {
-				console.error("amount invalid");
-				return;
-			}
+
 			if (!userTokenList) {
 				console.error("userTokenList invalid... userTokenList:", userTokenList);
 				return;
@@ -261,7 +253,7 @@ const BridgeBtc = () => {
 			//'tokenSymbol:', tokenSymbol
 			//const txHash = api.tx.balances.transfer(BOB, 1000).signAndSend(alice);
 			const subscription = await api.tx.tokens
-				.transferKeepAlive(walletTo, { Token: tokenSymbol }, `${amount}`)
+				.transferKeepAlive(walletTo, { Token: tokenSymbol }, amount.toString())
 				.signAndSend(
 					selectedAccount.address,
 					{ signer: injector.signer },
@@ -368,7 +360,11 @@ const BridgeBtc = () => {
 		if (dpLen > MAX_DP) {
 			input = fixDP(input);
 		}
-		if (checkNumInput(input)) return;
+		const { amount, isValid } = checkBnStr(input);
+		if (!isValid) {
+			toast.warn("amount invalid");
+			return;
+		}
 		setModalAmount(input);
 	};
 	const walletIsNotInitialized = accounts.length === 0;
@@ -504,7 +500,7 @@ const BridgeBtc = () => {
 				Check Balances
 			</button>
 			<br />
-			<input name="amount1" value={amountIp} onChange={handleAmountChange} />
+			<input name="amount1" value={amountStr} onChange={handleAmountChange} />
 			<br />
 			<button type="button" onClick={handleSendTransaction}>
 				Send Transaction

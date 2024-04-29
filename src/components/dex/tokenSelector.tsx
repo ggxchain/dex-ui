@@ -2,7 +2,7 @@ import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
 import {
-	checkNumInput,
+	checkBnStr,
 	count_decimals,
 	fixDP,
 	strFloatToBN,
@@ -89,9 +89,9 @@ export default function TokenSelector({
 		if (dpLen > MAX_DP) {
 			input = fixDP(input);
 		}
-		if (checkNumInput(input)) {
-			console.warn("invalid input:", input);
-			toast.warn("invalid input");
+		const { amount, isValid } = checkBnStr(input);
+		if (!isValid) {
+			toast.warn("amount invalid");
 			return;
 		}
 		// The question here should we allow decimals or not.

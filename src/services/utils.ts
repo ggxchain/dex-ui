@@ -1,11 +1,11 @@
 import { MAX_DP, maxNumericInput } from "@/settings";
 import { BN, BN_TEN, BN_ZERO } from "@polkadot/util";
-
 export const lg = console.log;
 export const bn = (n: number | string | number[]) => new BN(n);
 export const bn18 = BN_TEN.pow(bn(18));
 export const bn15 = BN_TEN.pow(bn(15));
 export const bn9 = BN_TEN.pow(bn(9));
+export const maxNumericInputBn = bn(maxNumericInput);
 
 export const formatter = (mfd = 2, currencyName = "usd") => {
 	let formatter: any;
@@ -61,10 +61,26 @@ export const sigFig = (n: number, sig: number) => {
 	const mult = 10 ** (sig - Math.floor(Math.log(n) / Math.LN10) - 1);
 	return `${Math.round(n * mult) / mult}`;
 };
-export const checkNumInput = (input: string): boolean => {
-	const num = Number(input);
-	return Number.isNaN(num) || num < 0 || num > maxNumericInput;
+export const checkBnStr = (str: string) => {
+	let amount = BN_ZERO;
+	const out = { amount, isValid: false };
+	try {
+		amount = strFloatToBN(str, 0);
+	} catch (err) {
+		console.warn(err);
+		return out;
+	}
+	if (amount.lt(BN_ZERO)) {
+		console.warn("amount should not be less than zero");
+		return out;
+	}
+	if (amount.gt(maxNumericInputBn)) {
+		console.warn("amount should be less than max numeric input");
+		return out;
+	}
+	return { amount, isValid: true };
 };
+
 export const splitStrFloat = (str: string): { int: string; dec: string } => {
 	let out = { int: "0", dec: "0" };
 	const arr = str.split(".");
