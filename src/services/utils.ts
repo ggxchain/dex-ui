@@ -7,15 +7,6 @@ export const bn18 = BN_TEN.pow(bn(18));
 export const bn15 = BN_TEN.pow(bn(15));
 export const bn9 = BN_TEN.pow(bn(9));
 
-export const strToBn = (str: string): BN => {
-	const integer: number = Number.parseInt(str);
-	if (Number.isNaN(integer)) {
-		console.error("convertStr input invalid");
-		return BN_ZERO;
-	}
-	return bn(integer);
-};
-
 export const formatter = (mfd = 2, currencyName = "usd") => {
 	let formatter: any;
 	switch (currencyName) {
@@ -74,10 +65,73 @@ export const checkNumInput = (input: string): boolean => {
 	const num = Number(input);
 	return Number.isNaN(num) || num < 0 || num > maxNumericInput;
 };
+export const splitStrFloat = (str: string): { int: string; dec: string } => {
+	let out = { int: "0", dec: "0" };
+	const arr = str.split(".");
+	//lg('arr:', arr)
+	if (arr.length > 2) {
+		throw new Error("invalid input");
+	}
+	if (arr[0].match(/[^$,.\d]/)) {
+		throw new Error("integer part contains non digits");
+	}
+	if (arr.length === 2 && arr[1].match(/[^$,.\d]/)) {
+		throw new Error("decimal part contains non digits");
+	}
+	switch (str) {
+		case "":
+		case ".":
+			break;
+
+		default:
+			if (arr[0] === "") arr[0] = "0";
+			if (arr[1]) {
+				out = { int: arr[0], dec: arr[1] };
+			} else {
+				out = { int: arr[0], dec: "0" };
+			}
+	}
+	return out;
+};
+export const fixDigits = (input: string, width = MAX_DP, padchar = "0") => {
+	let str = input;
+	if (str.length > width) str = str.substring(0, width);
+	while (str.length < width) {
+		str += padchar;
+	}
+	return str;
+};
 export const strToNum = (input: string) => {
 	const num = Number(input);
 	if (Number.isNaN(num)) return 0;
 	return num;
+};
+//catch error from splitStrFloat
+export const strFloatToBN = (str: string, dp = 8): BN => {
+	//lg("strFloatToBN input:", str, ', dp:', dp);
+	const dpBn = bn(dp);
+	const { int, dec } = splitStrFloat(str);
+	const decimal = fixDigits(dec);
+	//lg("integer:", int, "decimal:");
+	const decimalBn = bn(decimal);
+	const multiplier = BN_TEN.pow(dpBn);
+
+	const min = Math.min(8, dp);
+	let fractionalBN: BN;
+	if (dp >= 8) {
+		fractionalBN = decimalBn.mul(BN_TEN.pow(bn(dp - min)));
+	} else {
+		fractionalBN = decimalBn.div(bn(8 - dp));
+	}
+	return bn(int).mul(multiplier).add(fractionalBN);
+};
+export const strIntToBn = (str: string): BN => {
+	const integer: number = Number.parseInt(str);
+	if (Number.isNaN(integer)) {
+		console.error("convertStr input invalid");
+		return BN_ZERO;
+	}
+	return bn(integer);
 };
 /** interfaces/lookup.ts
     _enum: ['FundsUnavailable', 'OnlyProvider', 'BelowMinimum', 'CannotCreate', 'UnknownAsset', 'Frozen', 'Unsupported', 'CannotCreateHold', 'NotExpendable', 'Blocked']

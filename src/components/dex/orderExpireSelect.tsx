@@ -3,7 +3,7 @@ import {
 	checkNumInput,
 	count_decimals,
 	fixDP,
-	strToBn,
+	strIntToBn,
 } from "@/services/utils";
 import { MAX_DP } from "@/settings";
 import { type ChangeEvent, useMemo, useState } from "react";
@@ -33,11 +33,11 @@ export function useExpire() {
 	const convertToMillis = () => {
 		switch (unit.value) {
 			case "Minutes":
-				return strToBn(expNum).mul(bn(60000));
+				return strIntToBn(expNum).mul(bn(60000));
 			case "Hours":
-				return strToBn(expNum).mul(bn(3600000));
+				return strIntToBn(expNum).mul(bn(3600000));
 			case "Days":
-				return strToBn(expNum).mul(bn(86400000));
+				return strIntToBn(expNum).mul(bn(86400000));
 		}
 	};
 

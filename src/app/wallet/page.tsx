@@ -15,6 +15,7 @@ import {
 	count_decimals,
 	fixDP,
 	formatter,
+	strFloatToBN,
 } from "@/services/utils";
 import { MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
@@ -92,7 +93,7 @@ export default function Wallet() {
 
 	// Modal related states
 	const [modal, setModal] = useState<boolean>(false);
-	const [modalAmount, setModalAmount] = useState<number>(0);
+	const [modalAmount, setModalAmount] = useState("");
 	const modalTitle = useRef<InteractType>("Deposit");
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 
@@ -176,17 +177,19 @@ export default function Wallet() {
 	}, totalOnChain);
 
 	const omModalSubmit = () => {
-		if (isTokenNotSelected || modalAmount <= 0) {
+		if (isTokenNotSelected) {
+			return;
+		}
+		const amount = new TokenDecimals(selectedToken.decimals).strToBN(
+			modalAmount,
+		);
+		if (amount.lte(BN_ZERO)) {
 			return;
 		}
 
 		const method =
 			modalTitle.current === "Deposit" ? contract.deposit : contract.withdraw;
 		setModalLoading(true);
-
-		const amount = new TokenDecimals(selectedToken.decimals).floatToBN(
-			modalAmount,
-		);
 
 		method
 			.call(contract, selectedToken.id, amount, () => {
@@ -205,7 +208,7 @@ export default function Wallet() {
 		}
 		modalTitle.current = type;
 		setModalLoading(false);
-		setModalAmount(0);
+		setModalAmount("");
 		setModal(true);
 	};
 
@@ -260,7 +263,14 @@ export default function Wallet() {
 	const selectedTokenPrice = selectedToken
 		? tokenPrices.get(selectedToken.id) ?? 0
 		: 0;
-	const amountPrice = modalAmount * selectedTokenPrice;
+	let amountPrice = BN_ZERO;
+	try {
+		amountPrice = strFloatToBN(modalAmount).mul(
+			strFloatToBN(`${selectedTokenPrice}`),
+		);
+	} catch (error) {
+		console.warn(error);
+	}
 	const selectedTokenBalance = selectedToken
 		? new BN(dexBalances.get(selectedToken.id) ?? 0)
 		: BN_ZERO;
@@ -275,7 +285,7 @@ export default function Wallet() {
 			console.warn("Invalid input:", input);
 			return;
 		}
-		setModalAmount(Number(input));
+		setModalAmount(input);
 	};
 	return (
 		<div className="w-full h-full flex flex-col">
@@ -388,15 +398,15 @@ export default function Wallet() {
 					<InputWithPriceInfo
 						name="Amount"
 						className="mt-1 rounded-[4px] border p-3 basis-1/4 bg-transparent text-GGx-gray border-GGx-gray w-full"
-						value={modalAmount.toString()}
+						value={modalAmount}
 						onChange={handleAmountChange}
 						symbol={selectedToken?.name ?? ""}
-						price={amountPrice}
+						price={amountPrice.toString()}
 					/>
 					<div className="flex w-full justify-center">
 						<LoadingButton
 							loading={modalLoading}
-							disabled={modalAmount === 0}
+							disabled={modalAmount === "0"}
 							className="disabled:opacity-90 text-lg md:w-1/2 mt-5 w-3/4 bg-GGx-dark border-GGx-dark"
 							onClick={omModalSubmit}
 						>

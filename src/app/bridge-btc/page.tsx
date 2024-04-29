@@ -11,6 +11,7 @@ import {
 	count_decimals,
 	fixDP,
 	formatter,
+	strFloatToBN,
 } from "@/services/utils";
 import { GGX_WSS_URL, MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
@@ -297,7 +298,7 @@ const BridgeBtc = () => {
 	const modalTitle = useRef<InteractType>("Deposit");
 	// Modal related states
 	const [modal, setModal] = useState<boolean>(false);
-	const [modalAmount, setModalAmount] = useState<number>(0);
+	const [modalAmount, setModalAmount] = useState("");
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 
 	// biome-ignore lint: TODO: get rid of async
@@ -308,7 +309,7 @@ const BridgeBtc = () => {
 		}
 		modalTitle.current = type;
 		setModalLoading(false);
-		setModalAmount(0);
+		setModalAmount("");
 		setModal(true);
 	};
 
@@ -333,11 +334,14 @@ const BridgeBtc = () => {
 
 	// biome-ignore lint: TODO: get rid of async
 	const omModalSubmit = async () => {
-		if (isTokenNotSelected || modalAmount <= 0) {
+		if (isTokenNotSelected) {
+			return;
+		}
+		if (strFloatToBN(modalAmount).lte(BN_ZERO)) {
 			return;
 		}
 		setModalLoading(true);
-		const amount = new TokenDecimals(selectedToken.decimals).floatToBN(
+		const amount = new TokenDecimals(selectedToken.decimals).strToBN(
 			modalAmount,
 		);
 		console.log("amount:", amount.toString());
@@ -359,13 +363,12 @@ const BridgeBtc = () => {
 			input = fixDP(input);
 		}
 		if (checkNumInput(input)) return;
-		setModalAmount(Number(input));
+		setModalAmount(input);
 	};
 	const walletIsNotInitialized = accounts.length === 0;
 	/*const selectedTokenPrice = selectedToken
     ? tokenPrices.get(selectedToken.id) ?? 0
     : 0;*/
-	const amountPrice = 0; //modalAmount * selectedTokenPrice;
 
 	const handleAccountSelection = async (account1: Account) => {
 		const account = accounts.find(
@@ -458,7 +461,7 @@ const BridgeBtc = () => {
 						value={modalAmount.toString()}
 						onChange={handleModalAmountChange}
 						symbol={selectedToken?.name ?? ""}
-						price={amountPrice}
+						price={"0"}
 					/>
 					{modalTitle.current === "Deposit" ? (
 						<h1 className="text-xl text-GGx-dark text-left w-full">
@@ -472,7 +475,7 @@ const BridgeBtc = () => {
 					<div className="flex w-full justify-center">
 						<LoadingButton
 							loading={modalLoading}
-							disabled={modalAmount === 0}
+							disabled={modalAmount === "0" || modalAmount === ""}
 							className="disabled:opacity-90 text-lg md:w-1/2 mt-5 w-3/4 bg-GGx-dark border-GGx-dark"
 							onClick={omModalSubmit}
 						>

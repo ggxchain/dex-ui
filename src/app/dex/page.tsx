@@ -111,12 +111,12 @@ export default function Dex() {
 
 	const sellAmount = !isTokenNotSelected
 		? isMaker
-			? amountConverter.floatToBN(Number(sellAmountStr))
+			? amountConverter.strToBN(sellAmountStr)
 			: orderRequested
 		: BN_ZERO; //sell.amount
 	const buyAmount = !isTokenNotSelected
 		? isMaker
-			? amountConverter.floatToBN(Number(buyAmountStr))
+			? amountConverter.strToBN(buyAmountStr)
 			: orderOffered
 		: BN_ZERO; //buy.amount
 
@@ -203,7 +203,7 @@ export default function Dex() {
 		if (token.id !== sell?.id) {
 			setOrder(undefined);
 		}
-		const amtBn = amountConverter.floatToBN2(amount);
+		const amtBn = amountConverter.strToBN(amount);
 		//lg('amtBn:', amtBn.toString(), amtBn.div(bn9).toString())
 		setSellAmountStr(amount);
 		setSell({ ...token, amount: amtBn });
@@ -213,7 +213,7 @@ export default function Dex() {
 		if (token.id !== buy?.id) {
 			setOrder(undefined);
 		}
-		const amtBn = amountConverter.floatToBN2(amount);
+		const amtBn = amountConverter.strToBN(amount);
 		setbuyAmountStr(amount);
 		setBuy({ ...token, amount: amtBn });
 	};

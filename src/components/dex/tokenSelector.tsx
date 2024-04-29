@@ -5,7 +5,7 @@ import {
 	checkNumInput,
 	count_decimals,
 	fixDP,
-	strToNum,
+	strFloatToBN,
 } from "@/services/utils";
 import { MAX_DP } from "@/settings";
 import type { Token } from "@/types";
@@ -97,7 +97,7 @@ export default function TokenSelector({
 		onChange(token, input);
 	};
 
-	const price = strToNum(amount) * token.price;
+	const priceBn = strFloatToBN(amount).mul(strFloatToBN(`${token.price}`));
 
 	return (
 		<div
@@ -128,7 +128,7 @@ export default function TokenSelector({
 			<InputWithPriceInfo
 				symbol=""
 				wrapperClassName="basis-4/6"
-				price={price}
+				price={priceBn.toString()}
 				value={amount}
 				suffixStyle="text-GGx-black2"
 				step="2"

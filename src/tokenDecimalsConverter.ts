@@ -1,6 +1,6 @@
 import assert from "assert";
-import { BN, BN_ONE, BN_TEN } from "@polkadot/util";
-import { bn, count_decimals, fixDP, lg } from "./services/utils";
+import { BN, BN_ONE, BN_ZERO } from "@polkadot/util";
+import { bn, count_decimals, fixDP, strFloatToBN } from "./services/utils";
 import { CALCULATION_PRECISION, MAX_DP } from "./settings";
 
 export default class TokenDecimals {
@@ -18,41 +18,13 @@ export default class TokenDecimals {
 		return new TokenDecimals(decimalPlaces);
 	}
 
-	floatToBN2(str: string): BN {
-		lg("floatToBN2 input:", str);
-		const num = Number(str);
-		lg("num:", num);
-		const integer = Math.floor(num);
-		const decimal = Number((Math.abs(num) % 1).toFixed(8).substring(2));
-		lg("integer:", integer, "decimal:", decimal, this.decimalPlaces);
-		const decimalBn = bn(decimal);
-
-		const multiplier = BN_TEN.pow(bn(this.decimalPlaces));
-
-		const min = Math.min(8, this.decimalPlaces);
-		let fractionalBN: BN;
-		if (this.decimalPlaces >= 8) {
-			fractionalBN = decimalBn.mul(BN_TEN.pow(bn(this.decimalPlaces - min)));
-		} else {
-			fractionalBN = decimalBn.div(bn(8 - this.decimalPlaces));
+	strToBN(str: string): BN {
+		try {
+			return strFloatToBN(str, this.decimalPlaces);
+		} catch (error) {
+			console.warn(error);
+			return BN_ZERO;
 		}
-		return bn(integer).mul(multiplier).add(fractionalBN);
-	}
-	floatToBN(value: number): BN {
-		const multiplier = new BN(10).pow(new BN(this.decimalPlaces));
-		const integer = Math.floor(value);
-		const fractional = value - integer;
-
-		// It's safe to work with up to 3 decimal places. Later float number too messy.
-		// TODO: maybe it's better to avoid convertation in input fields and use BNs with selector of decimal places
-		const min = Math.min(8, this.decimalPlaces);
-		const fractionalMultiplied = new BN(Math.ceil(fractional * 10 ** min));
-		const fractionalBN =
-			this.decimalPlaces - min > 0
-				? fractionalMultiplied.mul(BN_TEN.pow(new BN(this.decimalPlaces - min)))
-				: fractionalMultiplied;
-
-		return multiplier.mul(bn(integer)).add(fractionalBN);
 	}
 
 	BNToFloat(value: BN): number {

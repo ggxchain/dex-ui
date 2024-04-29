@@ -24,7 +24,7 @@ import { toast } from "react-toastify";
 
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
-import { formatter } from "@/services/utils";
+import { formatter, strFloatToBN } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import Loading from "./loading";
 
@@ -48,7 +48,7 @@ export default function Transfer() {
 	const [modal, setModal] = useState<boolean>(false);
 	const modalTitle = useRef<ModalTypes>("Deposit");
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
-	const [modalAmount, setModalAmount] = useState<number>(0);
+	const [modalAmount, setModalAmount] = useState("");
 	const [modalGGxAccount, setModalGGxAccount] = useState<Account>();
 	const [modalSourceChannel, setModalSourceChannel] =
 		useState<string>("channel-0");
@@ -186,7 +186,7 @@ export default function Transfer() {
 			return;
 		}
 
-		const amount = new TokenDecimals(selectedToken.decimals).floatToBN(
+		const amount = new TokenDecimals(selectedToken.decimals).strToBN(
 			modalAmount,
 		);
 		const sendAmount = {
@@ -265,14 +265,14 @@ export default function Transfer() {
 
 		modalTitle.current = modalType;
 		setModalLoading(false);
-		setModalAmount(0);
+		setModalAmount("");
 		setModalSourceChannel("channel-0");
 		setModal(true);
 	};
 
 	const onModalSubmit = () => {
 		if (!modalGGxAccount) return;
-		if (modalAmount <= 0) return;
+		if (strFloatToBN(modalAmount).lte(BN_ZERO)) return;
 		if (!selectedToken) return;
 		if (modalSourceChannel === "") return;
 
@@ -304,9 +304,15 @@ export default function Transfer() {
 		const balance = new TokenDecimals(token.decimals).BNToFloat(token.balance);
 		return acc + balance * (prices.get(token.symbol) ?? 0);
 	}, 0);
-	const amountPrice =
-		modalAmount * (selectedToken ? prices.get(selectedToken.symbol) ?? 0 : 0);
-	//{formatter().format(total)}
+
+	let price = 0;
+	if (selectedToken) {
+		price = prices.get(selectedToken.symbol) ?? 0;
+	}
+	const amountPrice = strFloatToBN(modalAmount).mul(
+		selectedToken ? strFloatToBN(`${price}`) : BN_ZERO,
+	);
+
 	return (
 		<div className="flex flex-col w-full items-center h-full">
 			<div className="flex w-full justify-between items-center">
@@ -451,15 +457,15 @@ export default function Transfer() {
 						className="mt-1 rounded-[4px] border pl-5 p-3 basis-1/4 text-GGx-gray border-GGx-gray bg-transparent w-full"
 						wrapperClassName="mt-2"
 						value={modalAmount}
-						onChange={(e) => setModalAmount(Number(e.target.value))}
+						onChange={(e) => setModalAmount(e.target.value)}
 						symbol={selectedToken?.name ?? ""}
-						price={amountPrice}
+						price={amountPrice.toString()}
 					/>
 
 					<div className="w-full flex justify-center mt-2">
 						<LoadingButton
 							disabled={
-								modalAmount <= 0 ||
+								strFloatToBN(modalAmount).lte(BN_ZERO) ||
 								isGGxWalletNotConnected ||
 								walletIsNotInitialized
 							}
