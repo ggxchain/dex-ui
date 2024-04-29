@@ -206,7 +206,6 @@ export default function Dex() {
 		let amtBn = BN_ZERO;
 		try {
 			amtBn = amountConverter.strFloatToBN(amount);
-			//lg('amtBn:', amtBn.toString(), amtBn.div(bn9).toString())
 		} catch (err) {
 			console.warn(err);
 			toast.warn("sell amount invalid");

@@ -358,6 +358,8 @@ const BridgeBtc = () => {
 		} catch (error: any) {
 			setModal(false);
 			errorHandler(error);
+		} finally {
+			setModalLoading(false);
 		}
 	};
 	const handleModalAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
