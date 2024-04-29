@@ -309,9 +309,7 @@ export default function Transfer() {
 	if (selectedToken) {
 		price = prices.get(selectedToken.symbol) ?? 0;
 	}
-	const amountPrice = strFloatToBN(modalAmount).mul(
-		selectedToken ? strFloatToBN(`${price}`) : BN_ZERO,
-	);
+	const amountPrice = strFloatToBN(modalAmount).mul(strFloatToBN(`${price}`));
 
 	return (
 		<div className="flex flex-col w-full items-center h-full">

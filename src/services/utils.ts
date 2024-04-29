@@ -103,7 +103,10 @@ export const fixDigits = (input: string, width = MAX_DP, padchar = "0") => {
 };
 export const strToNum = (input: string) => {
 	const num = Number(input);
-	if (Number.isNaN(num)) return 0;
+	if (Number.isNaN(num)) {
+		console.error("Number(str) failed. input:", input);
+		return 0;
+	}
 	return num;
 };
 //catch error from splitStrFloat
