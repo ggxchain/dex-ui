@@ -1,5 +1,5 @@
 import assert from "assert";
-import { BN, BN_ONE, BN_ZERO } from "@polkadot/util";
+import { BN, BN_ONE } from "@polkadot/util";
 import { bn, count_decimals, fixDP, strFloatToBN } from "./services/utils";
 import { CALCULATION_PRECISION, MAX_DP } from "./settings";
 
@@ -18,13 +18,9 @@ export default class TokenDecimals {
 		return new TokenDecimals(decimalPlaces);
 	}
 
-	strToBN(str: string): BN {
-		try {
-			return strFloatToBN(str, this.decimalPlaces);
-		} catch (err) {
-			console.warn(err);
-			return BN_ZERO;
-		}
+	//catch error
+	strFloatToBN(str: string): BN {
+		return strFloatToBN(str, this.decimalPlaces);
 	}
 
 	BNToFloat(value: BN): number {

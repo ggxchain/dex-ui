@@ -180,9 +180,16 @@ export default function Wallet() {
 		if (isTokenNotSelected) {
 			return;
 		}
-		const amount = new TokenDecimals(selectedToken.decimals).strToBN(
-			modalAmount,
-		);
+		let amount = BN_ZERO;
+		try {
+			amount = new TokenDecimals(selectedToken.decimals).strFloatToBN(
+				modalAmount,
+			);
+		} catch (err) {
+			console.warn(err);
+			toast.warn("input amount invalid");
+			return;
+		}
 		if (amount.lte(BN_ZERO)) {
 			return;
 		}
@@ -269,7 +276,7 @@ export default function Wallet() {
 			strFloatToBN(`${selectedTokenPrice}`),
 		);
 	} catch (err) {
-		console.warn(err);
+		console.warn("amountPrice calculation failed. ", err);
 	}
 	const selectedTokenBalance = selectedToken
 		? new BN(dexBalances.get(selectedToken.id) ?? 0)
@@ -282,7 +289,8 @@ export default function Wallet() {
 			input = fixDP(input);
 		}
 		if (checkNumInput(input)) {
-			console.warn("Invalid input:", input);
+			console.warn("input invalid:", input);
+			toast.warn("input invalid");
 			return;
 		}
 		setModalAmount(input);

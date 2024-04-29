@@ -12,6 +12,7 @@ import type { Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
 import { type ChangeEvent, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { InputWithPriceInfo } from "../common/input";
 import { SelectDark } from "../common/select";
 import Spinner from "../common/spinner";
@@ -89,7 +90,8 @@ export default function TokenSelector({
 			input = fixDP(input);
 		}
 		if (checkNumInput(input)) {
-			console.warn("Invalid input:", input);
+			console.warn("invalid input:", input);
+			toast.warn("invalid input");
 			return;
 		}
 		// The question here should we allow decimals or not.
@@ -101,7 +103,7 @@ export default function TokenSelector({
 	try {
 		priceBn = strFloatToBN(amount).mul(strFloatToBN(`${token.price}`));
 	} catch (err) {
-		console.error(err);
+		console.error("price calculation failed.", err);
 	}
 
 	return (

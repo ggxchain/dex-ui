@@ -19,7 +19,14 @@ import {
 import type { AccountData, ChainInfo } from "@keplr-wallet/types";
 import { Keyring } from "@polkadot/keyring";
 import { BN, BN_ZERO, u8aToHex } from "@polkadot/util";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+	type ChangeEvent,
+	Suspense,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/common/button";
@@ -186,25 +193,25 @@ export default function Transfer() {
 			return;
 		}
 
-		const amount = new TokenDecimals(selectedToken.decimals).strToBN(
-			modalAmount,
-		);
-		const sendAmount = {
-			denom: selectedToken.symbol,
-			amount: amount.toString(),
-		};
-
-		const fee = {
-			amount: [
-				{
-					denom: chain.stakeCurrency?.coinMinimalDenom ?? "ert",
-					amount: "0.025",
-				},
-			],
-			gas: "2000000",
-		};
-
 		try {
+			const amount = new TokenDecimals(selectedToken.decimals).strFloatToBN(
+				modalAmount,
+			);
+			const sendAmount = {
+				denom: selectedToken.symbol,
+				amount: amount.toString(),
+			};
+
+			const fee = {
+				amount: [
+					{
+						denom: chain.stakeCurrency?.coinMinimalDenom ?? "ert",
+						amount: "0.025",
+					},
+				],
+				gas: "2000000",
+			};
+
 			const keyring = new Keyring();
 			const pair = keyring.addFromAddress(modalGGxAccount.address);
 			const recipientAddress = u8aToHex(pair.publicKey);
@@ -269,13 +276,24 @@ export default function Transfer() {
 		setModalSourceChannel("channel-0");
 		setModal(true);
 	};
-
+	const changeModalAmount = (e: ChangeEvent<HTMLInputElement>) => {
+		const input = e.target.value;
+		try {
+			strFloatToBN(input);
+		} catch (err) {
+			console.warn(err);
+			toast.warn("modal amount invalid");
+			return;
+		}
+		setModalAmount(input);
+	};
 	const onModalSubmit = () => {
 		if (!modalGGxAccount) return;
 		try {
 			if (strFloatToBN(modalAmount).lte(BN_ZERO)) return;
 		} catch (err) {
-			console.error(err);
+			console.warn(err);
+			toast.warn("input amount invalid");
 			return;
 		}
 		if (!selectedToken) return;
@@ -314,15 +332,18 @@ export default function Transfer() {
 	if (selectedToken) {
 		price = prices.get(selectedToken.symbol) ?? 0;
 	}
-	let modalAmountBn = BN_ZERO;
 	let pricenBn = BN_ZERO;
+	let modalAmountBn = BN_ZERO;
+	let amountPrice = BN_ZERO;
 	try {
 		modalAmountBn = strFloatToBN(modalAmount);
 		pricenBn = strFloatToBN(`${price}`);
+		amountPrice = modalAmountBn.mul(pricenBn);
 	} catch (err) {
-		console.error(err);
+		console.warn(err);
+		toast.warn("price calculation failed");
+		return;
 	}
-	const amountPrice = modalAmountBn.mul(pricenBn);
 
 	return (
 		<div className="flex flex-col w-full items-center h-full">
@@ -468,7 +489,7 @@ export default function Transfer() {
 						className="mt-1 rounded-[4px] border pl-5 p-3 basis-1/4 text-GGx-gray border-GGx-gray bg-transparent w-full"
 						wrapperClassName="mt-2"
 						value={modalAmount}
-						onChange={(e) => setModalAmount(e.target.value)}
+						onChange={changeModalAmount}
 						symbol={selectedToken?.name ?? ""}
 						price={amountPrice.toString()}
 					/>

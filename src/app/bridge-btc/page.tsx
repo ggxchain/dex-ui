@@ -11,7 +11,6 @@ import {
 	count_decimals,
 	fixDP,
 	formatter,
-	strFloatToBN,
 } from "@/services/utils";
 import { GGX_WSS_URL, MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
@@ -337,17 +336,19 @@ const BridgeBtc = () => {
 		if (isTokenNotSelected) {
 			return;
 		}
+		let amount = BN_ZERO;
 		try {
-			if (strFloatToBN(modalAmount).lte(BN_ZERO)) return;
+			amount = new TokenDecimals(selectedToken.decimals).strFloatToBN(
+				modalAmount,
+			);
 		} catch (err) {
-			console.error(err);
+			console.warn(err);
+			toast.warn("invalid amount or token decimal");
 			return;
 		}
-		setModalLoading(true);
-		const amount = new TokenDecimals(selectedToken.decimals).strToBN(
-			modalAmount,
-		);
+		if (amount.lte(BN_ZERO)) return;
 		console.log("amount:", amount.toString());
+		setModalLoading(true);
 
 		try {
 			//Call bridgeAction to make deposit or withdraw action...

@@ -111,12 +111,12 @@ export default function Dex() {
 
 	const sellAmount = !isTokenNotSelected
 		? isMaker
-			? amountConverter.strToBN(sellAmountStr)
+			? amountConverter.strFloatToBN(sellAmountStr)
 			: orderRequested
 		: BN_ZERO; //sell.amount
 	const buyAmount = !isTokenNotSelected
 		? isMaker
-			? amountConverter.strToBN(buyAmountStr)
+			? amountConverter.strFloatToBN(buyAmountStr)
 			: orderOffered
 		: BN_ZERO; //buy.amount
 
@@ -203,8 +203,15 @@ export default function Dex() {
 		if (token.id !== sell?.id) {
 			setOrder(undefined);
 		}
-		const amtBn = amountConverter.strToBN(amount);
-		//lg('amtBn:', amtBn.toString(), amtBn.div(bn9).toString())
+		let amtBn = BN_ZERO;
+		try {
+			amtBn = amountConverter.strFloatToBN(amount);
+			//lg('amtBn:', amtBn.toString(), amtBn.div(bn9).toString())
+		} catch (err) {
+			console.warn(err);
+			toast.warn("sell amount invalid");
+			return;
+		}
 		setSellAmountStr(amount);
 		setSell({ ...token, amount: amtBn });
 	};
@@ -213,7 +220,14 @@ export default function Dex() {
 		if (token.id !== buy?.id) {
 			setOrder(undefined);
 		}
-		const amtBn = amountConverter.strToBN(amount);
+		let amtBn = BN_ZERO;
+		try {
+			amtBn = amountConverter.strFloatToBN(amount);
+		} catch (err) {
+			console.warn(err);
+			toast.warn("buy amount invalid");
+			return;
+		}
 		setbuyAmountStr(amount);
 		setBuy({ ...token, amount: amtBn });
 	};
