@@ -1,5 +1,6 @@
+import { bn, lg } from "@/services/utils";
 import type { DetailedOrder } from "@/types";
-import { BN_TEN } from "@polkadot/util";
+import { BN_ONE, BN_TEN } from "@polkadot/util";
 import { render, screen } from "@testing-library/react";
 import OrdersList from "../orderList";
 
@@ -18,7 +19,7 @@ describe("OrdersList", () => {
 			token2: {
 				id: 1,
 				name: "USDT",
-				symbol: "ETH",
+				symbol: "USDT",
 				decimals: 6,
 				network: "ETH",
 			},
@@ -45,8 +46,8 @@ describe("OrdersList", () => {
 				decimals: 6,
 				network: "ETH",
 			},
-			amoutRequested: BN_TEN,
-			amountOffered: BN_TEN,
+			amoutRequested: BN_ONE,
+			amountOffered: BN_TEN.pow(bn(3)),
 			pubkey: "0x123",
 			expiration: Date.now() + 10000,
 			orderType: "SELL",
@@ -79,6 +80,7 @@ describe("OrdersList", () => {
 		render(
 			<OrdersList orders={[]} cancelOrder={jest.fn()} isInitialized={true} />,
 		);
+		lg("orderlist test2");
 		expect(screen.getByText("My orders")).toBeInTheDocument();
 		expect(screen.getByText("No orders found")).toBeInTheDocument();
 	});

@@ -1,9 +1,10 @@
 import { OrderUtils } from "@/order";
 import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
-import { formatPrice } from "@/services/utils";
+import { bnFormat } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { DetailedOrder } from "@/types";
+import BigNumber from "bignumber.js";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import Close from "../common/close";
@@ -102,10 +103,12 @@ export default function OrdersList({
 								order.amountOffered,
 								ownedToken.decimals,
 							);
-							const price = amountConverter.divWithPrecision(
-								requested,
-								offered,
+
+							const priceBn = BigNumber(requested.toString()).div(
+								BigNumber(offered.toString()),
 							);
+
+							const formattedPrice = bnFormat(priceBn);
 
 							const expiration = order.expiration - now;
 							const expiredText =
@@ -147,7 +150,7 @@ export default function OrdersList({
 									</td>
 									{/*Price*/}
 									<td className="text-left">
-										{formatPrice(price)} {desiredToken.symbol}
+										{formattedPrice} {desiredToken.symbol}
 									</td>
 
 									<td className="text-left">

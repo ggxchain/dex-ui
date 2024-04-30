@@ -29,6 +29,7 @@
     "@polkadot/extension-dapp": "^0.46.6",
     "@polkadot/keyring": "^12.6.2",
     "@polkadot/util": "^12.6.2",
+    "bignumber.js": "^9.1.2",
     "chain-registry": "^1.25.0",
     "cryptocurrency-icons": "^0.18.1",
     "next": "14.2.2",
@@ -36,9 +37,9 @@
     "react-dom": "^18",
     "react-select": "^5.8.0",
     "react-toastify": "^10.0.4",
+    "sst": "^3.0.1",
     "tailwindcss-safe-area": "^0.4.1",
-    "zod": "^3.22.4",
-    "sst": "^3.0.1"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@biomejs/biome": "1.7.1",
