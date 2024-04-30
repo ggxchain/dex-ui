@@ -56,9 +56,6 @@ export const fixDP = (str: string, dp = MAX_DP) => {
 		return `${arr[0]}.+${"0".repeat(dp)}`;
 	return `${arr[0]}.${arr[1].substring(0, dp)}`;
 };
-export const makePriceBn = (buyAmt: BN, sellAmt: BN) => {
-	return buyAmt.div(sellAmt).toNumber();
-};
 export const formatPrice = (n: number, symbol = "na") => {
 	if (["dai"].includes(symbol.toLowerCase())) {
 		return formatter(8).format(n);
