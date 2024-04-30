@@ -7,7 +7,7 @@ describe("TokenSelector", () => {
 			id: 1,
 			symbol: "ETH",
 			name: "Ethereum",
-			price: 2000,
+			price: 3168.27,
 			network: "ETH",
 			decimals: 18,
 		},
@@ -15,7 +15,7 @@ describe("TokenSelector", () => {
 			id: 2,
 			symbol: "BTC",
 			name: "Bitcoin",
-			price: 50000,
+			price: 63425.82,
 			network: "BTC",
 			decimals: 8,
 		},
@@ -90,8 +90,10 @@ describe("TokenSelector", () => {
 		const input = screen.getByDisplayValue("1");
 		expect(input).toBeDefined();
 
-		fireEvent.change(input!, { target: { value: "10" } });
+		fireEvent.change(input!, { target: { value: "99.12345678" } });
+		expect(onChangeMock).toHaveBeenCalledWith(selectedToken, "99.12345678");
 
-		expect(onChangeMock).toHaveBeenCalledWith(selectedToken, "10");
+		fireEvent.change(input!, { target: { value: "10.1234" } });
+		expect(onChangeMock).toHaveBeenCalledWith(selectedToken, "10.1234");
 	});
 });
