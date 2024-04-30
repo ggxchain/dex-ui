@@ -1,7 +1,8 @@
-import { bn, lg } from "@/services/utils";
+import { bn, bnE6, bnE18, lg } from "@/services/utils";
 import type { DetailedOrder } from "@/types";
-import { BN_ONE, BN_TEN } from "@polkadot/util";
+import { BN_MILLION, BN_ONE, BN_THOUSAND } from "@polkadot/util";
 import { render, screen } from "@testing-library/react";
+import { debug } from "jest-preview";
 import OrdersList from "../orderList";
 
 describe("OrdersList", () => {
@@ -9,13 +10,6 @@ describe("OrdersList", () => {
 		{
 			counter: 1,
 			pair: [0, 1],
-			token1: {
-				id: 0,
-				name: "ETH",
-				symbol: "ETH",
-				decimals: 18,
-				network: "ETH",
-			},
 			token2: {
 				id: 1,
 				name: "USDT",
@@ -23,22 +17,22 @@ describe("OrdersList", () => {
 				decimals: 6,
 				network: "ETH",
 			},
-			amoutRequested: BN_TEN,
-			amountOffered: BN_TEN,
+			token1: {
+				id: 0,
+				name: "ETH",
+				symbol: "ETH",
+				decimals: 18,
+				network: "ETH",
+			},
+			amoutRequested: BN_ONE.mul(bnE6),
+			amountOffered: BN_MILLION.mul(bn(100)).mul(bnE18),
 			pubkey: "0x123",
 			expiration: Date.now() + 10000,
-			orderType: "BUY",
+			orderType: "SELL",
 		},
 		{
-			counter: 12,
+			counter: 2,
 			pair: [0, 1],
-			token1: {
-				id: 0,
-				name: "ETH",
-				symbol: "ETH",
-				decimals: 18,
-				network: "ETH",
-			},
 			token2: {
 				id: 1,
 				name: "USDT",
@@ -46,8 +40,61 @@ describe("OrdersList", () => {
 				decimals: 6,
 				network: "ETH",
 			},
-			amoutRequested: BN_ONE,
-			amountOffered: BN_TEN.pow(bn(3)),
+			token1: {
+				id: 0,
+				name: "ETH",
+				symbol: "ETH",
+				decimals: 18,
+				network: "ETH",
+			},
+			amoutRequested: BN_ONE.mul(bnE6),
+			amountOffered: BN_THOUSAND.mul(bnE18),
+			pubkey: "0x123",
+			expiration: Date.now() + 10000,
+			orderType: "SELL",
+		},
+		{
+			counter: 3,
+			pair: [0, 1],
+			token2: {
+				id: 1,
+				name: "USDT",
+				symbol: "USDT",
+				decimals: 6,
+				network: "ETH",
+			},
+			token1: {
+				id: 0,
+				name: "ETH",
+				symbol: "ETH",
+				decimals: 18,
+				network: "ETH",
+			},
+			amoutRequested: BN_ONE.mul(bnE6),
+			amountOffered: BN_ONE.mul(bnE18),
+			pubkey: "0x123",
+			expiration: Date.now() + 10000,
+			orderType: "SELL",
+		},
+		{
+			counter: 4,
+			pair: [0, 1],
+			token2: {
+				id: 1,
+				name: "USDT",
+				symbol: "USDT",
+				decimals: 6,
+				network: "ETH",
+			},
+			token1: {
+				id: 0,
+				name: "ETH",
+				symbol: "ETH",
+				decimals: 18,
+				network: "ETH",
+			},
+			amoutRequested: BN_THOUSAND.mul(bnE6),
+			amountOffered: BN_ONE.mul(bnE18),
 			pubkey: "0x123",
 			expiration: Date.now() + 10000,
 			orderType: "SELL",
@@ -73,7 +120,13 @@ describe("OrdersList", () => {
 		expect(screen.getByText("Actions")).toBeInTheDocument();
 
 		const elem = screen.getAllByRole("row");
-		expect(elem.length).toBe(4); // 2 orders + header + ruler
+		expect(elem.length).toBe(6); // 4 orders + header + ruler
+		debug();
+		//check prices
+		expect(screen.getByText("0.00000001 USDT")).toBeInTheDocument();
+		expect(screen.getByText("0.00100000 USDT")).toBeInTheDocument();
+		expect(screen.getByText("1.00 USDT")).toBeInTheDocument();
+		expect(screen.getByText("1000.00 USDT")).toBeInTheDocument();
 	});
 
 	test("empty order list", () => {

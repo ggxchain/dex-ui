@@ -1,10 +1,13 @@
 import { MAX_DP, maxNumericInput } from "@/settings";
-import { BN, BN_ZERO } from "@polkadot/util";
+import { BN, BN_TEN, BN_ZERO } from "@polkadot/util";
 import BigNumber from "bignumber.js";
 
 export const lg = console.log;
 export const bn = (n: number | string | number[]) => new BN(n);
-const bnOne = new BigNumber(1);
+export const bnOne = new BigNumber(1);
+export const bnE6 = BN_TEN.pow(bn(6));
+export const bnE8 = BN_TEN.pow(bn(8));
+export const bnE18 = BN_TEN.pow(bn(18));
 
 export const strToBn = (str: string): BN => {
 	const integer: number = Number.parseInt(str);
