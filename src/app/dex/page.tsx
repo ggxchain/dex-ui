@@ -226,6 +226,7 @@ export default function Dex() {
 		if (token.id !== buy?.id) {
 			setOrder(undefined);
 		}
+
 		let input = inputStr;
 		const dpLen = count_decimals(inputStr);
 		if (dpLen > MAX_DP) {
