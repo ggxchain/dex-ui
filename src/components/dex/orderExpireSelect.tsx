@@ -1,12 +1,13 @@
 import {
 	bn,
-	checkNumInput,
+	checkBnStr,
 	count_decimals,
 	fixDP,
-	strToBn,
+	strIntToBn,
 } from "@/services/utils";
 import { MAX_DP } from "@/settings";
 import { type ChangeEvent, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 import { Input } from "../common/input";
 import { SelectDark } from "../common/select";
 
@@ -33,11 +34,11 @@ export function useExpire() {
 	const convertToMillis = () => {
 		switch (unit.value) {
 			case "Minutes":
-				return strToBn(expNum).mul(bn(60000));
+				return strIntToBn(expNum).mul(bn(60000));
 			case "Hours":
-				return strToBn(expNum).mul(bn(3600000));
+				return strIntToBn(expNum).mul(bn(3600000));
 			case "Days":
-				return strToBn(expNum).mul(bn(86400000));
+				return strIntToBn(expNum).mul(bn(86400000));
 		}
 	};
 
@@ -60,8 +61,9 @@ export default function OrderExpireSelect(props: Props) {
 		if (dpLen > MAX_DP) {
 			input = fixDP(input);
 		}
-		if (checkNumInput(input)) {
-			console.warn("Invalid input:", input);
+		const { amount, isValid } = checkBnStr(input);
+		if (!isValid) {
+			toast.warn("amount invalid");
 			return;
 		}
 		props.onChange(input, props.unit);

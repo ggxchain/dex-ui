@@ -1,7 +1,6 @@
 import assert from "assert";
-import { BN_ONE, BN_TEN } from "@polkadot/util";
-import BN from "bn.js";
-import { bn, count_decimals, fixDP } from "./services/utils";
+import { BN, BN_ONE } from "@polkadot/util";
+import { bn, count_decimals, fixDP, strFloatToBN } from "./services/utils";
 import { CALCULATION_PRECISION, MAX_DP } from "./settings";
 
 export default class TokenDecimals {
@@ -19,21 +18,9 @@ export default class TokenDecimals {
 		return new TokenDecimals(decimalPlaces);
 	}
 
-	floatToBN(value: number): BN {
-		const multiplier = new BN(10).pow(new BN(this.decimalPlaces));
-		const integer = Math.floor(value);
-		const fractional = value - integer;
-
-		// It's safe to work with up to 3 decimal places. Later float number too messy.
-		// TODO: maybe it's better to avoid convertation in input fields and use BNs with selector of decimal places
-		const min = Math.min(8, this.decimalPlaces);
-		const fractionalMultiplied = new BN(Math.ceil(fractional * 10 ** min));
-		const fractionalBN =
-			this.decimalPlaces - min > 0
-				? fractionalMultiplied.mul(BN_TEN.pow(new BN(this.decimalPlaces - min)))
-				: fractionalMultiplied;
-
-		return multiplier.mul(bn(integer)).add(fractionalBN);
+	//catch error
+	strFloatToBN(str: string): BN {
+		return strFloatToBN(str, this.decimalPlaces);
 	}
 
 	BNToFloat(value: BN): number {
