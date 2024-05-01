@@ -1,11 +1,24 @@
 import { MAX_DP, maxNumericInput } from "@/settings";
-import { BN, BN_TEN, BN_ZERO } from "@polkadot/util";
+import {
+	BN,
+	BN_BILLION,
+	BN_MILLION,
+	BN_ONE,
+	BN_TEN,
+	BN_THOUSAND,
+	BN_ZERO,
+} from "@polkadot/util";
 export const lg = console.log;
 export const bn = (n: number | string | number[]) => new BN(n);
 export const bn18 = BN_TEN.pow(bn(18));
 export const bn15 = BN_TEN.pow(bn(15));
+export const bnMaxDp = BN_TEN.pow(bn(MAX_DP));
 export const bn9 = BN_TEN.pow(bn(9));
 export const maxNumericInputBn = bn(maxNumericInput);
+import BigNumber from "bignumber.js";
+export const bigZero = new BigNumber(0);
+export const bigOne = new BigNumber(1);
+export const bigTEN = new BigNumber(10);
 
 export const formatter = (mfd = 2, currencyName = "usd") => {
 	let formatter: any;
@@ -65,7 +78,7 @@ export const checkBnStr = (str: string) => {
 	let amount = BN_ZERO;
 	const out = { amount, isValid: false };
 	try {
-		amount = strFloatToBN(str, 0);
+		amount = strFloatToBN(str, MAX_DP);
 	} catch (err) {
 		console.warn(err);
 		return out;
@@ -74,7 +87,27 @@ export const checkBnStr = (str: string) => {
 		console.warn("amount should not be less than zero");
 		return out;
 	}
-	if (amount.gt(maxNumericInputBn)) {
+	if (amount.div(bnMaxDp).gt(maxNumericInputBn)) {
+		console.warn("amount should be less than max numeric input");
+		return out;
+	}
+	return { amount, isValid: true };
+};
+export const checkBigStr = (str: string) => {
+	let amount = BigNumber(0);
+	const out = { amount, isValid: false };
+	try {
+		const float = Number.parseFloat(str.replace(/[^\d.-]/g, ""));
+		amount = BigNumber(float);
+	} catch (err) {
+		console.warn(err);
+		return out;
+	}
+	if (amount.lt(bigZero)) {
+		console.warn("amount should not be less than zero");
+		return out;
+	}
+	if (amount.gt(BigNumber(maxNumericInput))) {
 		console.warn("amount should be less than max numeric input");
 		return out;
 	}
@@ -109,7 +142,9 @@ export const splitStrFloat = (str: string): { int: string; dec: string } => {
 	}
 	return out;
 };
+//pad the input decimal digits to `width` length
 export const fixDigits = (input: string, width = MAX_DP, padchar = "0") => {
+	lg("fixDigits... input:", input, ", width:", width);
 	let str = input;
 	if (str.length > width) str = str.substring(0, width);
 	while (str.length < width) {
@@ -125,23 +160,32 @@ export const strToNum = (input: string) => {
 	}
 	return num;
 };
+export const numFloatToBN = (num: number, pow: number): BN => {
+	const int = Math.trunc(num);
+	const decimal = (num % 1).toFixed(pow);
+	const decimalBn = bn(Number(decimal) * 10 ** pow);
+	const multiplier = BN_TEN.pow(bn(pow));
+	//lg('numFloatToBN:', int, decimal, decimalBn.toString())
+	return bn(int).mul(multiplier).add(decimalBn);
+};
 //catch error from splitStrFloat
-export const strFloatToBN = (str: string, dp = 8): BN => {
-	//lg("strFloatToBN input:", str, ', dp:', dp);
-	const dpBn = bn(dp);
+export const strFloatToBN = (str: string, pow = MAX_DP): BN => {
+	lg("strFloatToBN input:", str, ", pow:", pow);
 	const { int, dec } = splitStrFloat(str);
-	const decimal = fixDigits(dec);
-	//lg("integer:", int, "decimal:");
+	lg("int:", int, ", dec:", dec);
+	const decimal = fixDigits(dec, pow);
+	lg("integer:", int, "decimal:", decimal);
 	const decimalBn = bn(decimal);
-	const multiplier = BN_TEN.pow(dpBn);
+	const multiplier = BN_TEN.pow(bn(pow));
 
-	const min = Math.min(8, dp);
+	const min = Math.min(8, pow);
 	let fractionalBN: BN;
-	if (dp >= 8) {
-		fractionalBN = decimalBn.mul(BN_TEN.pow(bn(dp - min)));
+	if (pow >= 8) {
+		fractionalBN = decimalBn.mul(BN_TEN.pow(bn(pow - min)));
 	} else {
-		fractionalBN = decimalBn.div(bn(8 - dp));
+		fractionalBN = decimalBn.div(bn(8 - pow));
 	}
+	lg("fractionalBN:", fractionalBN.toString());
 	return bn(int).mul(multiplier).add(fractionalBN);
 };
 export const strIntToBn = (str: string): BN => {
@@ -151,6 +195,38 @@ export const strIntToBn = (str: string): BN => {
 		return BN_ZERO;
 	}
 	return bn(integer);
+};
+export const BNToFloat = (value: BN, dp: number): number => {
+	const multiplier = BN_TEN.pow(bn(dp));
+	const integer = value.div(multiplier);
+	const fractional = value.mod(multiplier);
+
+	if (fractional.isZero()) {
+		return integer.toNumber();
+	}
+	return Number(`${integer}.${fractional.toString(10, dp)}`);
+};
+export const BNtoDisplay = (value: BN, symbol = "USD"): string => {
+	const integer = value; //.div(BN_HUNDRED);
+	let prefix = "";
+	let moreDp = 0;
+	if (integer.div(BN_BILLION).gte(BN_ONE)) {
+		prefix = "B";
+		moreDp = 9;
+	} else if (integer.div(BN_MILLION).gte(BN_ONE)) {
+		prefix = "M";
+		moreDp = 6;
+	} else if (integer.div(BN_THOUSAND).gte(BN_ONE)) {
+		prefix = "K";
+		moreDp = 3;
+	}
+	let result = `${BNToFloat(value, moreDp)}`;
+
+	const dpLen = count_decimals(result);
+	if (dpLen > MAX_DP) {
+		result = fixDP(result);
+	}
+	return `${result} ${prefix}${symbol}`;
 };
 /** interfaces/lookup.ts
     _enum: ['FundsUnavailable', 'OnlyProvider', 'BelowMinimum', 'CannotCreate', 'UnknownAsset', 'Frozen', 'Unsupported', 'CannotCreateHold', 'NotExpendable', 'Blocked']

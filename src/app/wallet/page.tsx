@@ -270,13 +270,13 @@ export default function Wallet() {
 	const selectedTokenPrice = selectedToken
 		? tokenPrices.get(selectedToken.id) ?? 0
 		: 0;
-	let amountPrice = BN_ZERO;
+	let amtValue = BN_ZERO;
 	try {
-		amountPrice = strFloatToBN(modalAmount).mul(
+		amtValue = strFloatToBN(modalAmount).mul(
 			strFloatToBN(`${selectedTokenPrice}`),
 		);
 	} catch (err) {
-		console.warn("amountPrice calculation failed. ", err);
+		console.warn("amtValue calculation failed. ", err);
 	}
 	const selectedTokenBalance = selectedToken
 		? new BN(dexBalances.get(selectedToken.id) ?? 0)
@@ -409,7 +409,7 @@ export default function Wallet() {
 						value={modalAmount}
 						onChange={handleAmountChange}
 						symbol={selectedToken?.name ?? ""}
-						price={amountPrice.toString()}
+						amtValue={amtValue.toString()}
 					/>
 					<div className="flex w-full justify-center">
 						<LoadingButton

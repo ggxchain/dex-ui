@@ -1,4 +1,3 @@
-import { formatPrice, strToNum } from "@/services/utils";
 import type React from "react";
 
 type InputProps = React.ComponentPropsWithRef<"input"> & {
@@ -37,15 +36,14 @@ export function Input({
 
 type InputWithPriceInfoProps = InputProps & {
 	symbol: string;
-	price: string;
+	amtValue: string;
 	suffixStyle?: string;
 };
 
 export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
 	const value = props.value ?? 0;
 	// We don't want to pass wrapperClassName to Input component
-	const { symbol, price, suffixStyle, ...forwardProps } = props;
-	const priceNum = strToNum(props.price);
+	const { symbol, amtValue, suffixStyle, ...forwardProps } = props;
 
 	return (
 		<div className={`relative w-full h-full ${props.wrapperClassName ?? ""}`}>
@@ -54,7 +52,7 @@ export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
 				className={`flex text-14px items-center space-x-1 absolute bottom-1/2 right-2 top-1/2 -translate-y-1/4 ${props.suffixStyle}`}
 			>
 				<p className="hidden md:block">{props.symbol}</p>
-				<span className="text-sm">({formatPrice(priceNum)})</span>
+				<span className="text-sm">({props.amtValue})</span>
 			</div>
 		</div>
 	);

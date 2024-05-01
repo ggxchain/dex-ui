@@ -1,5 +1,12 @@
 import assert from "assert";
-import { BN, BN_ONE } from "@polkadot/util";
+import {
+	type BN,
+	BN_BILLION,
+	BN_MILLION,
+	BN_ONE,
+	BN_TEN,
+	BN_THOUSAND,
+} from "@polkadot/util";
 import { bn, count_decimals, fixDP, strFloatToBN } from "./services/utils";
 import { CALCULATION_PRECISION, MAX_DP } from "./settings";
 
@@ -24,7 +31,7 @@ export default class TokenDecimals {
 	}
 
 	BNToFloat(value: BN): number {
-		const multiplier = new BN(10).pow(new BN(this.decimalPlaces));
+		const multiplier = BN_TEN.pow(bn(this.decimalPlaces));
 		const integer = value.div(multiplier);
 		const fractional = value.mod(multiplier);
 
@@ -36,18 +43,18 @@ export default class TokenDecimals {
 	}
 
 	BNtoDisplay(value: BN, symbol: string): string {
-		const multiplier = new BN(10).pow(new BN(this.decimalPlaces));
+		const multiplier = BN_TEN.pow(bn(this.decimalPlaces));
 		const integer = value.div(multiplier);
 
 		let prefix = "";
 		let extraPrecision = 0;
-		if (integer.div(bn(1_000_000_000)).gt(BN_ONE)) {
+		if (integer.div(BN_BILLION).gt(BN_ONE)) {
 			prefix = "B";
 			extraPrecision = 9;
-		} else if (integer.div(bn(1_000_000)).gt(BN_ONE)) {
+		} else if (integer.div(BN_MILLION).gt(BN_ONE)) {
 			prefix = "M";
 			extraPrecision = 6;
-		} else if (integer.div(bn(1_000)).gt(BN_ONE)) {
+		} else if (integer.div(BN_THOUSAND).gt(BN_ONE)) {
 			prefix = "K";
 			extraPrecision = 3;
 		}
@@ -66,12 +73,12 @@ export default class TokenDecimals {
 			oldDecimals <= this.decimalPlaces,
 			"Cannot normalize to a higher precision",
 		);
-		const multiplier = new BN(10).pow(new BN(this.decimalPlaces - oldDecimals));
+		const multiplier = BN_TEN.pow(bn(this.decimalPlaces - oldDecimals));
 		return value.mul(multiplier);
 	}
 
 	denormalize(value: BN, oldDecimals: number): BN {
-		const multiplier = new BN(10).pow(new BN(this.decimalPlaces - oldDecimals));
+		const multiplier = BN_TEN.pow(bn(this.decimalPlaces - oldDecimals));
 		return value.div(multiplier);
 	}
 
@@ -80,7 +87,7 @@ export default class TokenDecimals {
 		const value1Normalized = o.normalize(value1, this.decimalPlaces);
 		return value1Normalized
 			.div(value2)
-			.div(bn(10).pow(bn(CALCULATION_PRECISION)))
+			.div(BN_TEN.pow(bn(CALCULATION_PRECISION)))
 			.toNumber(); //
 	}
 }
