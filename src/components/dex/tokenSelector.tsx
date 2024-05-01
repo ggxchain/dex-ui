@@ -13,7 +13,6 @@ import type { Token } from "@/types";
 import { BN_TEN, BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
 import { type ChangeEvent, useEffect, useState } from "react";
-import { toast } from "react-toastify";
 import { InputWithPriceInfo } from "../common/input";
 import { SelectDark } from "../common/select";
 import Spinner from "../common/spinner";
