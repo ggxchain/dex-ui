@@ -12,6 +12,7 @@
     "lint": "bun run next_lint && bun run biome_check",
     "next_lint": "next lint",
     "test": "jest",
+    "test5": "jest src/app/__tests__/wallet.tsx",
     "jest-preview": "jest-preview",
     "test3": "jest src/components/dex/__tests__/tokenSelector.tsx",
     "biome_check_errors": "biome check src --apply --diagnostic-level=error",

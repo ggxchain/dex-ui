@@ -15,7 +15,7 @@ export default function mockedTokens(): Token[] {
 			name: "BTC",
 			symbol: "BTC",
 			network: "Bitcoin",
-			decimals: 12,
+			decimals: 8,
 		},
 		{
 			id: 2,
