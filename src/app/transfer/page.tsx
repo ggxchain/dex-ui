@@ -19,12 +19,19 @@ import {
 import type { AccountData, ChainInfo } from "@keplr-wallet/types";
 import { Keyring } from "@polkadot/keyring";
 import { BN, BN_ZERO, u8aToHex } from "@polkadot/util";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+	type ChangeEvent,
+	Suspense,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
-import { formatter } from "@/services/utils";
+import { formatter, strFloatToBN } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import Loading from "./loading";
 
@@ -48,7 +55,7 @@ export default function Transfer() {
 	const [modal, setModal] = useState<boolean>(false);
 	const modalTitle = useRef<ModalTypes>("Deposit");
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
-	const [modalAmount, setModalAmount] = useState<number>(0);
+	const [modalAmount, setModalAmount] = useState("");
 	const [modalGGxAccount, setModalGGxAccount] = useState<Account>();
 	const [modalSourceChannel, setModalSourceChannel] =
 		useState<string>("channel-0");
@@ -186,25 +193,25 @@ export default function Transfer() {
 			return;
 		}
 
-		const amount = new TokenDecimals(selectedToken.decimals).floatToBN(
-			modalAmount,
-		);
-		const sendAmount = {
-			denom: selectedToken.symbol,
-			amount: amount.toString(),
-		};
-
-		const fee = {
-			amount: [
-				{
-					denom: chain.stakeCurrency?.coinMinimalDenom ?? "ert",
-					amount: "0.025",
-				},
-			],
-			gas: "2000000",
-		};
-
 		try {
+			const amount = new TokenDecimals(selectedToken.decimals).strFloatToBN(
+				modalAmount,
+			);
+			const sendAmount = {
+				denom: selectedToken.symbol,
+				amount: amount.toString(),
+			};
+
+			const fee = {
+				amount: [
+					{
+						denom: chain.stakeCurrency?.coinMinimalDenom ?? "ert",
+						amount: "0.025",
+					},
+				],
+				gas: "2000000",
+			};
+
 			const keyring = new Keyring();
 			const pair = keyring.addFromAddress(modalGGxAccount.address);
 			const recipientAddress = u8aToHex(pair.publicKey);
@@ -265,14 +272,30 @@ export default function Transfer() {
 
 		modalTitle.current = modalType;
 		setModalLoading(false);
-		setModalAmount(0);
+		setModalAmount("");
 		setModalSourceChannel("channel-0");
 		setModal(true);
 	};
-
+	const changeModalAmount = (e: ChangeEvent<HTMLInputElement>) => {
+		const input = e.target.value;
+		try {
+			strFloatToBN(input);
+		} catch (err) {
+			console.warn(err);
+			toast.warn("modal amount invalid");
+			return;
+		}
+		setModalAmount(input);
+	};
 	const onModalSubmit = () => {
 		if (!modalGGxAccount) return;
-		if (modalAmount <= 0) return;
+		try {
+			if (strFloatToBN(modalAmount).lte(BN_ZERO)) return;
+		} catch (err) {
+			console.warn(err);
+			toast.warn("input amount invalid");
+			return;
+		}
 		if (!selectedToken) return;
 		if (modalSourceChannel === "") return;
 
@@ -304,9 +327,24 @@ export default function Transfer() {
 		const balance = new TokenDecimals(token.decimals).BNToFloat(token.balance);
 		return acc + balance * (prices.get(token.symbol) ?? 0);
 	}, 0);
-	const amountPrice =
-		modalAmount * (selectedToken ? prices.get(selectedToken.symbol) ?? 0 : 0);
-	//{formatter().format(total)}
+
+	let price = 0;
+	if (selectedToken) {
+		price = prices.get(selectedToken.symbol) ?? 0;
+	}
+	let pricenBn = BN_ZERO;
+	let modalAmountBn = BN_ZERO;
+	let amountPrice = BN_ZERO;
+	try {
+		modalAmountBn = strFloatToBN(modalAmount);
+		pricenBn = strFloatToBN(`${price}`);
+		amountPrice = modalAmountBn.mul(pricenBn);
+	} catch (err) {
+		console.warn(err);
+		toast.warn("price calculation failed");
+		return;
+	}
+
 	return (
 		<div className="flex flex-col w-full items-center h-full">
 			<div className="flex w-full justify-between items-center">
@@ -451,15 +489,15 @@ export default function Transfer() {
 						className="mt-1 rounded-[4px] border pl-5 p-3 basis-1/4 text-GGx-gray border-GGx-gray bg-transparent w-full"
 						wrapperClassName="mt-2"
 						value={modalAmount}
-						onChange={(e) => setModalAmount(Number(e.target.value))}
+						onChange={changeModalAmount}
 						symbol={selectedToken?.name ?? ""}
-						price={amountPrice}
+						price={amountPrice.toString()}
 					/>
 
 					<div className="w-full flex justify-center mt-2">
 						<LoadingButton
 							disabled={
-								modalAmount <= 0 ||
+								modalAmountBn.lte(BN_ZERO) ||
 								isGGxWalletNotConnected ||
 								walletIsNotInitialized
 							}

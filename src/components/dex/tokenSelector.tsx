@@ -1,11 +1,18 @@
 import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
-import { checkNumInput, count_decimals, fixDP } from "@/services/utils";
+import {
+	checkBnStr,
+	count_decimals,
+	fixDP,
+	strFloatToBN,
+} from "@/services/utils";
 import { MAX_DP } from "@/settings";
 import type { Token } from "@/types";
+import { BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
 import { type ChangeEvent, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { InputWithPriceInfo } from "../common/input";
 import { SelectDark } from "../common/select";
 import Spinner from "../common/spinner";
@@ -13,7 +20,7 @@ import Spinner from "../common/spinner";
 interface TokenSelectorProps {
 	token?: TokenWithPrice;
 	tokens: TokenWithPrice[];
-	amount?: number;
+	amount: string;
 	lockedAmount?: boolean;
 	onChange: (tokenId: TokenWithPrice, amount: string) => void;
 }
@@ -52,8 +59,9 @@ export default function TokenSelector({
 	lockedAmount,
 }: Readonly<TokenSelectorProps>) {
 	useEffect(() => {
+		//lg('tokenSelector', token, amount, tokens, lockedAmount)
 		if (tokens.length > 0 && token === undefined) {
-			onChange(tokens[0], "0");
+			onChange(tokens[0], "");
 		}
 	});
 
@@ -72,7 +80,7 @@ export default function TokenSelector({
 			return;
 		}
 
-		onChange(e, "0");
+		onChange(e, "");
 	};
 
 	const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -81,8 +89,9 @@ export default function TokenSelector({
 		if (dpLen > MAX_DP) {
 			input = fixDP(input);
 		}
-		if (checkNumInput(input)) {
-			console.warn("Invalid input:", input);
+		const { amount, isValid } = checkBnStr(input);
+		if (!isValid) {
+			toast.warn("amount invalid");
 			return;
 		}
 		// The question here should we allow decimals or not.
@@ -90,8 +99,12 @@ export default function TokenSelector({
 		// So probably tokens will be more like satoshi/gwei/wei and not like eth/btc.
 		onChange(token, input);
 	};
-
-	const price = (amount ?? 0) * token.price;
+	let priceBn = BN_ZERO;
+	try {
+		priceBn = strFloatToBN(amount).mul(strFloatToBN(`${token.price}`));
+	} catch (err) {
+		console.error("price calculation failed.", err);
+	}
 
 	return (
 		<div
@@ -122,8 +135,8 @@ export default function TokenSelector({
 			<InputWithPriceInfo
 				symbol=""
 				wrapperClassName="basis-4/6"
-				price={price}
-				value={amount?.toString()}
+				price={priceBn.toString()}
+				value={amount}
 				suffixStyle="text-GGx-black2"
 				step="2"
 				className="w-full bg-GGx-gray text-GGx-black2 px-[15px] py-[16px] rounded-r-[4px] border-GGx-gray border text-left disabled:cursor-not-allowed"
