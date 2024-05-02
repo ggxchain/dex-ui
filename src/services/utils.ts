@@ -117,7 +117,6 @@ export const checkBigStr = (str: string) => {
 export const splitStrFloat = (str: string): { int: string; dec: string } => {
 	let out = { int: "0", dec: "0" };
 	const arr = str.split(".");
-	//lg('arr:', arr)
 	if (arr.length > 2) {
 		throw new Error("invalid input");
 	}
@@ -144,7 +143,6 @@ export const splitStrFloat = (str: string): { int: string; dec: string } => {
 };
 //pad the input decimal digits to `width` length
 export const fixDigits = (input: string, width = MAX_DP, padchar = "0") => {
-	lg("fixDigits... input:", input, ", width:", width);
 	let str = input;
 	if (str.length > width) str = str.substring(0, width);
 	while (str.length < width) {
@@ -170,11 +168,11 @@ export const numFloatToBN = (num: number, pow: number): BN => {
 };
 //catch error from splitStrFloat
 export const strFloatToBN = (str: string, pow = MAX_DP): BN => {
-	lg("strFloatToBN input:", str, ", pow:", pow);
+	//lg("strFloatToBN input:", str, ", pow:", pow);
 	const { int, dec } = splitStrFloat(str);
-	lg("int:", int, ", dec:", dec);
+	//lg("int:", int, ", dec:", dec);
 	const decimal = fixDigits(dec, pow);
-	lg("integer:", int, "decimal:", decimal);
+	//lg("integer:", int, "decimal:", decimal);
 	const decimalBn = bn(decimal);
 	const multiplier = BN_TEN.pow(bn(pow));
 
@@ -185,7 +183,7 @@ export const strFloatToBN = (str: string, pow = MAX_DP): BN => {
 	} else {
 		fractionalBN = decimalBn.div(bn(8 - pow));
 	}
-	lg("fractionalBN:", fractionalBN.toString());
+	//lg("fractionalBN:", fractionalBN.toString());
 	return bn(int).mul(multiplier).add(fractionalBN);
 };
 export const strIntToBn = (str: string): BN => {

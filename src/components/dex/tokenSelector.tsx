@@ -1,13 +1,7 @@
 import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
-import {
-	BNtoDisplay,
-	bn,
-	lg,
-	numFloatToBN,
-	strFloatToBN,
-} from "@/services/utils";
+import { BNtoDisplay, bn, numFloatToBN, strFloatToBN } from "@/services/utils";
 import { MAX_DP, PRICE_DP } from "@/settings";
 import type { Token } from "@/types";
 import { BN_TEN, BN_ZERO } from "@polkadot/util";
@@ -96,7 +90,7 @@ export default function TokenSelector({
 	} catch (err) {
 		console.error("price calculation failed.", err);
 	}
-	lg("TokenSelector valueBn", valueBn.toString());
+
 	return (
 		<div
 			data-testid="tokenSelector"

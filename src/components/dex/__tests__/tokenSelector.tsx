@@ -1,4 +1,3 @@
-import { lg } from "@/services/utils";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { debug } from "jest-preview";
 import TokenSelector, { type TokenWithPrice } from "../tokenSelector";
@@ -112,7 +111,6 @@ describe("TokenSelector", () => {
 		);
 		const input = screen.getByDisplayValue("99.12345678");
 		expect(input).toBeDefined();
-		lg("tokenprice:", selectedToken.price);
 
 		debug();
 		//99.12345678×63425.82 = 6286986,52750606

@@ -15,7 +15,7 @@ import type Order from "@/order";
 import type Pair from "@/pair";
 import Contract, { errorHandler } from "@/services/api";
 import GGXWallet from "@/services/ggx";
-import { count_decimals, fixDP, formatPrice, lg } from "@/services/utils";
+import { count_decimals, fixDP, formatPrice } from "@/services/utils";
 import { MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, DetailedOrder } from "@/types";
@@ -222,7 +222,6 @@ export default function Dex() {
 	};
 
 	const onBuyChange = (token: TokenWithPrice, inputStr: string) => {
-		lg("onBuyChange", inputStr);
 		if (token.id !== buy?.id) {
 			setOrder(undefined);
 		}
