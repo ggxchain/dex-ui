@@ -273,6 +273,7 @@ export default function Wallet() {
 	const selectedTokenPrice = selectedToken
 		? tokenPrices.get(selectedToken.id) ?? 0
 		: 0;
+
 	let valueBn = BN_ZERO;
 	const amountBn = strFloatToBN(modalAmount, MAX_DP);
 	const multiplerAmt = BN_TEN.pow(bn(MAX_DP));
