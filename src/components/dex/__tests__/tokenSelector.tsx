@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { debug } from "jest-preview";
 import TokenSelector, { type TokenWithPrice } from "../tokenSelector";
 
 describe("TokenSelector", () => {
@@ -7,7 +8,7 @@ describe("TokenSelector", () => {
 			id: 1,
 			symbol: "ETH",
 			name: "Ethereum",
-			price: 2000,
+			price: 3168.27,
 			network: "ETH",
 			decimals: 18,
 		},
@@ -15,7 +16,7 @@ describe("TokenSelector", () => {
 			id: 2,
 			symbol: "BTC",
 			name: "Bitcoin",
-			price: 50000,
+			price: 63425.82,
 			network: "BTC",
 			decimals: 8,
 		},
@@ -28,7 +29,7 @@ describe("TokenSelector", () => {
 	});
 
 	test("renders loading spinner when token is undefined", () => {
-		render(<TokenSelector tokens={tokens} onChange={onChangeMock} />);
+		render(<TokenSelector tokens={tokens} onChange={onChangeMock} amount="" />);
 		const spinnerElement = screen.getByTestId("spinner");
 		expect(spinnerElement).toBeInTheDocument();
 	});
@@ -40,6 +41,7 @@ describe("TokenSelector", () => {
 				token={selectedToken}
 				tokens={tokens}
 				onChange={onChangeMock}
+				amount=""
 			/>,
 		);
 
@@ -57,6 +59,7 @@ describe("TokenSelector", () => {
 				token={selectedToken}
 				tokens={tokens}
 				onChange={onChangeMock}
+				amount=""
 			/>,
 		);
 
@@ -71,25 +74,46 @@ describe("TokenSelector", () => {
 		fireEvent.click(option);
 		const newSelectedToken = tokens[1];
 
-		expect(onChangeMock).toHaveBeenCalledWith(newSelectedToken, "0");
+		expect(onChangeMock).toHaveBeenCalledWith(newSelectedToken, "");
 	});
 
 	test("calls onChange when amount input changes", () => {
-		const selectedToken = tokens[0];
+		const selectedToken = tokens[1];
 		render(
 			<TokenSelector
 				token={selectedToken}
 				tokens={tokens}
 				onChange={onChangeMock}
-				amount={1}
+				amount={"10"}
 			/>,
 		);
-
-		const input = screen.getByDisplayValue("1");
+		const input = screen.getByDisplayValue("10");
 		expect(input).toBeDefined();
 
-		fireEvent.change(input!, { target: { value: "10" } });
+		expect(screen.getByText(/634.258 KUSD/)).toBeInTheDocument();
 
-		expect(onChangeMock).toHaveBeenCalledWith(selectedToken, "10");
+		fireEvent.change(input!, { target: { value: "99.12345678" } });
+		expect(onChangeMock).toHaveBeenCalledWith(selectedToken, "99.12345678");
+
+		fireEvent.change(input!, { target: { value: "10.1234" } });
+		expect(onChangeMock).toHaveBeenCalledWith(selectedToken, "10.1234");
+	});
+
+	test("renders token price =  token price * amount", () => {
+		const selectedToken = tokens[1];
+		render(
+			<TokenSelector
+				token={selectedToken}
+				tokens={tokens}
+				onChange={onChangeMock}
+				amount={"99.12345678"}
+			/>,
+		);
+		const input = screen.getByDisplayValue("99.12345678");
+		expect(input).toBeDefined();
+
+		debug();
+		//99.12345678×63425.82 = 6286986,52750606
+		expect(screen.getByText(/6.286986 MUSD/)).toBeInTheDocument();
 	});
 });

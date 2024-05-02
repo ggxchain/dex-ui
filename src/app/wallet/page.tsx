@@ -11,10 +11,11 @@ import Contract, { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
 import GGXWallet, { type Account } from "@/services/ggx";
 import {
-	checkNumInput,
+	checkBnStr,
 	count_decimals,
 	fixDP,
 	formatter,
+	strFloatToBN,
 } from "@/services/utils";
 import { MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
@@ -92,7 +93,7 @@ export default function Wallet() {
 
 	// Modal related states
 	const [modal, setModal] = useState<boolean>(false);
-	const [modalAmount, setModalAmount] = useState<number>(0);
+	const [modalAmount, setModalAmount] = useState("");
 	const modalTitle = useRef<InteractType>("Deposit");
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 
@@ -176,17 +177,26 @@ export default function Wallet() {
 	}, totalOnChain);
 
 	const omModalSubmit = () => {
-		if (isTokenNotSelected || modalAmount <= 0) {
+		if (isTokenNotSelected) {
+			return;
+		}
+		let amount = BN_ZERO;
+		try {
+			amount = new TokenDecimals(selectedToken.decimals).strFloatToBN(
+				modalAmount,
+			);
+		} catch (err) {
+			console.warn(err);
+			toast.warn("input amount invalid");
+			return;
+		}
+		if (amount.lte(BN_ZERO)) {
 			return;
 		}
 
 		const method =
 			modalTitle.current === "Deposit" ? contract.deposit : contract.withdraw;
 		setModalLoading(true);
-
-		const amount = new TokenDecimals(selectedToken.decimals).floatToBN(
-			modalAmount,
-		);
 
 		method
 			.call(contract, selectedToken.id, amount, () => {
@@ -205,7 +215,7 @@ export default function Wallet() {
 		}
 		modalTitle.current = type;
 		setModalLoading(false);
-		setModalAmount(0);
+		setModalAmount("");
 		setModal(true);
 	};
 
@@ -260,7 +270,14 @@ export default function Wallet() {
 	const selectedTokenPrice = selectedToken
 		? tokenPrices.get(selectedToken.id) ?? 0
 		: 0;
-	const amountPrice = modalAmount * selectedTokenPrice;
+	let amtValue = BN_ZERO;
+	try {
+		amtValue = strFloatToBN(modalAmount).mul(
+			strFloatToBN(`${selectedTokenPrice}`),
+		);
+	} catch (err) {
+		console.warn("amtValue calculation failed. ", err);
+	}
 	const selectedTokenBalance = selectedToken
 		? new BN(dexBalances.get(selectedToken.id) ?? 0)
 		: BN_ZERO;
@@ -271,11 +288,12 @@ export default function Wallet() {
 		if (dpLen > MAX_DP) {
 			input = fixDP(input);
 		}
-		if (checkNumInput(input)) {
-			console.warn("Invalid input:", input);
+		const { amount, isValid } = checkBnStr(input);
+		if (!isValid) {
+			toast.warn("amount invalid");
 			return;
 		}
-		setModalAmount(Number(input));
+		setModalAmount(input);
 	};
 	return (
 		<div className="w-full h-full flex flex-col">
@@ -388,15 +406,15 @@ export default function Wallet() {
 					<InputWithPriceInfo
 						name="Amount"
 						className="mt-1 rounded-[4px] border p-3 basis-1/4 bg-transparent text-GGx-gray border-GGx-gray w-full"
-						value={modalAmount.toString()}
+						value={modalAmount}
 						onChange={handleAmountChange}
 						symbol={selectedToken?.name ?? ""}
-						price={amountPrice}
+						amtValue={amtValue.toString()}
 					/>
 					<div className="flex w-full justify-center">
 						<LoadingButton
 							loading={modalLoading}
-							disabled={modalAmount === 0}
+							disabled={modalAmount === "0"}
 							className="disabled:opacity-90 text-lg md:w-1/2 mt-5 w-3/4 bg-GGx-dark border-GGx-dark"
 							onClick={omModalSubmit}
 						>

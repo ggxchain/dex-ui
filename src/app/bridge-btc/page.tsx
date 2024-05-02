@@ -6,12 +6,7 @@ import Modal from "@/components/common/modal";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
 import Contract, { errorHandler } from "@/services/api";
-import {
-	checkNumInput,
-	count_decimals,
-	fixDP,
-	formatter,
-} from "@/services/utils";
+import { checkBnStr, count_decimals, fixDP, formatter } from "@/services/utils";
 import { GGX_WSS_URL, MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { PubKey, Token } from "@/types";
@@ -42,7 +37,7 @@ const BridgeBtc = () => {
 	const [selectedAccount, setSelectedAccount] = useState<Account>();
 	//InjectedAccountWithMeta
 
-	const [amountIp, setAmountIp] = useState(0);
+	const [amountStr, setAmountStr] = useState("");
 	const [balcWalletToGGXT, setBalcWalletToGGXT] = useState<BN>(new BN(0));
 	const [balcWalletToKBTC, setBalcWalletToKBTC] = useState<BN>(new BN(0));
 	const [userTokenList, setUserTokenList] = useState<string[]>();
@@ -203,11 +198,11 @@ const BridgeBtc = () => {
 		if (dpLen > MAX_DP) {
 			input = fixDP(input);
 		}
-		if (checkNumInput(input)) {
-			console.warn("Invalid input:", input);
+		if (!checkBnStr(input).isValid) {
+			toast.warn("amount invalid");
 			return;
 		}
-		setAmountIp(Number(input)); //TODO: input should be string
+		setAmountStr(input);
 	};
 	const handleSendTransaction = async () => {
 		if (!api) {
@@ -235,15 +230,12 @@ const BridgeBtc = () => {
 			const injector = await web3FromAddress(selectedAccount?.address);
 			//const injector = await web3FromSource(selectedAccount?.meta.source);
 
-			const amount = Number.parseInt(amountIp.toString()); //TODO: handle parseFloat
-			if (Number.isNaN(amount)) {
-				console.error("parseInt failed");
+			const { amount, isValid } = checkBnStr(amountStr);
+			if (!isValid) {
+				toast.warn("amount invalid");
 				return;
 			}
-			if (amount <= 0) {
-				console.error("amount invalid");
-				return;
-			}
+
 			if (!userTokenList) {
 				console.error("userTokenList invalid... userTokenList:", userTokenList);
 				return;
@@ -261,7 +253,7 @@ const BridgeBtc = () => {
 			//'tokenSymbol:', tokenSymbol
 			//const txHash = api.tx.balances.transfer(BOB, 1000).signAndSend(alice);
 			const subscription = await api.tx.tokens
-				.transferKeepAlive(walletTo, { Token: tokenSymbol }, `${amount}`)
+				.transferKeepAlive(walletTo, { Token: tokenSymbol }, amount.toString())
 				.signAndSend(
 					selectedAccount.address,
 					{ signer: injector.signer },
@@ -297,7 +289,7 @@ const BridgeBtc = () => {
 	const modalTitle = useRef<InteractType>("Deposit");
 	// Modal related states
 	const [modal, setModal] = useState<boolean>(false);
-	const [modalAmount, setModalAmount] = useState<number>(0);
+	const [modalAmount, setModalAmount] = useState("");
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 
 	// biome-ignore lint: TODO: get rid of async
@@ -308,7 +300,7 @@ const BridgeBtc = () => {
 		}
 		modalTitle.current = type;
 		setModalLoading(false);
-		setModalAmount(0);
+		setModalAmount("");
 		setModal(true);
 	};
 
@@ -333,14 +325,22 @@ const BridgeBtc = () => {
 
 	// biome-ignore lint: TODO: get rid of async
 	const omModalSubmit = async () => {
-		if (isTokenNotSelected || modalAmount <= 0) {
+		if (isTokenNotSelected) {
 			return;
 		}
-		setModalLoading(true);
-		const amount = new TokenDecimals(selectedToken.decimals).floatToBN(
-			modalAmount,
-		);
+		let amount = BN_ZERO;
+		try {
+			amount = new TokenDecimals(selectedToken.decimals).strFloatToBN(
+				modalAmount,
+			);
+		} catch (err) {
+			console.warn(err);
+			toast.warn("invalid amount or token decimal");
+			return;
+		}
+		if (amount.lte(BN_ZERO)) return;
 		console.log("amount:", amount.toString());
+		setModalLoading(true);
 
 		try {
 			//Call bridgeAction to make deposit or withdraw action...
@@ -350,6 +350,8 @@ const BridgeBtc = () => {
 		} catch (error: any) {
 			setModal(false);
 			errorHandler(error);
+		} finally {
+			setModalLoading(false);
 		}
 	};
 	const handleModalAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -358,14 +360,17 @@ const BridgeBtc = () => {
 		if (dpLen > MAX_DP) {
 			input = fixDP(input);
 		}
-		if (checkNumInput(input)) return;
-		setModalAmount(Number(input));
+		const { amount, isValid } = checkBnStr(input);
+		if (!isValid) {
+			toast.warn("amount invalid");
+			return;
+		}
+		setModalAmount(input);
 	};
 	const walletIsNotInitialized = accounts.length === 0;
 	/*const selectedTokenPrice = selectedToken
     ? tokenPrices.get(selectedToken.id) ?? 0
     : 0;*/
-	const amountPrice = 0; //modalAmount * selectedTokenPrice;
 
 	const handleAccountSelection = async (account1: Account) => {
 		const account = accounts.find(
@@ -458,7 +463,7 @@ const BridgeBtc = () => {
 						value={modalAmount.toString()}
 						onChange={handleModalAmountChange}
 						symbol={selectedToken?.name ?? ""}
-						price={amountPrice}
+						amtValue={"0"}
 					/>
 					{modalTitle.current === "Deposit" ? (
 						<h1 className="text-xl text-GGx-dark text-left w-full">
@@ -472,7 +477,7 @@ const BridgeBtc = () => {
 					<div className="flex w-full justify-center">
 						<LoadingButton
 							loading={modalLoading}
-							disabled={modalAmount === 0}
+							disabled={modalAmount === "0" || modalAmount === ""}
 							className="disabled:opacity-90 text-lg md:w-1/2 mt-5 w-3/4 bg-GGx-dark border-GGx-dark"
 							onClick={omModalSubmit}
 						>
@@ -495,7 +500,7 @@ const BridgeBtc = () => {
 				Check Balances
 			</button>
 			<br />
-			<input name="amount1" value={amountIp} onChange={handleAmountChange} />
+			<input name="amount1" value={amountStr} onChange={handleAmountChange} />
 			<br />
 			<button type="button" onClick={handleSendTransaction}>
 				Send Transaction
