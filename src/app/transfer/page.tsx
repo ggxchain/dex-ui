@@ -334,11 +334,11 @@ export default function Transfer() {
 	}
 	let pricenBn = BN_ZERO;
 	let modalAmountBn = BN_ZERO;
-	let amountPrice = BN_ZERO;
+	let amtValue = BN_ZERO;
 	try {
 		modalAmountBn = strFloatToBN(modalAmount);
 		pricenBn = strFloatToBN(`${price}`);
-		amountPrice = modalAmountBn.mul(pricenBn);
+		amtValue = modalAmountBn.mul(pricenBn);
 	} catch (err) {
 		console.warn(err);
 		toast.warn("price calculation failed");
@@ -491,7 +491,7 @@ export default function Transfer() {
 						value={modalAmount}
 						onChange={changeModalAmount}
 						symbol={selectedToken?.name ?? ""}
-						price={amountPrice.toString()}
+						amtValue={amtValue.toString()}
 					/>
 
 					<div className="w-full flex justify-center mt-2">

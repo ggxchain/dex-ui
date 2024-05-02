@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { debug } from "jest-preview";
 import TokenSelector, { type TokenWithPrice } from "../tokenSelector";
 
 describe("TokenSelector", () => {
@@ -77,23 +78,42 @@ describe("TokenSelector", () => {
 	});
 
 	test("calls onChange when amount input changes", () => {
-		const selectedToken = tokens[0];
+		const selectedToken = tokens[1];
 		render(
 			<TokenSelector
 				token={selectedToken}
 				tokens={tokens}
 				onChange={onChangeMock}
-				amount={"1"}
+				amount={"10"}
 			/>,
 		);
-
-		const input = screen.getByDisplayValue("1");
+		const input = screen.getByDisplayValue("10");
 		expect(input).toBeDefined();
+
+		expect(screen.getByText(/634.258 KUSD/)).toBeInTheDocument();
 
 		fireEvent.change(input!, { target: { value: "99.12345678" } });
 		expect(onChangeMock).toHaveBeenCalledWith(selectedToken, "99.12345678");
 
 		fireEvent.change(input!, { target: { value: "10.1234" } });
 		expect(onChangeMock).toHaveBeenCalledWith(selectedToken, "10.1234");
+	});
+
+	test("renders token price =  token price * amount", () => {
+		const selectedToken = tokens[1];
+		render(
+			<TokenSelector
+				token={selectedToken}
+				tokens={tokens}
+				onChange={onChangeMock}
+				amount={"99.12345678"}
+			/>,
+		);
+		const input = screen.getByDisplayValue("99.12345678");
+		expect(input).toBeDefined();
+
+		debug();
+		//99.12345678×63425.82 = 6286986,52750606
+		expect(screen.getByText(/6.286986 MUSD/)).toBeInTheDocument();
 	});
 });

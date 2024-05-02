@@ -15,7 +15,8 @@ import type Order from "@/order";
 import type Pair from "@/pair";
 import Contract, { errorHandler } from "@/services/api";
 import GGXWallet from "@/services/ggx";
-import { formatPrice } from "@/services/utils";
+import { count_decimals, fixDP, formatPrice } from "@/services/utils";
+import { MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, DetailedOrder } from "@/types";
 import { BN, BN_ZERO } from "@polkadot/util";
@@ -199,35 +200,46 @@ export default function Dex() {
 	const onOrderChange = (order: Order) => {
 		setOrder(order);
 	};
-	const onSellChange = (token: TokenWithPrice, amount: string) => {
+	const onSellChange = (token: TokenWithPrice, inputStr: string) => {
 		if (token.id !== sell?.id) {
 			setOrder(undefined);
 		}
+		let input = inputStr;
+		const dpLen = count_decimals(inputStr);
+		if (dpLen > MAX_DP) {
+			input = fixDP(inputStr);
+		}
 		let amtBn = BN_ZERO;
 		try {
-			amtBn = amountConverter.strFloatToBN(amount);
+			amtBn = amountConverter.strFloatToBN(input);
 		} catch (err) {
 			console.warn(err);
 			toast.warn("sell amount invalid");
 			return;
 		}
-		setSellAmountStr(amount);
+		setSellAmountStr(input);
 		setSell({ ...token, amount: amtBn });
 	};
 
-	const onBuyChange = (token: TokenWithPrice, amount: string) => {
+	const onBuyChange = (token: TokenWithPrice, inputStr: string) => {
 		if (token.id !== buy?.id) {
 			setOrder(undefined);
 		}
+
+		let input = inputStr;
+		const dpLen = count_decimals(inputStr);
+		if (dpLen > MAX_DP) {
+			input = fixDP(inputStr);
+		}
 		let amtBn = BN_ZERO;
 		try {
-			amtBn = amountConverter.strFloatToBN(amount);
+			amtBn = amountConverter.strFloatToBN(input);
 		} catch (err) {
 			console.warn(err);
 			toast.warn("buy amount invalid");
 			return;
 		}
-		setbuyAmountStr(amount);
+		setbuyAmountStr(input);
 		setBuy({ ...token, amount: amtBn });
 	};
 

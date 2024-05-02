@@ -463,7 +463,7 @@ const BridgeBtc = () => {
 						value={modalAmount.toString()}
 						onChange={handleModalAmountChange}
 						symbol={selectedToken?.name ?? ""}
-						price={"0"}
+						amtValue={"0"}
 					/>
 					{modalTitle.current === "Deposit" ? (
 						<h1 className="text-xl text-GGx-dark text-left w-full">
