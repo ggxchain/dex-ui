@@ -49,14 +49,16 @@ export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
 	return (
 		<div
 			data-testid="InputWithPriceInfo"
-			className={`relative w-full h-full ${props.wrapperClassName ?? ""}`}
+			className={`relative w-full h-full flex flex-col ${
+				props.wrapperClassName ?? ""
+			}`}
 		>
 			<Input {...forwardProps} type="number" value={value.toString()} />
 			<div
-				className={`flex text-14px items-center space-x-1 absolute bottom-1/2 right-2 top-1/2 -translate-y-1/4 ${props.suffixStyle}`}
+				className={`md:flex text-14px items-center space-x-1 absolute bottom-1/2 right-2 top-1/2 -translate-y-1/4 ${props.suffixStyle}`}
 			>
 				<p className="hidden md:block">{props.symbol}</p>
-				<span className="text-sm">({props.amtValue})</span>
+				<span className="text-xs sm:text-sm">({props.amtValue})</span>
 			</div>
 		</div>
 	);
