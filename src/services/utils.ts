@@ -142,7 +142,7 @@ export const splitStrFloat = (str: string): { int: string; dec: string } => {
 	return out;
 };
 //pad the input decimal digits to `width` length
-export const fixDigits = (input: string, width = MAX_DP, padchar = "0") => {
+export const padDigits = (input: string, width = MAX_DP, padchar = "0") => {
 	let str = input;
 	if (str.length > width) str = str.substring(0, width);
 	while (str.length < width) {
@@ -171,20 +171,13 @@ export const strFloatToBN = (str: string, pow = MAX_DP): BN => {
 	//lg("strFloatToBN input:", str, ", pow:", pow);
 	const { int, dec } = splitStrFloat(str);
 	//lg("int:", int, ", dec:", dec);
-	const decimal = fixDigits(dec, pow);
-	//lg("integer:", int, "decimal:", decimal);
-	const decimalBn = bn(decimal);
+	const raisedDecimal = padDigits(dec, pow);
+	//lg("integer:", int, "raisedDecimal:", raisedDecimal);
+	const raisedDecimalBn = bn(raisedDecimal);
 	const multiplier = BN_TEN.pow(bn(pow));
 
-	const min = Math.min(8, pow);
-	let fractionalBN: BN;
-	if (pow >= 8) {
-		fractionalBN = decimalBn.mul(BN_TEN.pow(bn(pow - min)));
-	} else {
-		fractionalBN = decimalBn.div(bn(8 - pow));
-	}
-	//lg("fractionalBN:", fractionalBN.toString());
-	return bn(int).mul(multiplier).add(fractionalBN);
+	//lg("raisedDecimalBn:", raisedDecimalBn.toString());
+	return bn(int).mul(multiplier).add(raisedDecimalBn);
 };
 export const strIntToBn = (str: string): BN => {
 	const integer: number = Number.parseInt(str);
