@@ -183,11 +183,10 @@ export default function Wallet() {
 		if (isTokenNotSelected) {
 			return;
 		}
+		//lg('modalAmount:', modalAmount, ', decimal:', selectedToken?.decimals)
 		let amount = BN_ZERO;
 		try {
-			amount = new TokenDecimals(selectedToken.decimals).strFloatToBN(
-				modalAmount,
-			);
+			amount = strFloatToBN(modalAmount, selectedToken.decimals);
 		} catch (err) {
 			console.warn(err);
 			toast.warn("input amount invalid");
@@ -196,6 +195,7 @@ export default function Wallet() {
 		if (amount.lte(BN_ZERO)) {
 			return;
 		}
+		//lg('amount', amount.toString())
 
 		const method =
 			modalTitle.current === "Deposit" ? contract.deposit : contract.withdraw;
@@ -207,6 +207,7 @@ export default function Wallet() {
 				setModal(false);
 			})
 			.catch((error) => {
+				//console.error('omModalSubmit', error);
 				setModal(false);
 				errorHandler(error);
 			});
