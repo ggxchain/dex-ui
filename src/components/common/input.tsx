@@ -49,6 +49,7 @@ export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
 	return (
 		<div
 			data-testid="InputWithPriceInfo"
+
 			className={`relative w-full h-full flex flex-col ${
 				props.wrapperClassName ?? ""
 			}`}
