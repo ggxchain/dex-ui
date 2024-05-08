@@ -8,17 +8,42 @@ import {
 	BN_THOUSAND,
 	BN_ZERO,
 } from "@polkadot/util";
+import BigNumber from "bignumber.js";
+
 export const lg = console.log;
 export const bn = (n: number | string | number[]) => new BN(n);
-export const bn18 = BN_TEN.pow(bn(18));
-export const bn15 = BN_TEN.pow(bn(15));
+
+export const bnE6 = BN_TEN.pow(bn(6));
+export const bnE8 = BN_TEN.pow(bn(8));
+export const bnE9 = BN_TEN.pow(bn(9));
+export const bnE15 = BN_TEN.pow(bn(15));
+export const bnE18 = BN_TEN.pow(bn(18));
 export const bnMaxDp = BN_TEN.pow(bn(MAX_DP));
-export const bn9 = BN_TEN.pow(bn(9));
 export const maxNumericInputBn = bn(maxNumericInput);
-import BigNumber from "bignumber.js";
+
+export const bnOne = new BigNumber(1);
 export const bigZero = new BigNumber(0);
 export const bigOne = new BigNumber(1);
 export const bigTEN = new BigNumber(10);
+
+export const strToBn = (str: string): BN => {
+	const integer: number = Number.parseInt(str);
+	if (Number.isNaN(integer)) {
+		console.error("convertStr input invalid");
+		return BN_ZERO;
+	}
+	return bn(integer);
+};
+
+/**Price Representation Rules:
+- DAI price uses 8 dp
+- if price >= 1, use default 2 dp. This includes USDT and USDC: 1.00xy => 1.00, OR use 4 dp 0.999x
+- if price < 1, use 4 significant figures(except 5 for DOGE, TRX)
+*/
+export const bnFormat = (n: BigNumber, minimumFractionDigits = 8) => {
+	if (n.gte(bnOne)) return n.toFixed(2);
+	return n.toFixed(minimumFractionDigits);
+};
 
 export const formatter = (mfd = 2, currencyName = "usd") => {
 	let formatter: any;

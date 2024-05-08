@@ -13,7 +13,6 @@
     "next_lint": "next lint",
     "test": "jest",
     "jest-preview": "jest-preview",
-    "test3": "jest src/components/dex/__tests__/tokenSelector.tsx",
     "biome_check_errors": "biome check src --apply --diagnostic-level=error",
     "biome_check": "biome check --apply src",
     "format": "biome format src --write",
