@@ -29,6 +29,7 @@ export function Input({
 				placeholder={inputPlaceholder}
 				value={props.value || ""}
 				className={className}
+				data-testid="Input"
 			/>
 		</div>
 	);
@@ -46,7 +47,10 @@ export function InputWithPriceInfo(props: Readonly<InputWithPriceInfoProps>) {
 	const { symbol, amtValue, suffixStyle, ...forwardProps } = props;
 
 	return (
-		<div className={`relative w-full h-full ${props.wrapperClassName ?? ""}`}>
+		<div
+			data-testid="InputWithPriceInfo"
+			className={`relative w-full h-full ${props.wrapperClassName ?? ""}`}
+		>
 			<Input {...forwardProps} type="number" value={value.toString()} />
 			<div
 				className={`flex text-14px items-center space-x-1 absolute bottom-1/2 right-2 top-1/2 -translate-y-1/4 ${props.suffixStyle}`}

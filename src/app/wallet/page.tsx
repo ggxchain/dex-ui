@@ -11,16 +11,19 @@ import Contract, { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
 import GGXWallet, { type Account } from "@/services/ggx";
 import {
+	BNtoDisplay,
+	bn,
 	checkBnStr,
 	count_decimals,
 	fixDP,
 	formatter,
+	numFloatToBN,
 	strFloatToBN,
 } from "@/services/utils";
-import { MAX_DP } from "@/settings";
+import { MAX_DP, PRICE_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token, TokenId } from "@/types";
-import { BN, BN_ZERO } from "@polkadot/util";
+import { BN, BN_TEN, BN_ZERO } from "@polkadot/util";
 import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Loading from "./loading";
@@ -270,13 +273,16 @@ export default function Wallet() {
 	const selectedTokenPrice = selectedToken
 		? tokenPrices.get(selectedToken.id) ?? 0
 		: 0;
-	let amtValue = BN_ZERO;
+
+	let valueBn = BN_ZERO;
+	const amountBn = strFloatToBN(modalAmount, MAX_DP);
+	const multiplerAmt = BN_TEN.pow(bn(MAX_DP));
+	const multiplerPrice = BN_TEN.pow(bn(PRICE_DP));
+	const priceBn = numFloatToBN(selectedTokenPrice, PRICE_DP);
 	try {
-		amtValue = strFloatToBN(modalAmount).mul(
-			strFloatToBN(`${selectedTokenPrice}`),
-		);
+		valueBn = amountBn.mul(priceBn).div(multiplerPrice).div(multiplerAmt);
 	} catch (err) {
-		console.warn("amtValue calculation failed. ", err);
+		console.error("valueBn calculation failed. ", err);
 	}
 	const selectedTokenBalance = selectedToken
 		? new BN(dexBalances.get(selectedToken.id) ?? 0)
@@ -409,7 +415,7 @@ export default function Wallet() {
 						value={modalAmount}
 						onChange={handleAmountChange}
 						symbol={selectedToken?.name ?? ""}
-						amtValue={amtValue.toString()}
+						amtValue={BNtoDisplay(valueBn)}
 					/>
 					<div className="flex w-full justify-center">
 						<LoadingButton
