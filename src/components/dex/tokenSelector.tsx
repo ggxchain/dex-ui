@@ -1,9 +1,10 @@
 import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
-import { checkNumInput, count_decimals, fixDP } from "@/services/utils";
-import { MAX_DP } from "@/settings";
+import { BNtoDisplay, bn, numFloatToBN, strFloatToBN } from "@/services/utils";
+import { MAX_DP, PRICE_DP } from "@/settings";
 import type { Token } from "@/types";
+import { BN_TEN, BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { InputWithPriceInfo } from "../common/input";
@@ -13,7 +14,7 @@ import Spinner from "../common/spinner";
 interface TokenSelectorProps {
 	token?: TokenWithPrice;
 	tokens: TokenWithPrice[];
-	amount?: number;
+	amount: string;
 	lockedAmount?: boolean;
 	onChange: (tokenId: TokenWithPrice, amount: string) => void;
 }
@@ -52,8 +53,9 @@ export default function TokenSelector({
 	lockedAmount,
 }: Readonly<TokenSelectorProps>) {
 	useEffect(() => {
+		//lg('tokenSelector', token, amount, tokens, lockedAmount)
 		if (tokens.length > 0 && token === undefined) {
-			onChange(tokens[0], "0");
+			onChange(tokens[0], "");
 		}
 	});
 
@@ -71,27 +73,23 @@ export default function TokenSelector({
 		if (e === null) {
 			return;
 		}
-
-		onChange(e, "0");
+		onChange(e, "");
 	};
 
 	const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
-		let input = e.target.value;
-		const dpLen = count_decimals(input);
-		if (dpLen > MAX_DP) {
-			input = fixDP(input);
-		}
-		if (checkNumInput(input)) {
-			console.warn("Invalid input:", input);
-			return;
-		}
-		// The question here should we allow decimals or not.
-		// My guess is not as it's not possible to work with decimals on chain.
-		// So probably tokens will be more like satoshi/gwei/wei and not like eth/btc.
-		onChange(token, input);
+		onChange(token, e.target.value);
 	};
 
-	const price = (amount ?? 0) * token.price;
+	let valueBn = BN_ZERO;
+	const amountBn = strFloatToBN(amount, MAX_DP);
+	const multiplerAmt = BN_TEN.pow(bn(MAX_DP));
+	const multiplerPrice = BN_TEN.pow(bn(PRICE_DP));
+	const priceBn = numFloatToBN(token.price, PRICE_DP);
+	try {
+		valueBn = amountBn.mul(priceBn).div(multiplerPrice).div(multiplerAmt);
+	} catch (err) {
+		console.error("price calculation failed.", err);
+	}
 
 	return (
 		<div
@@ -122,8 +120,8 @@ export default function TokenSelector({
 			<InputWithPriceInfo
 				symbol=""
 				wrapperClassName="basis-4/6"
-				price={price}
-				value={amount?.toString()}
+				value={amount}
+				amtValue={BNtoDisplay(valueBn)}
 				suffixStyle="text-GGx-black2"
 				step="2"
 				className="w-full bg-GGx-gray text-GGx-black2 px-[15px] py-[16px] rounded-r-[4px] border-GGx-gray border text-left disabled:cursor-not-allowed"

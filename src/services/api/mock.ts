@@ -67,7 +67,7 @@ export default class GgxNetworkMock implements ApiInterface {
 	async onChainBalanceOf(tokenId: number, address: string): Promise<Amount> {
 		const tokenInfo = await this.tokenInfo(tokenId);
 		return Promise.resolve(
-			new TokenDecimals(tokenInfo.decimals).floatToBN(1000),
+			new TokenDecimals(tokenInfo.decimals).strFloatToBN("1000"),
 		);
 	}
 

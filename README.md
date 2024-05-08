@@ -21,9 +21,11 @@ bun run dev
 ```
 
 Configure `.env.local` file(used during running):
+```
 NEXT_PUBLIC_PARACHAIN_URL=ws://127.0.0.1:9944
 NEXT_PUBLIC_WALLET1=YOUR_TEST_WALLET_ADDRESS
 NEXT_PUBLIC_GGX_NETWORK=brooklyn
+```
 
 Copy the `.env.local` file into `.env` file(used during tests)
 
@@ -38,15 +40,23 @@ Also, you need to run local node with correct version of code (or change package
 ```bash
 ./ggxchain-node --dev
 
-npm run generate:defs
-npm run generate:types
+bun run generate:defs
+bun run generate:types
 ```
 
-## Running tests
+## Running all tests
 
 ```bash
-npm run test
+bun run test
 ```
+## Running specific tests with Jest-Preview
+Run the following two commands in two terminals:
+
+```bash
+bun run jest-preview
+bun run specific-test
+```
+Jest-preview should open http://localhost:3336/ in your browser and update that page when you run `bun run specific-test`
 
 ## Running tests on BTC balances
 in ggxnode repo: `$ cd node && cargo run --release --no-default-features --features=brooklyn -- --dev -d /tmp/db`
