@@ -66,13 +66,15 @@ const useOwnedTokens = (
 
 	return [tokens, balances, refreshBalances] as const;
 };
-
-interface WalletProps {
-	isMocked?: boolean;
+export interface PageProps {
+	params: { slug: string; isMocked: boolean };
+	searchParams: { [key: string]: string | string[] | undefined };
 }
-export default function Wallet({ isMocked }: Readonly<WalletProps>) {
+export default function Wallet({ params, searchParams }: PageProps) {
 	const { api } = useParachain();
-	const ggxNetwork = isMocked ? new GgxNetworkMock() : new GGxNetwork(api!);
+	const ggxNetwork = params.isMocked
+		? new GgxNetworkMock()
+		: new GGxNetwork(api!);
 	const contract = new Contract(ggxNetwork);
 	const [isInitialized, setIsInitialized] = useState(false);
 

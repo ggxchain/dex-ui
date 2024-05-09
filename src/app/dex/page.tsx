@@ -26,6 +26,7 @@ import { BN, BN_ZERO } from "@polkadot/util";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
+import type { PageProps } from "../wallet/page";
 import Loading from "./loading";
 
 type TokenData = TokenWithPrice & {
@@ -33,13 +34,13 @@ type TokenData = TokenWithPrice & {
 };
 
 const milisecPerYear = new BN(31536000).mul(new BN(1000));
-interface DexProps {
-	isMocked?: boolean;
-}
-export default function Dex({ isMocked }: Readonly<DexProps>) {
+
+export default function Dex({ params, searchParams }: PageProps) {
 	let mesg = "";
 	const { api } = useParachain();
-	const ggxNetwork = isMocked ? new GgxNetworkMock() : new GGxNetwork(api!);
+	const ggxNetwork = params.isMocked
+		? new GgxNetworkMock()
+		: new GGxNetwork(api!);
 	const contract = new Contract(ggxNetwork);
 	const contractRef = useRef<Contract>(contract);
 	const [isMaker, setIsMaker] = useState<boolean>(false);

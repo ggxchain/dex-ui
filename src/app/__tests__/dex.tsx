@@ -43,7 +43,14 @@ describe("Dex", () => {
 	});
 
 	test("renders default component", async () => {
-		await act(() => render(<Dex isMocked={true} />));
+		await act(() =>
+			render(
+				<Dex
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 
 		expect(screen.getByText("My orders")).toBeInTheDocument();
 		expect(screen.getByText("Order book")).toBeInTheDocument();
@@ -62,7 +69,14 @@ describe("Dex", () => {
 			"ggx-wallet-selected-account",
 			JSON.stringify({ address: "blahblah" }),
 		);
-		await act(() => render(<Dex isMocked={true} />));
+		await act(() =>
+			render(
+				<Dex
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 
 		expect(screen.getByText("My orders")).toBeInTheDocument();
 		expect(screen.getByText("No orders found")).toBeInTheDocument();
@@ -84,7 +98,14 @@ describe("Dex", () => {
 			"ggx-wallet-selected-account",
 			JSON.stringify({ address: "blahblah" }),
 		);
-		await act(() => render(<Dex isMocked={true} />));
+		await act(() =>
+			render(
+				<Dex
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 
 		expect(screen.getByText("My orders")).toBeInTheDocument();
 		expect(screen.getByText("No orders found")).toBeInTheDocument();
@@ -102,7 +123,14 @@ describe("Dex", () => {
 	});
 
 	test("Taker has two forms", async () => {
-		await act(() => render(<Dex isMocked={true} />));
+		await act(() =>
+			render(
+				<Dex
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 		const taker = screen.getByText("Taker order");
 		expect(taker).toBeInTheDocument();
 		await act(() => fireEvent.click(taker));
@@ -121,7 +149,14 @@ describe("Dex", () => {
 	});
 
 	test("Balance is displayed", async () => {
-		await act(() => render(<Dex isMocked={true} />));
+		await act(() =>
+			render(
+				<Dex
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 		const available = screen.getByText("Available:");
 		expect(available).toBeInTheDocument();
 		const balance = available.getElementsByTagName("span")[0];
@@ -139,7 +174,14 @@ describe("Dex", () => {
 	});
 
 	test("Clear form", async () => {
-		await act(() => render(<Dex isMocked={true} />));
+		await act(() =>
+			render(
+				<Dex
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 
 		const selector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
 		await act(() => fireEvent.keyDown(selector, { key: "ArrowDown" }));

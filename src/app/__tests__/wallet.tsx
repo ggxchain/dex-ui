@@ -66,7 +66,14 @@ describe("Wallet", () => {
 	});
 
 	test("renders default component", async () => {
-		await act(() => render(<Wallet isMocked={true} />));
+		await act(() =>
+			render(
+				<Wallet
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 		await delayFunc(1000);
 		//const totalUserBalance ... see above calculation
 		expect(screen.getByTestId("deposit")).toBeInTheDocument();
@@ -81,7 +88,14 @@ describe("Wallet", () => {
 	});
 
 	test("deposit opens modal", async () => {
-		await act(() => render(<Wallet isMocked={true} />));
+		await act(() =>
+			render(
+				<Wallet
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 
 		expect(screen.getByTestId("modal")).not.toBeVisible();
 		const deposit = screen.getByTestId("deposit");
@@ -95,7 +109,14 @@ describe("Wallet", () => {
 	});
 
 	test("withdraw opens modal", async () => {
-		await act(() => render(<Wallet isMocked={true} />));
+		await act(() =>
+			render(
+				<Wallet
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 
 		expect(screen.getByTestId("modal")).not.toBeVisible();
 		const withdraw = screen.getByTestId("withdraw");
@@ -109,7 +130,14 @@ describe("Wallet", () => {
 	});
 
 	test("select account", async () => {
-		await act(() => render(<Wallet isMocked={true} />));
+		await act(() =>
+			render(
+				<Wallet
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 		const select = screen.getByTestId("userSelect").lastChild!;
 		expect(select).toBeInTheDocument();
 		await act(() => fireEvent.keyDown(select, { key: "ArrowDown" }));
@@ -119,7 +147,14 @@ describe("Wallet", () => {
 	});
 
 	test("click on table replaces selected token", async () => {
-		await act(() => render(<Wallet isMocked={true} />));
+		await act(() =>
+			render(
+				<Wallet
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 		const deposit = screen.getByTestId("deposit");
 		expect(deposit.textContent).toBe("Deposit USDT");
 		const withdraw = screen.getByTestId("withdraw");
@@ -135,7 +170,14 @@ describe("Wallet", () => {
 	test("replace selected token, open modal, enter BTC amount and it shows the amount x its price", async () => {
 		//const contract = new Contract();
 		//contract.deposit(1, BN_BILLION, () => {});
-		await act(() => render(<Wallet isMocked={true} />));
+		await act(() =>
+			render(
+				<Wallet
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 		const deposit = screen.getByTestId("deposit");
 		expect(deposit.textContent).toBe("Deposit USDT");
 
@@ -165,7 +207,14 @@ describe("Wallet", () => {
 	});
 
 	test("withdraw doesn't open on balance < 0", async () => {
-		await act(() => render(<Wallet isMocked={true} />));
+		await act(() =>
+			render(
+				<Wallet
+					params={{ isMocked: true, slug: "" }}
+					searchParams={{ pair: undefined }}
+				/>,
+			),
+		);
 		const withdraw = screen.getByTestId("withdraw");
 		expect(withdraw).toBeEnabled();
 
