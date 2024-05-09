@@ -14,6 +14,7 @@ const config = {
     moduleNameMapper: {
         "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     },
+    modulePathIgnorePatterns: ["aarchives"],
     transformIgnorePatterns: []
 };
 

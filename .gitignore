@@ -9,6 +9,7 @@
 # testing
 /coverage
 zz*
+aarchives
 
 # next.js
 /.next/

@@ -15,6 +15,8 @@ import type Order from "@/order";
 import type Pair from "@/pair";
 import { useParachain } from "@/parachain_provider";
 import Contract, { errorHandler } from "@/services/api";
+import GGxNetwork from "@/services/api/ggx";
+import GgxNetworkMock from "@/services/api/mock";
 import GGXWallet from "@/services/ggx";
 import { count_decimals, fixDP, formatPrice } from "@/services/utils";
 import { MAX_DP } from "@/settings";
@@ -31,11 +33,15 @@ type TokenData = TokenWithPrice & {
 };
 
 const milisecPerYear = new BN(31536000).mul(new BN(1000));
-
-export default function Dex() {
+interface DexProps {
+	isMocked?: boolean;
+}
+export default function Dex({ isMocked }: Readonly<DexProps>) {
 	let mesg = "";
 	const { api } = useParachain();
-	const contractRef = useRef<Contract>(new Contract(api!));
+	const ggxNetwork = isMocked ? new GgxNetworkMock() : new GGxNetwork(api!);
+	const contract = new Contract(ggxNetwork);
+	const contractRef = useRef<Contract>(contract);
 	const [isMaker, setIsMaker] = useState<boolean>(false);
 	const [sellAmountStr, setSellAmountStr] = useState("");
 	const [buyAmountStr, setbuyAmountStr] = useState("");
@@ -69,6 +75,7 @@ export default function Dex() {
 		updateUserOrders();
 		loadTokens();
 		setIsInitialized(true);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
@@ -84,6 +91,7 @@ export default function Dex() {
 				})
 				.catch(errorHandler);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [sell, buy]);
 
 	const onClear = () => {

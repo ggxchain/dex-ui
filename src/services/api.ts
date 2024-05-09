@@ -60,8 +60,8 @@ export enum Errors {
 }
 export default class Contract {
 	private api: ApiInterface;
-	private tokenCache: Map<TokenId, Token> = new Map<TokenId, Token>();
-	private tokenList: TokenId[] = new Array<TokenId>();
+	public tokenCache: Map<TokenId, Token> = new Map<TokenId, Token>();
+	public tokenList: TokenId[] = new Array<TokenId>();
 	private lastUpdated = 0;
 
 	constructor(api: ApiInterface) {
@@ -283,7 +283,7 @@ export function warnHandler(error: Errors): undefined {
 }
 export function errorHandler(error: Errors): undefined {
 	toast.error(`${error}`);
-	console.error(error);
+	//console.error(error);
 	return undefined;
 }
 

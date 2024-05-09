@@ -9,6 +9,8 @@ import { SelectDark } from "@/components/common/select";
 import TokenList from "@/components/tokenList";
 import { useParachain } from "@/parachain_provider";
 import Contract, { errorHandler } from "@/services/api";
+import GGxNetwork from "@/services/api/ggx";
+import GgxNetworkMock from "@/services/api/mock";
 import CexService from "@/services/cex";
 import GGXWallet, { type Account } from "@/services/ggx";
 import {
@@ -65,10 +67,13 @@ const useOwnedTokens = (
 	return [tokens, balances, refreshBalances] as const;
 };
 
-export default function Wallet() {
+interface WalletProps {
+	isMocked?: boolean;
+}
+export default function Wallet({ isMocked }: Readonly<WalletProps>) {
 	const { api } = useParachain();
-	const contract = new Contract(api!);
-
+	const ggxNetwork = isMocked ? new GgxNetworkMock() : new GGxNetwork(api!);
+	const contract = new Contract(ggxNetwork);
 	const [isInitialized, setIsInitialized] = useState(false);
 
 	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
@@ -139,14 +144,10 @@ export default function Wallet() {
 			});
 
 		connectWallet();
-
-		// do not add `contract` to dependencies here.
-		// it causes an infinite loop.
-	}, []);
-
-	useEffect(() => {
 		refreshBalances();
-	}, [refreshBalances]);
+		// do not add `contract` OR `refreshBalances` to dependencies here because they cause an infinite loop.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	const onSearch = (e: ChangeEvent<HTMLInputElement>) => {
 		setSearch(e.target.value);
@@ -273,7 +274,7 @@ export default function Wallet() {
 	};
 
 	const onContractTypeChange = () => {
-		Contract.setMocked(!Contract.isMocked());
+		//Contract.setMocked(!Contract.isMocked);
 	};
 
 	const selectedTokenPrice = selectedToken
@@ -345,7 +346,7 @@ export default function Wallet() {
 				<label className="inline-flex relative items-center cursor-pointer ">
 					<input
 						type="checkbox"
-						checked={!Contract.isMocked()}
+						checked={false} //!Contract.isMocked
 						onChange={onContractTypeChange}
 						className="sr-only peer"
 					/>

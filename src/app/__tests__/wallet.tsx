@@ -1,6 +1,8 @@
 import "@/__utils__/localstore.mock";
 import mockedTokens from "@/mock";
 import Contract from "@/services/api";
+import GgxNetworkMock from "@/services/api/mock";
+import { delayFunc } from "@/services/utils";
 import { BN_MILLION } from "@polkadot/util";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { debug } from "jest-preview";
@@ -46,7 +48,7 @@ jest.mock("../../services/ggx", () => ({
 }));
 
 describe("Wallet", () => {
-	beforeEach(() => {
+	beforeEach(async () => {
 		selectFn.mockClear();
 		window.localStorage.clear();
 		window.sessionStorage.clear();
@@ -57,26 +59,29 @@ describe("Wallet", () => {
 			}),
 		);
 
-		Contract.setMocked(true);
-
-		const contract = new Contract();
+		//Contract.setMocked(true);
+		const mock = new GgxNetworkMock();
+		const contract = new Contract(mock);
 		contract.deposit(0, BN_MILLION, () => {});
 	});
 
 	test("renders default component", async () => {
-		await act(() => render(<Wallet />));
+		await act(() => render(<Wallet isMocked={true} />));
+		await delayFunc(1000);
 		//const totalUserBalance ... see above calculation
-		expect(screen.getByText("$66,373,839.00")).toBeInTheDocument();
 		expect(screen.getByTestId("deposit")).toBeInTheDocument();
 		expect(screen.getByTestId("withdraw")).toBeInTheDocument();
+		expect(screen.getByText("Account 1"));
+		debug();
+		expect(screen.getAllByRole("row").length).toBe(mockedTokens().length + 1); // 1 header + tokens
+
 		expect(screen.getByText("1 USDT")).toBeInTheDocument();
 
-		expect(screen.getAllByRole("row").length).toBe(mockedTokens().length + 1); // 1 header + tokens
-		expect(screen.getByText("Account 1"));
+		expect(screen.getByText("$66,373,839.00")).toBeInTheDocument();
 	});
 
 	test("deposit opens modal", async () => {
-		await act(() => render(<Wallet />));
+		await act(() => render(<Wallet isMocked={true} />));
 
 		expect(screen.getByTestId("modal")).not.toBeVisible();
 		const deposit = screen.getByTestId("deposit");
@@ -90,7 +95,7 @@ describe("Wallet", () => {
 	});
 
 	test("withdraw opens modal", async () => {
-		await act(() => render(<Wallet />));
+		await act(() => render(<Wallet isMocked={true} />));
 
 		expect(screen.getByTestId("modal")).not.toBeVisible();
 		const withdraw = screen.getByTestId("withdraw");
@@ -104,24 +109,24 @@ describe("Wallet", () => {
 	});
 
 	test("select account", async () => {
-		await act(() => render(<Wallet />));
+		await act(() => render(<Wallet isMocked={true} />));
 		const select = screen.getByTestId("userSelect").lastChild!;
 		expect(select).toBeInTheDocument();
-		fireEvent.keyDown(select, { key: "ArrowDown" });
+		await act(() => fireEvent.keyDown(select, { key: "ArrowDown" }));
 		const option = screen.getByText("Account 2");
 		await act(() => fireEvent.click(option));
 		expect(selectFn).toHaveBeenCalledTimes(1);
 	});
 
 	test("click on table replaces selected token", async () => {
-		await act(() => render(<Wallet />));
+		await act(() => render(<Wallet isMocked={true} />));
 		const deposit = screen.getByTestId("deposit");
 		expect(deposit.textContent).toBe("Deposit USDT");
 		const withdraw = screen.getByTestId("withdraw");
 		expect(withdraw.textContent).toBe("Withdraw USDT");
 
 		const rows = screen.getAllByRole("row");
-		act(() => fireEvent.click(rows[2]));
+		await act(() => fireEvent.click(rows[2]));
 
 		expect(deposit.textContent).toBe("Deposit BTC");
 		expect(withdraw.textContent).toBe("Withdraw BTC");
@@ -130,12 +135,12 @@ describe("Wallet", () => {
 	test("replace selected token, open modal, enter BTC amount and it shows the amount x its price", async () => {
 		//const contract = new Contract();
 		//contract.deposit(1, BN_BILLION, () => {});
-		await act(() => render(<Wallet />));
+		await act(() => render(<Wallet isMocked={true} />));
 		const deposit = screen.getByTestId("deposit");
 		expect(deposit.textContent).toBe("Deposit USDT");
 
 		const rows = screen.getAllByRole("row");
-		act(() => fireEvent.click(rows[2]));
+		await act(() => fireEvent.click(rows[2]));
 
 		expect(deposit.textContent).toBe("Deposit BTC");
 
@@ -150,7 +155,9 @@ describe("Wallet", () => {
 		expect(screen.getByTestId("InputWithPriceInfo")).toBeVisible();
 		const input: HTMLInputElement = screen.getByTestId("Input");
 		expect(input).toBeVisible();
-		fireEvent.change(input, { target: { value: "99.12345678" } });
+		await act(() =>
+			fireEvent.change(input, { target: { value: "99.12345678" } }),
+		);
 		debug();
 		expect(input.value).toBe("99.12345678");
 		//99.12345678×63425.82 = 6286986,52750606
@@ -158,12 +165,12 @@ describe("Wallet", () => {
 	});
 
 	test("withdraw doesn't open on balance < 0", async () => {
-		await act(() => render(<Wallet />));
+		await act(() => render(<Wallet isMocked={true} />));
 		const withdraw = screen.getByTestId("withdraw");
 		expect(withdraw).toBeEnabled();
 
 		const rows = screen.getAllByRole("row");
-		act(() => fireEvent.click(rows[2]));
+		await act(() => fireEvent.click(rows[2]));
 		expect(screen.getByTestId("modal")).not.toBeVisible();
 
 		await act(() => fireEvent.click(withdraw));

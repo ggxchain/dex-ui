@@ -1,5 +1,5 @@
 import { BN_TEN } from "@polkadot/util";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import TokenList, { type ListElement } from "../tokenList";
 
 describe("OrdersList", () => {
@@ -72,16 +72,16 @@ describe("OrdersList", () => {
 		},
 	];
 
-	test("render empty token list", () => {
-		render(<TokenList tokens={[]} />);
+	test("render empty token list", async () => {
+		await act(() => render(<TokenList tokens={[]} />));
 		setTimeout((done) => {
 			expect(screen.getByText("No tokens found")).toBeInTheDocument();
 			done();
 		}, 2000);
 	});
 
-	test("render correctly without onchaindata", () => {
-		render(<TokenList tokens={tokens} />);
+	test("render correctly without onchaindata", async () => {
+		await act(() => render(<TokenList tokens={tokens} />));
 		expect(screen.queryByText("No tokens found")).toBeNull();
 		expect(screen.queryByText("On-chain balance")).toBeNull();
 		expect(screen.getByAltText("ETH icon")).toBeInTheDocument();
@@ -92,8 +92,8 @@ describe("OrdersList", () => {
 		expect(rows.length).toBe(7); // 6 tokens + header
 	});
 
-	test("render correctly with onchaindata", () => {
-		render(<TokenList tokens={tokens} onChain={true} />);
+	test("render correctly with onchaindata", async () => {
+		await act(() => render(<TokenList tokens={tokens} onChain={true} />));
 		expect(screen.queryByText("No tokens found")).toBeNull();
 		expect(screen.getByText("On chain balance")).toBeInTheDocument();
 		expect(screen.getByAltText("ETH icon")).toBeInTheDocument();
@@ -104,9 +104,9 @@ describe("OrdersList", () => {
 		expect(rows.length).toBe(7); // 6 tokens + header
 	});
 
-	test("render token amount correctly", () => {
-		const { getByRole, findAllByRole } = render(
-			<TokenList tokens={tokens} onChain={true} isInitialized={true} />,
+	test("render token amount correctly", async () => {
+		const { getByRole, findAllByRole } = await act(() =>
+			render(<TokenList tokens={tokens} onChain={true} isInitialized={true} />),
 		);
 
 		let box: HTMLElement;

@@ -43,7 +43,7 @@ describe("Dex", () => {
 	});
 
 	test("renders default component", async () => {
-		await act(() => render(<Dex />));
+		await act(() => render(<Dex isMocked={true} />));
 
 		expect(screen.getByText("My orders")).toBeInTheDocument();
 		expect(screen.getByText("Order book")).toBeInTheDocument();
@@ -62,7 +62,7 @@ describe("Dex", () => {
 			"ggx-wallet-selected-account",
 			JSON.stringify({ address: "blahblah" }),
 		);
-		await act(() => render(<Dex />));
+		await act(() => render(<Dex isMocked={true} />));
 
 		expect(screen.getByText("My orders")).toBeInTheDocument();
 		expect(screen.getByText("No orders found")).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe("Dex", () => {
 		expect(screen.getByText("No bids found")).toBeInTheDocument();
 
 		const tokenSelector = screen.getAllByTestId("tokenSelector")[1].firstChild!;
-		fireEvent.keyDown(tokenSelector, { key: "ArrowDown" });
+		await act(() => fireEvent.keyDown(tokenSelector, { key: "ArrowDown" }));
 		const option = screen.getByText(mockedTokens()[1].symbol);
 		await act(() => fireEvent.click(option));
 
@@ -84,7 +84,7 @@ describe("Dex", () => {
 			"ggx-wallet-selected-account",
 			JSON.stringify({ address: "blahblah" }),
 		);
-		await act(() => render(<Dex />));
+		await act(() => render(<Dex isMocked={true} />));
 
 		expect(screen.getByText("My orders")).toBeInTheDocument();
 		expect(screen.getByText("No orders found")).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe("Dex", () => {
 		expect(screen.getByText("No bids found")).toBeInTheDocument();
 
 		const tokenSelector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
-		fireEvent.keyDown(tokenSelector, { key: "ArrowDown" });
+		await act(() => fireEvent.keyDown(tokenSelector, { key: "ArrowDown" }));
 		const option = screen.getByText(mockedTokens()[1].symbol);
 		await act(() => fireEvent.click(option));
 
@@ -102,10 +102,10 @@ describe("Dex", () => {
 	});
 
 	test("Taker has two forms", async () => {
-		await act(() => render(<Dex />));
+		await act(() => render(<Dex isMocked={true} />));
 		const taker = screen.getByText("Taker order");
 		expect(taker).toBeInTheDocument();
-		act(() => fireEvent.click(taker));
+		await act(() => fireEvent.click(taker));
 		expect(
 			Array.prototype.slice.call(screen.getAllByTestId("tokenSelector")).length,
 		).toBe(2);
@@ -113,7 +113,7 @@ describe("Dex", () => {
 
 		const maker = screen.getByText("Maker order");
 		expect(maker).toBeInTheDocument();
-		act(() => fireEvent.click(maker));
+		await act(() => fireEvent.click(maker));
 		expect(
 			Array.prototype.slice.call(screen.getAllByTestId("tokenSelector")).length,
 		).toBe(2);
@@ -121,7 +121,7 @@ describe("Dex", () => {
 	});
 
 	test("Balance is displayed", async () => {
-		await act(() => render(<Dex />));
+		await act(() => render(<Dex isMocked={true} />));
 		const available = screen.getByText("Available:");
 		expect(available).toBeInTheDocument();
 		const balance = available.getElementsByTagName("span")[0];
@@ -129,7 +129,7 @@ describe("Dex", () => {
 		expect(balance.textContent).toBe(" 0.00001 USDT");
 
 		const selector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
-		fireEvent.keyDown(selector, { key: "ArrowDown" });
+		await act(() => fireEvent.keyDown(selector, { key: "ArrowDown" }));
 		const option = screen.getByText(mockedTokens()[1].symbol);
 		await act(() => fireEvent.click(option));
 
@@ -139,10 +139,10 @@ describe("Dex", () => {
 	});
 
 	test("Clear form", async () => {
-		await act(() => render(<Dex />));
+		await act(() => render(<Dex isMocked={true} />));
 
 		const selector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
-		fireEvent.keyDown(selector, { key: "ArrowDown" });
+		await act(() => fireEvent.keyDown(selector, { key: "ArrowDown" }));
 		const option = screen.getByText(mockedTokens()[1].symbol);
 		await act(() => fireEvent.click(option));
 

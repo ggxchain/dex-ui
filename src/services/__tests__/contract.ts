@@ -28,7 +28,8 @@ describe("Contract", () => {
 	it("should fail if user account is not selected", async () => {
 		// We have to remove the account from local storage and reload the contract
 		window.localStorage.removeItem("ggx-wallet-selected-account");
-		contract = new Contract();
+		const mock = new GgxNetworkMock();
+		const contract = new Contract(mock);
 
 		await expect(
 			contract.deposit(mockedTokenId, BN_ONE, () => {}),

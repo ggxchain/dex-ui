@@ -7,6 +7,7 @@ import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
 import { useParachain } from "@/parachain_provider";
 import Contract, { errorHandler } from "@/services/api";
+import GGxNetwork from "@/services/api/ggx";
 import { checkBnStr, count_decimals, fixDP, formatter } from "@/services/utils";
 import { MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
@@ -290,7 +291,7 @@ const BridgeBtc = () => {
 	const [tokens, setTokens] = useState<Token[]>([]);
 	useEffect(() => {
 		const run = async () => {
-			const contract = new Contract(api!);
+			const contract = new Contract(new GGxNetwork(api!));
 			const tokens = await contract.allTokensWithInfo();
 			//console.log('tokens:', tokens)
 			setTokens(tokens);
