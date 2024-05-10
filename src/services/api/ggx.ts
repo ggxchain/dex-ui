@@ -1,12 +1,8 @@
-import {
-	BLOCK_TIME_IN_MILLIS,
-	GGX_WSS_URL,
-	NATIVE_TOKEN_ID_RESERVED,
-} from "@/settings";
+import { BLOCK_TIME_IN_MILLIS, NATIVE_TOKEN_ID_RESERVED } from "@/settings";
 
 import type Pair from "@/pair";
 import type { Amount, CounterId, OrderType, Token, TokenId } from "@/types";
-import { ApiPromise, WsProvider } from "@polkadot/api";
+import type { ApiPromise } from "@polkadot/api";
 import type { Signer } from "@polkadot/api/types";
 import type { ISubmittableResult } from "@polkadot/types/types";
 import { decodeAddress } from "@polkadot/util-crypto";
@@ -18,31 +14,29 @@ import type Order from "@/order";
 import type { ApiInterface, onFinalize } from "../api";
 
 export default class GGxNetwork implements ApiInterface {
-	api: ApiPromise | undefined;
+	private api: ApiPromise;
+
+	constructor(api: ApiPromise) {
+		this.api = api;
+	}
 
 	async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
-		const api = await this.apiPromise();
-
 		if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
-			return this.depositBalance(api, amount, callback);
+			return this.depositBalance(amount, callback);
 		}
 
 		const [sender, senderSigner] = await this.accountSigner();
 		const transactionCallback = this.transactionCallback(callback);
 
-		await api.tx.dex
+		await this.api.tx.dex
 			.deposit(tokenId, amount)
 			.signAndSend(sender, { signer: senderSigner }, transactionCallback);
 	}
 
-	async depositBalance(
-		api: ApiPromise,
-		amount: Amount,
-		callback: onFinalize,
-	): Promise<void> {
+	async depositBalance(amount: Amount, callback: onFinalize): Promise<void> {
 		const [sender, senderSigner] = await this.accountSigner();
 
-		await api.tx.dex
+		await this.api.tx.dex
 			.depositNative(amount)
 			.signAndSend(
 				sender,
@@ -52,10 +46,12 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async balanceOf(tokenId: TokenId, address: string): Promise<Amount> {
-		const api = await this.apiPromise();
 		const addressParam = this.createAddress(address);
 
-		const result = await api.query.dex.userTokenInfoes(addressParam, tokenId);
+		const result = await this.api.query.dex.userTokenInfoes(
+			addressParam,
+			tokenId,
+		);
 		if (result !== undefined) {
 			return Promise.resolve(result.amount.toBn());
 		}
@@ -63,10 +59,9 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async userBalance(address: string): Promise<Amount> {
-		const api = await this.apiPromise();
 		const addressParam = this.createAddress(address);
 
-		const result = await api.query.system.account(addressParam);
+		const result = await this.api.query.system.account(addressParam);
 		if (result !== undefined) {
 			return Promise.resolve(result.data.free.toBn());
 		}
@@ -74,24 +69,22 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize) {
-		const api = await this.apiPromise();
-
 		if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
-			return this.withdrawBalance(api, amount, callback);
+			return this.withdrawBalance(amount, callback);
 		}
 
 		const [sender, senderSigner] = await this.accountSigner();
 		const transactionCallback = this.transactionCallback(callback);
 
-		await api.tx.dex
+		await this.api.tx.dex
 			.withdraw(tokenId, amount)
 			.signAndSend(sender, { signer: senderSigner }, transactionCallback);
 	}
 
-	async withdrawBalance(api: ApiPromise, amount: Amount, callback: onFinalize) {
+	async withdrawBalance(amount: Amount, callback: onFinalize) {
 		const [sender, senderSigner] = await this.accountSigner();
 
-		await api.tx.dex
+		await this.api.tx.dex
 			.withdrawNative(amount)
 			.signAndSend(
 				sender,
@@ -101,8 +94,10 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async tokens(): Promise<TokenId[]> {
-		const api = await this.apiPromise();
-		const output = await api.query.dex.tokenInfoes();
+		if (this.api === undefined) {
+			return Promise.resolve([]);
+		}
+		const output = await this.api.query.dex.tokenInfoes();
 		if (output !== undefined) {
 			return output.map((tokenId) => tokenId.toNumber());
 		}
@@ -110,13 +105,12 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async tokenInfo(tokenId: TokenId): Promise<Token> {
-		const api = await this.apiPromise();
 		// Let's reserve chain prefix as GGx token id
 		if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
 			return this.ggxTokenInfo();
 		}
 
-		const metadata = await api.query.assets.metadata(tokenId);
+		const metadata = await this.api.query.assets.metadata(tokenId);
 
 		return {
 			id: tokenId,
@@ -127,21 +121,18 @@ export default class GGxNetwork implements ApiInterface {
 		};
 	}
 
-	async ggxTokenInfo(): Promise<Token> {
-		const api = await this.apiPromise();
-
+	ggxTokenInfo(): Token {
 		return {
 			id: NATIVE_TOKEN_ID_RESERVED,
-			name: api.registry.chainTokens[0],
-			symbol: api.registry.chainTokens[0],
+			name: this.api.registry.chainTokens[0],
+			symbol: this.api.registry.chainTokens[0],
 			network: "GGx",
-			decimals: api.registry.chainDecimals[0],
+			decimals: this.api.registry.chainDecimals[0],
 		};
 	}
 
 	async ownersTokens(address: string): Promise<TokenId[]> {
-		const api = await this.apiPromise();
-		const output = await api.query.dex.userTokenInfoes.entries(address);
+		const output = await this.api.query.dex.userTokenInfoes.entries(address);
 		if (output !== undefined) {
 			// Dex has a bug for now, use storage key instead
 			return output.map(([key, _tokenInfo]) => key.args[1].toNumber());
@@ -150,14 +141,13 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async onChainBalanceOf(tokenId: TokenId, address: string): Promise<Amount> {
-		const api = await this.apiPromise();
 		const addressParam = this.createAddress(address);
 
 		if (tokenId === NATIVE_TOKEN_ID_RESERVED) {
 			return this.userBalance(address);
 		}
 
-		const result = await api.query.assets.account(tokenId, addressParam);
+		const result = await this.api.query.assets.account(tokenId, addressParam);
 		if (result?.isSome) {
 			return Promise.resolve(result.unwrap().balance.toBn());
 		}
@@ -165,16 +155,14 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async pairOrders(pair: Pair): Promise<Order[]> {
-		const api = await this.apiPromise();
-
-		const blockNumberPromise = api.query.system.number();
-		const orderListPromise = api.query.dex.pairOrders(pair);
+		const blockNumberPromise = this.api.query.system.number();
+		const orderListPromise = this.api.query.dex.pairOrders(pair);
 		const [blockNumber, orderList] = await Promise.all([
 			blockNumberPromise,
 			orderListPromise,
 		]);
 		const ordersOpt = await Promise.all(
-			orderList.map((number) => api.query.dex.orders(number)),
+			orderList.map((number) => this.api.query.dex.orders(number)),
 		);
 
 		if (ordersOpt !== undefined) {
@@ -203,16 +191,17 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async userOrders(address: string): Promise<Order[]> {
-		const api = await this.apiPromise();
-
-		const blockNumberPromise = api.query.system.number();
-		const orderListPromise = await api.query.dex.userOrders.entries(address);
+		const blockNumberPromise = this.api.query.system.number();
+		const orderListPromise =
+			await this.api.query.dex.userOrders.entries(address);
 		const [blockNumber, orderList] = await Promise.all([
 			blockNumberPromise,
 			orderListPromise,
 		]);
 		const ordersOpt = await Promise.all(
-			orderList.map(([storageKey]) => api.query.dex.orders(storageKey.args[1])),
+			orderList.map(([storageKey]) =>
+				this.api.query.dex.orders(storageKey.args[1]),
+			),
 		);
 
 		if (ordersOpt !== undefined) {
@@ -248,15 +237,14 @@ export default class GGxNetwork implements ApiInterface {
 		expirationInMillis: number,
 		callback: onFinalize,
 	): Promise<void> {
-		const api = await this.apiPromise();
 		const [sender, senderSigner] = await this.accountSigner();
 		const transactionCallback = this.transactionCallback(callback);
-		const curentBlock = await api.query.system.number();
+		const curentBlock = await this.api.query.system.number();
 		const expirationBlock = curentBlock.addn(
 			Math.ceil(expirationInMillis / BLOCK_TIME_IN_MILLIS),
 		);
 
-		await api.tx.dex
+		await this.api.tx.dex
 			.makeOrder(
 				...pair,
 				amountOffered,
@@ -268,32 +256,21 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async cancelOrder(counterId: CounterId, callback: onFinalize): Promise<void> {
-		const api = await this.apiPromise();
 		const [sender, senderSigner] = await this.accountSigner();
 		const transactionCallback = this.transactionCallback(callback);
 
-		await api.tx.dex
+		await this.api.tx.dex
 			.cancelOrder(counterId)
 			.signAndSend(sender, { signer: senderSigner }, transactionCallback);
 	}
 
 	async takeOrder(counterId: CounterId, callback: onFinalize): Promise<void> {
-		const api = await this.apiPromise();
 		const [sender, senderSigner] = await this.accountSigner();
 		const transactionCallback = this.transactionCallback(callback);
 
-		await api.tx.dex
+		await this.api.tx.dex
 			.takeOrder(counterId)
 			.signAndSend(sender, { signer: senderSigner }, transactionCallback);
-	}
-
-	async apiPromise() {
-		if (this.api === undefined) {
-			const wsProvider = new WsProvider(GGX_WSS_URL);
-			this.api = await ApiPromise.create({ provider: wsProvider });
-		}
-
-		return this.api;
 	}
 
 	async accountSigner(): Promise<[string, Signer]> {

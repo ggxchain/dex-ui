@@ -1,7 +1,7 @@
-import { bn, bnE6, bnE18, lg } from "@/services/utils";
+import { bn, bnE6, bnE18 } from "@/services/utils";
 import type { DetailedOrder } from "@/types";
 import { BN_MILLION, BN_ONE, BN_THOUSAND } from "@polkadot/util";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { debug } from "jest-preview";
 import OrdersList from "../orderList";
 
@@ -101,13 +101,15 @@ describe("OrdersList", () => {
 		},
 	];
 
-	test("renders the order list correctly", () => {
-		render(
-			<OrdersList
-				orders={orders}
-				cancelOrder={jest.fn()}
-				isInitialized={true}
-			/>,
+	test("renders the order list correctly", async () => {
+		await act(() =>
+			render(
+				<OrdersList
+					orders={orders}
+					cancelOrder={jest.fn()}
+					isInitialized={true}
+				/>,
+			),
 		);
 
 		expect(screen.getByText("My orders")).toBeInTheDocument();
@@ -129,11 +131,12 @@ describe("OrdersList", () => {
 		expect(screen.getByText("1000.00 USDT")).toBeInTheDocument();
 	});
 
-	test("empty order list", () => {
-		render(
-			<OrdersList orders={[]} cancelOrder={jest.fn()} isInitialized={true} />,
+	test("empty order list", async () => {
+		await act(() =>
+			render(
+				<OrdersList orders={[]} cancelOrder={jest.fn()} isInitialized={true} />,
+			),
 		);
-		lg("orderlist test2");
 		expect(screen.getByText("My orders")).toBeInTheDocument();
 		expect(screen.getByText("No orders found")).toBeInTheDocument();
 	});

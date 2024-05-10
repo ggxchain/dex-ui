@@ -7,7 +7,10 @@ import Modal from "@/components/common/modal";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
 import TokenList from "@/components/tokenList";
+import { useParachain } from "@/parachain_provider";
 import Contract, { errorHandler } from "@/services/api";
+import GGxNetwork from "@/services/api/ggx";
+import GgxNetworkMock from "@/services/api/mock";
 import CexService from "@/services/cex";
 import GGXWallet, { type Account } from "@/services/ggx";
 import {
@@ -63,10 +66,16 @@ const useOwnedTokens = (
 
 	return [tokens, balances, refreshBalances] as const;
 };
-
-export default function Wallet() {
+export interface PageProps {
+	params: { slug: string; isMocked: boolean };
+	searchParams: { [key: string]: string | string[] | undefined };
+}
+export default function Wallet({ params, searchParams }: PageProps) {
+	const [isMocked, setIsMocked] = useState(params.isMocked);
+	const { isConnected, error, api } = useParachain();
+	const ggxNetwork = isMocked ? new GgxNetworkMock() : new GGxNetwork(api!);
+	const contract = new Contract(ggxNetwork);
 	const [isInitialized, setIsInitialized] = useState(false);
-	const [contract, setContract] = useState<Contract>(new Contract());
 
 	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
 		Contract.prototype.allTokensOfOwner,
@@ -105,6 +114,7 @@ export default function Wallet() {
 		refreshChainBalances();
 	};
 
+	// biome-ignore lint: do not include` contract` as a dependency of this effect, as it causes an inf loop
 	useEffect(() => {
 		setTokens([]);
 		contract
@@ -135,12 +145,10 @@ export default function Wallet() {
 			});
 
 		connectWallet();
-	}, [contract]);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-	useEffect(() => {
 		refreshBalances();
-	}, [selectedAccount]);
+		// do not add `contract` OR `refreshBalances` to dependencies here because they cause an infinite loop.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	const onSearch = (e: ChangeEvent<HTMLInputElement>) => {
 		setSearch(e.target.value);
@@ -267,8 +275,7 @@ export default function Wallet() {
 	};
 
 	const onContractTypeChange = () => {
-		Contract.setMocked(!Contract.isMocked());
-		setContract(new Contract());
+		setIsMocked(!isMocked);
 	};
 
 	const selectedTokenPrice = selectedToken
@@ -340,7 +347,7 @@ export default function Wallet() {
 				<label className="inline-flex relative items-center cursor-pointer ">
 					<input
 						type="checkbox"
-						checked={!Contract.isMocked()}
+						checked={!isMocked}
 						onChange={onContractTypeChange}
 						className="sr-only peer"
 					/>

@@ -1,6 +1,7 @@
 import "@/__utils__/localstore.mock";
 import ibcChains from "@/config/chains";
 import Contract from "@/services/api";
+import GgxNetworkMock from "@/services/api/mock";
 import { BN_MILLION } from "@polkadot/util";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
@@ -89,9 +90,8 @@ describe("Transfer", () => {
 			}),
 		);
 
-		Contract.setMocked(true);
-
-		const contract = new Contract();
+		const mockapi = new GgxNetworkMock();
+		const contract = new Contract(mockapi);
 		contract.deposit(0, BN_MILLION, () => {});
 	});
 
@@ -144,7 +144,7 @@ describe("Transfer", () => {
 		const select = screen.getByTestId("selectNetwork").lastChild!;
 		expect(select).toBeInTheDocument();
 
-		fireEvent.keyDown(select, { key: "ArrowDown" });
+		await act(() => fireEvent.keyDown(select, { key: "ArrowDown" }));
 		const option = screen.getByText(ibcChains[1].chainName);
 		await act(() => fireEvent.click(option));
 
@@ -159,7 +159,7 @@ describe("Transfer", () => {
 		expect(withdraw.textContent).toBe("Withdraw USDT");
 
 		const rows = screen.getAllByRole("row");
-		act(() => fireEvent.click(rows[2])); // Header + 2 tokens
+		await act(() => fireEvent.click(rows[2])); // Header + 2 tokens
 
 		expect(deposit.textContent).toBe("Deposit USDC");
 		expect(withdraw.textContent).toBe("Withdraw USDC");
@@ -171,7 +171,7 @@ describe("Transfer", () => {
 		expect(withdraw).toBeEnabled();
 
 		const rows = screen.getAllByRole("row");
-		act(() => fireEvent.click(rows[2]));
+		await act(() => fireEvent.click(rows[2]));
 		expect(screen.getByTestId("modal")).not.toBeVisible();
 
 		await act(() => fireEvent.click(withdraw));
@@ -187,7 +187,7 @@ describe("Transfer", () => {
 
 		const select = screen.getByTestId("selectGGxAccount").lastChild!;
 		expect(select).toBeInTheDocument();
-		fireEvent.keyDown(select, { key: "ArrowDown" });
+		await act(() => fireEvent.keyDown(select, { key: "ArrowDown" }));
 		const option = screen.getByText("Account 2");
 		await act(() => fireEvent.click(option));
 

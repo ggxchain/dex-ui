@@ -22,7 +22,7 @@ type TokenDepositMock = {
 	amount: Amount;
 };
 
-export default class ContractMock implements ApiInterface {
+export default class GgxNetworkMock implements ApiInterface {
 	deposits: Map<PubKey, TokenDepositMock[]> = new Map<
 		PubKey,
 		TokenDepositMock[]

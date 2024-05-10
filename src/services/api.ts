@@ -12,10 +12,8 @@ import type {
 import GGXWallet from "./ggx";
 
 import type Order from "@/order";
-import { CONTRACT_MOCKED, TOKENS_LIST_TTL } from "@/settings";
+import { TOKENS_LIST_TTL } from "@/settings";
 import { toast } from "react-toastify";
-import GGxNetwork from "./api/ggx";
-import ContractMock from "./api/mock";
 import { translateErrorMesg } from "./utils";
 
 export type onFinalize = (error: string | undefined) => void;
@@ -61,47 +59,13 @@ export enum Errors {
 	InvalidTokenId = "Invalid token id",
 }
 export default class Contract {
-	api: ApiInterface;
-	tokenCache: Map<TokenId, Token> = new Map<TokenId, Token>();
-	tokenList: TokenId[] = new Array<TokenId>();
-	lastUpdated = 0;
+	private api: ApiInterface;
+	public tokenCache: Map<TokenId, Token> = new Map<TokenId, Token>();
+	public tokenList: TokenId[] = new Array<TokenId>();
+	private lastUpdated = 0;
 
-	constructor() {
-		let mocked = CONTRACT_MOCKED;
-		if (typeof window !== "undefined" && window.localStorage) {
-			// Get info from local storage
-			const mockedValue = window.localStorage.getItem("mocked");
-			if (mockedValue !== null) {
-				mocked = mockedValue === "true";
-			}
-		}
-
-		this.api = mocked ? new ContractMock() : new GGxNetwork();
-	}
-
-	changeContract() {
-		if (Contract.isMocked()) {
-			this.api = new ContractMock();
-		} else {
-			this.api = new ContractMock();
-		}
-		this.tokenCache = new Map<TokenId, Token>();
-		this.tokenList = new Array<TokenId>();
-		this.lastUpdated = 0;
-	}
-
-	static isMocked(): boolean {
-		if (typeof window !== "undefined" && window.localStorage) {
-			const mockedValue = window.localStorage.getItem("mocked");
-			return mockedValue === "true";
-		}
-		return CONTRACT_MOCKED;
-	}
-
-	static setMocked(value: boolean) {
-		if (typeof window !== "undefined" && window.localStorage) {
-			window.localStorage.setItem("mocked", `${value}`);
-		}
+	constructor(api: ApiInterface) {
+		this.api = api;
 	}
 
 	async allTokens(): Promise<TokenId[]> {
@@ -114,9 +78,9 @@ export default class Contract {
 	}
 
 	async allTokensWithInfo(): Promise<Token[]> {
-		const tokens = await this.allTokens();
+		const tokenIds = await this.allTokens();
 		return await Promise.all(
-			tokens.map(async (value) => {
+			tokenIds.map(async (value) => {
 				return {
 					...(await this.mapTokenIdToToken(value)),
 					id: value,
@@ -319,7 +283,7 @@ export function warnHandler(error: Errors): undefined {
 }
 export function errorHandler(error: Errors): undefined {
 	toast.error(`${error}`);
-	console.error(error);
+	//console.error(error);
 	return undefined;
 }
 

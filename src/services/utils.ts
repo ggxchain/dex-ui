@@ -314,3 +314,11 @@ export const translateErrorMesg = (error: string | undefined) => {
 	}
 	return errEasy;
 };
+
+export const delayFunc = (delay: number): Promise<boolean> =>
+	new Promise((resolve, reject) =>
+		setTimeout(() => {
+			//lg("delay:", delay)
+			resolve(true); //or reject()
+		}, delay),
+	);

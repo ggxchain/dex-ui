@@ -13,7 +13,10 @@ import TokenSelector, {
 } from "@/components/dex/tokenSelector";
 import type Order from "@/order";
 import type Pair from "@/pair";
+import { useParachain } from "@/parachain_provider";
 import Contract, { errorHandler } from "@/services/api";
+import GGxNetwork from "@/services/api/ggx";
+import GgxNetworkMock from "@/services/api/mock";
 import GGXWallet from "@/services/ggx";
 import { count_decimals, fixDP, formatPrice } from "@/services/utils";
 import { MAX_DP } from "@/settings";
@@ -23,16 +26,23 @@ import { BN, BN_ZERO } from "@polkadot/util";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
+import type { PageProps } from "../wallet/page";
 import Loading from "./loading";
 
 type TokenData = TokenWithPrice & {
 	amount: Amount;
 };
 
-export default function Dex() {
+const milisecPerYear = new BN(31536000).mul(new BN(1000));
+
+export default function Dex({ params, searchParams }: PageProps) {
 	let mesg = "";
-	const milisecPerYear = new BN(31536000).mul(new BN(1000));
-	const contractRef = useRef<Contract>(new Contract());
+	const { api } = useParachain();
+	const ggxNetwork = params.isMocked
+		? new GgxNetworkMock()
+		: new GGxNetwork(api!);
+	const contract = new Contract(ggxNetwork);
+	const contractRef = useRef<Contract>(contract);
 	const [isMaker, setIsMaker] = useState<boolean>(false);
 	const [sellAmountStr, setSellAmountStr] = useState("");
 	const [buyAmountStr, setbuyAmountStr] = useState("");
@@ -66,6 +76,7 @@ export default function Dex() {
 		updateUserOrders();
 		loadTokens();
 		setIsInitialized(true);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
@@ -81,6 +92,7 @@ export default function Dex() {
 				})
 				.catch(errorHandler);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [sell, buy]);
 
 	const onClear = () => {
