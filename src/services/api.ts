@@ -78,9 +78,9 @@ export default class Contract {
 	}
 
 	async allTokensWithInfo(): Promise<Token[]> {
-		const tokens = await this.allTokens();
+		const tokenIds = await this.allTokens();
 		return await Promise.all(
-			tokens.map(async (value) => {
+			tokenIds.map(async (value) => {
 				return {
 					...(await this.mapTokenIdToToken(value)),
 					id: value,

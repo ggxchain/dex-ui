@@ -71,10 +71,9 @@ export interface PageProps {
 	searchParams: { [key: string]: string | string[] | undefined };
 }
 export default function Wallet({ params, searchParams }: PageProps) {
-	const { api } = useParachain();
-	const ggxNetwork = params.isMocked
-		? new GgxNetworkMock()
-		: new GGxNetwork(api!);
+	const [isMocked, setIsMocked] = useState(params.isMocked);
+	const { isConnected, error, api } = useParachain();
+	const ggxNetwork = isMocked ? new GgxNetworkMock() : new GGxNetwork(api!);
 	const contract = new Contract(ggxNetwork);
 	const [isInitialized, setIsInitialized] = useState(false);
 
@@ -276,7 +275,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	};
 
 	const onContractTypeChange = () => {
-		//Contract.setMocked(!Contract.isMocked);
+		setIsMocked(!isMocked);
 	};
 
 	const selectedTokenPrice = selectedToken
@@ -348,7 +347,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 				<label className="inline-flex relative items-center cursor-pointer ">
 					<input
 						type="checkbox"
-						checked={false} //!Contract.isMocked
+						checked={!isMocked}
 						onChange={onContractTypeChange}
 						className="sr-only peer"
 					/>

@@ -59,7 +59,6 @@ describe("Wallet", () => {
 			}),
 		);
 
-		//Contract.setMocked(true);
 		const mock = new GgxNetworkMock();
 		const contract = new Contract(mock);
 		contract.deposit(0, BN_MILLION, () => {});
