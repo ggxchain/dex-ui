@@ -7,7 +7,13 @@ import {
 	BN_TEN,
 	BN_THOUSAND,
 } from "@polkadot/util";
-import { bn, count_decimals, fixDP, strFloatToBN } from "./services/utils";
+import {
+	bn,
+	count_decimals,
+	fixDP,
+	removeTrailingZeros,
+	strFloatToBN,
+} from "./services/utils";
 import { CALCULATION_PRECISION, MAX_DP } from "./settings";
 
 export default class TokenDecimals {
@@ -30,16 +36,16 @@ export default class TokenDecimals {
 		return strFloatToBN(str, this.decimalPlaces);
 	}
 
-	BNToFloat(value: BN): number {
+	BNToFloat(value: BN): string {
 		const multiplier = BN_TEN.pow(bn(this.decimalPlaces));
 		const integer = value.div(multiplier);
 		const fractional = value.mod(multiplier);
 
 		if (fractional.isZero()) {
-			return integer.toNumber();
+			return integer.toString();
 		}
 
-		return Number(`${integer}.${fractional.toString(10, this.decimalPlaces)}`);
+		return `${integer}.${fractional.toString(10, this.decimalPlaces)}`;
 	}
 
 	BNtoDisplay(value: BN, symbol: string): string {
@@ -59,13 +65,14 @@ export default class TokenDecimals {
 			extraPrecision = 3;
 		}
 		const converter = new TokenDecimals(this.decimalPlaces + extraPrecision);
-		let result = `${converter.BNToFloat(value)}`;
+		let result = converter.BNToFloat(value);
 
 		const dpLen = count_decimals(result);
 		if (dpLen > MAX_DP) {
 			result = fixDP(result);
 		}
-		return `${result} ${prefix}${symbol}`;
+		const resultClean = removeTrailingZeros(result);
+		return `${resultClean} ${prefix}${symbol}`;
 	}
 
 	normalize(value: BN, oldDecimals: number): BN {

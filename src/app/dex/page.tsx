@@ -18,7 +18,13 @@ import Contract, { errorHandler } from "@/services/api";
 import GGxNetwork from "@/services/api/ggx";
 import GgxNetworkMock from "@/services/api/mock";
 import GGXWallet from "@/services/ggx";
-import { count_decimals, fixDP, formatPrice } from "@/services/utils";
+import {
+	big,
+	bigZero,
+	count_decimals,
+	fixDP,
+	formatPrice,
+} from "@/services/utils";
 import { MAX_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, DetailedOrder } from "@/types";
@@ -194,6 +200,7 @@ export default function Dex({ params, searchParams }: PageProps) {
 				toast.warn(mesg);
 				return;
 			}
+			console.log("-------== makeOrder");
 			contract
 				.makeOrder(
 					pair,
@@ -269,13 +276,13 @@ export default function Dex({ params, searchParams }: PageProps) {
 	const reverseRate = rate > 0 ? 1 / rate : 0;
 	const sellPriceRate = reverseRate * (sell?.price ?? 0);
 
-	const buyPrice = amountConverter.BNToFloat(buyAmount) * sellPriceRate;
-	const sellPrice = amountConverter.BNToFloat(sellAmount) * buyPriceRate;
+	const buyPrice = big(buyAmount.toString()).multipliedBy(sellPriceRate);
+	const sellPrice = big(sellAmount.toString()).multipliedBy(buyPriceRate);
 
 	const comparedToMarket =
-		!isTokenNotSelected && !isAmountZero && buyPrice > 0
-			? ((sellPrice - buyPrice) * 100) / buyPrice
-			: 0;
+		!isTokenNotSelected && !isAmountZero && buyPrice.gt(0)
+			? sellPrice.minus(buyPrice).multipliedBy(100).dividedBy(buyPrice)
+			: bigZero;
 
 	return (
 		<div className="text-GGx-gray flex flex-col w-full items-center">
@@ -372,12 +379,12 @@ export default function Dex({ params, searchParams }: PageProps) {
 								{rate > 0 && !isTokenNotSelected && !isTokenSame ? (
 									<div className="flex flex-col text-GGx-light">
 										<p className="font-semibold">
-											1 {sell.name} = {formatPrice(rate)} {buy.name} ≈ $
-											{formatPrice(buyPriceRate)}
+											1 {sell.name} = {formatPrice(big(rate))} {buy.name} ≈ $
+											{formatPrice(big(buyPriceRate))}
 										</p>
 										<p className="text-base text-right text-GGx-gray">
-											1 {buy.name} = {formatPrice(reverseRate)} {sell.name} ≈ $
-											{formatPrice(sellPriceRate)}
+											1 {buy.name} = {formatPrice(big(reverseRate))} {sell.name}{" "}
+											≈ ${formatPrice(big(sellPriceRate))}
 										</p>
 									</div>
 								) : (
@@ -389,14 +396,14 @@ export default function Dex({ params, searchParams }: PageProps) {
 								<p className="font-semibold">COMPARED TO CEX:</p>
 								<p
 									className={`${
-										comparedToMarket < 0
+										comparedToMarket.lt(bigZero)
 											? "text-GGx-red"
-											: comparedToMarket > 0
+											: comparedToMarket.gt(bigZero)
 												? "text-GGx-green"
 												: ""
 									}`}
 								>
-									{formatPrice(Math.abs(comparedToMarket))}%
+									{formatPrice(comparedToMarket.abs())}%
 								</p>
 							</div>
 

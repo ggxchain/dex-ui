@@ -669,14 +669,18 @@ declare module '@polkadot/api-base/types/errors' {
     dex: {
       AssetIdNotInTokenIndex: AugmentedError<ApiType>;
       AssetIdNotInTokenInfoes: AugmentedError<ApiType>;
+      DivOverflow: AugmentedError<ApiType>;
       ExpirationMustBeInFuture: AugmentedError<ApiType>;
       InsufficientBalance: AugmentedError<ApiType>;
       InvalidOrderIndex: AugmentedError<ApiType>;
+      MulOverflow: AugmentedError<ApiType>;
       NotEnoughBalance: AugmentedError<ApiType>;
       NotOwner: AugmentedError<ApiType>;
+      OffchainUnsignedTxError: AugmentedError<ApiType>;
       OrderIndexOverflow: AugmentedError<ApiType>;
       PairAssetIdMustNotEqual: AugmentedError<ApiType>;
       PairOrderNotFound: AugmentedError<ApiType>;
+      PriceDoNotMatchOfferedRequestedAmount: AugmentedError<ApiType>;
       TokenBalanceOverflow: AugmentedError<ApiType>;
       UserAssetNotExist: AugmentedError<ApiType>;
       WithdrawBalanceMustKeepOrderSellAmount: AugmentedError<ApiType>;

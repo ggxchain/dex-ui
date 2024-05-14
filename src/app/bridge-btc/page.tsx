@@ -68,7 +68,7 @@ const BridgeBtc = () => {
 
 		const selected = selectedAccount?.address;
 		if (!selected) {
-			console.error("SelectedAccount undefined");
+			console.warn("SelectedAccount undefined");
 			return;
 		}
 		const entries = await api.query.tokens.accounts.entries(selected);
@@ -301,7 +301,7 @@ const BridgeBtc = () => {
 				return;
 			}
 			setSelectedToken(tokenObj);
-			console.log("tokenObj:", tokenObj);
+			console.log("selectedToken and tokenObj:", tokenObj);
 			//connectWallet();
 		};
 		run();
