@@ -12,7 +12,6 @@
     "lint": "bun run next_lint && bun run biome_check",
     "next_lint": "next lint",
     "test": "jest",
-    "test6": "jest src/app/__tests__/dex.tsx",
     "jest-preview": "jest-preview",
     "biome_check_errors": "biome check src --apply --diagnostic-level=error",
     "biome_check": "biome check --apply src",
