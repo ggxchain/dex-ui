@@ -16,7 +16,7 @@ const cosmos = ((): ChainInfo => {
 
 const localhost = {
 	chainId: "earth-0",
-	chainName: "monkey",
+	chainName: "GGx Cosmos testnet",
 	rpc: "http://127.0.0.1:26657",
 	rest: "http://127.0.0.1:1317",
 	bip44: {
@@ -65,6 +65,10 @@ const localhost = {
 	features: ["stargate", "ibc-transfer", "no-legacy-stdTx"],
 };
 
-const ibcChains = [cosmos, axelar, localhost];
+const ibcChains = [
+//	cosmos, 
+//	axelar, 
+	localhost
+];
 
 export default ibcChains;
