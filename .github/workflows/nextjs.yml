@@ -59,6 +59,10 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
       - run: bun install
       - name: Build with Next.js
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_PARACHAIN_URL: wss://brooklyn-archive.dev.ggxchain.io:9944/
+          NEXT_PUBLIC_GGX_NETWORK: brooklyn
         run: bun run build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
