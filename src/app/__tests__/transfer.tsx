@@ -136,20 +136,22 @@ describe("Transfer", () => {
 		expect(screen.getByTestId("modal")).toBeVisible();
 	});
 
-	test("select account", async () => {
-		await act(() => render(<Transfer />));
+	if (ibcChains.length > 1) {
+		test("select account", async () => {
+			await act(() => render(<Transfer />));
 
-		expect(screen.getByText(ibcChains[0].chainName)).toBeInTheDocument();
+			expect(screen.getByText(ibcChains[0].chainName)).toBeInTheDocument();
 
-		const select = screen.getByTestId("selectNetwork").lastChild!;
-		expect(select).toBeInTheDocument();
+			const select = screen.getByTestId("selectNetwork").lastChild!;
+			expect(select).toBeInTheDocument();
 
-		await act(() => fireEvent.keyDown(select, { key: "ArrowDown" }));
-		const option = screen.getByText(ibcChains[1].chainName);
-		await act(() => fireEvent.click(option));
+			await act(() => fireEvent.keyDown(select, { key: "ArrowDown" }));
+			const option = screen.getByText(ibcChains[1].chainName);
+			await act(() => fireEvent.click(option));
 
-		ibcChange(ibcChains[1]);
-	});
+			ibcChange(ibcChains[1]);
+		});
+	}
 
 	test("click on table replaces selected token", async () => {
 		await act(() => render(<Transfer />));

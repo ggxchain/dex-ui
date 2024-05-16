@@ -1,24 +1,8 @@
-import { chainRegistryChainToKeplr } from "@chain-registry/keplr";
-import type { ChainInfo } from "@keplr-wallet/types";
-import { assets, chains } from "chain-registry";
-
-const axelar = ((): ChainInfo => {
-	const chain = chains.find(
-		(chain) => chain.chain_id === "axelar-testnet-lisbon-3",
-	);
-	return chainRegistryChainToKeplr(chain!, assets);
-})();
-
-const cosmos = ((): ChainInfo => {
-	const chain = chains.find((chain) => chain.chain_id === "theta-testnet-001");
-	return chainRegistryChainToKeplr(chain!, assets);
-})();
-
 const localhost = {
 	chainId: "earth-0",
-	chainName: "monkey",
-	rpc: "http://127.0.0.1:26657",
-	rest: "http://127.0.0.1:1317",
+	chainName: "GGx Cosmos testnet",
+	rpc: "https://cosmos-rpc.dev.ggxchain.io:443",
+	rest: "https://cosmos-rpc.dev.ggxchain.io:1200",
 	bip44: {
 		coinType: 118,
 	},
@@ -65,6 +49,6 @@ const localhost = {
 	features: ["stargate", "ibc-transfer", "no-legacy-stdTx"],
 };
 
-const ibcChains = [cosmos, axelar, localhost];
+const ibcChains = [localhost];
 
 export default ibcChains;
