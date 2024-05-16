@@ -1,7 +1,3 @@
-import { chainRegistryChainToKeplr } from "@chain-registry/keplr";
-import type { ChainInfo } from "@keplr-wallet/types";
-import { assets, chains } from "chain-registry";
-
 const localhost = {
 	chainId: "earth-0",
 	chainName: "GGx Cosmos testnet",
