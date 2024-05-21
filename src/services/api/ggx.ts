@@ -47,14 +47,13 @@ export default class GGxNetwork implements ApiInterface {
 
 	async balanceOf(tokenId: TokenId, address: string): Promise<Amount> {
 		const addressParam = this.createAddress(address);
-		if (this?.api?.query?.dex?.userTokenInfoes) {
-			const result = await this.api.query.dex.userTokenInfoes(
-				addressParam,
-				tokenId,
-			);
-			if (result !== undefined) {
-				return Promise.resolve(result.amount.toBn());
-			}
+
+		const result = await this.api.query.dex.userTokenInfoes(
+			addressParam,
+			tokenId,
+		);
+		if (result !== undefined) {
+			return Promise.resolve(result.amount.toBn());
 		}
 		return Promise.resolve(BN_ZERO);
 	}
@@ -95,19 +94,14 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async tokens(): Promise<TokenId[]> {
-		try {
-			if (this.api === undefined) {
-				return Promise.resolve([]);
-			}
-			//@ts-ignore
-			const output = await this.api.query.dex.get.tokenInfoes();
-			if (output !== undefined) {
-				return output.map((tokenId: TokenId) => tokenId);
-			}
-			return Promise.resolve([]);
-		} catch {
+		if (this.api === undefined) {
 			return Promise.resolve([]);
 		}
+		const output = await this.api.query.dex.tokenInfoes();
+		if (output !== undefined) {
+			return output.map((tokenId) => tokenId.toNumber());
+		}
+		return Promise.resolve([]);
 	}
 
 	async tokenInfo(tokenId: TokenId): Promise<Token> {
@@ -138,12 +132,10 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async ownersTokens(address: string): Promise<TokenId[]> {
-		if (this?.api?.query?.dex?.userTokenInfoes?.entries) {
-			const output = await this.api.query.dex.userTokenInfoes.entries(address);
-			if (output !== undefined) {
-				// Dex has a bug for now, use storage key instead
-				return output.map(([key, _tokenInfo]) => key.args[1].toNumber());
-			}
+		const output = await this.api.query.dex.userTokenInfoes.entries(address);
+		if (output !== undefined) {
+			// Dex has a bug for now, use storage key instead
+			return output.map(([key, _tokenInfo]) => key.args[1].toNumber());
 		}
 		return Promise.resolve([]);
 	}
