@@ -3,7 +3,7 @@ import { OrderUtils } from "@/order";
 import type Pair from "@/pair";
 import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
-import { formatPrice } from "@/services/utils";
+import { big, formatPrice } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, DetailedOrder, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
@@ -179,7 +179,7 @@ export default function OrderBook({
 									className="relative w-full text-GGx-red"
 								>
 									<td className="text-left font-medium text-GGx-red">
-										{formatPrice(orderPrice)}
+										{formatPrice(big(orderPrice))}
 									</td>
 									<td className="text-left">
 										<span className="text-GGx-light font-medium bg-GGx-red/50 rounded-[4px] px-[6px]">
@@ -243,7 +243,7 @@ export default function OrderBook({
 								>
 									<td className="relative text-left font-medium text-GGx-green">
 										{selected && <p className="absolute h-full left-0">↠</p>}
-										<p className="pl-3">{formatPrice(orderPrice)}</p>
+										<p className="pl-3">{formatPrice(big(orderPrice))}</p>
 									</td>
 									<td className="text-left">
 										<span className="text-GGx-light font-medium bg-GGx-green/50 rounded-[4px] px-[6px]">

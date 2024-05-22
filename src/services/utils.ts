@@ -20,12 +20,13 @@ export const bnE15 = BN_TEN.pow(bn(15));
 export const bnE18 = BN_TEN.pow(bn(18));
 export const bnMaxDp = BN_TEN.pow(bn(MAX_DP));
 export const maxNumericInputBn = bn(maxNumericInput);
-
-export const bnOne = new BigNumber(1);
-export const bigZero = new BigNumber(0);
-export const bigOne = new BigNumber(1);
-export const bigTEN = new BigNumber(10);
-
+export const big = (n: number | string | BigNumber) => new BigNumber(n);
+export const bigZero = big(0);
+export const bigOne = big(1);
+export const bigTEN = big(10);
+export const fromBig = (n: number | string | BN, decimals: number) => {
+	return big(n.toString()).shiftedBy(-1 * decimals);
+};
 export const strToBn = (str: string): BN => {
 	const integer: number = Number.parseInt(str);
 	if (Number.isNaN(integer)) {
@@ -41,7 +42,7 @@ export const strToBn = (str: string): BN => {
 - if price < 1, use 4 significant figures(except 5 for DOGE, TRX)
 */
 export const bnFormat = (n: BigNumber, minimumFractionDigits = 8) => {
-	if (n.gte(bnOne)) return n.toFixed(2);
+	if (n.gte(bigOne)) return n.toFixed(2);
 	return n.toFixed(minimumFractionDigits);
 };
 
@@ -77,27 +78,34 @@ export const fixDP = (str: string, dp = MAX_DP) => {
 		return `${arr[0]}.+${"0".repeat(dp)}`;
 	return `${arr[0]}.${arr[1].substring(0, dp)}`;
 };
-export const formatPrice = (n: number, symbol = "na") => {
+export const bnToBig = (n: BN | undefined) => {
+	if (n === undefined || n === null) return bigZero;
+	return big(n.toString());
+};
+export const formatPrice = (n: BigNumber, symbol = "na") => {
 	if (["dai"].includes(symbol.toLowerCase())) {
 		return formatter(8).format(n);
 	}
 	if (["doge", "trx"].includes(symbol.toLowerCase())) {
 		return formatter(5).format(n);
 	}
-	if (n > 1) {
+	if (n.gt(bigOne)) {
 		return formatter().format(n);
 	}
-	if (n === 1) {
+	if (n.eq(bigOne)) {
 		return "$1.00";
 	}
-	if (n === 0) {
+	if (n.eq(bigZero)) {
 		return "$0.00";
 	}
-	return `$${sigFig(n, 4)}`;
+	return `$${sigFigBig(n, 4)}`;
 };
 export const sigFig = (n: number, sig: number) => {
 	const mult = 10 ** (sig - Math.floor(Math.log(n) / Math.LN10) - 1);
 	return `${Math.round(n * mult) / mult}`;
+};
+export const sigFigBig = (b: string | number | BigNumber, sig: number) => {
+	return big(b).toPrecision(sig);
 };
 export const checkBnStr = (str: string) => {
 	let amount = BN_ZERO;
@@ -212,16 +220,24 @@ export const strIntToBn = (str: string): BN => {
 	}
 	return bn(integer);
 };
-export const BNToFloat = (value: BN, dp: number): number => {
+export const BNToFloat = (value: BN, dp: number): string => {
 	const multiplier = BN_TEN.pow(bn(dp));
 	const integer = value.div(multiplier);
 	const fractional = value.mod(multiplier);
 
 	if (fractional.isZero()) {
-		return integer.toNumber();
+		return integer.toString();
 	}
-	return Number(`${integer}.${fractional.toString(10, dp)}`);
+	return `${integer}.${fractional.toString(10, dp)}`;
 };
+
+//^0+ to capture leading zeros and (\.\d*[1-9])(0+)$ to capture trailing zeros.
+export const removeZeros = (str: string) =>
+	str.replace(/^0+|(\.\d*[1-9])(0+)$/g, "$1");
+
+export const removeTrailingZeros = (str: string) =>
+	str.replace(/(\.\d*[1-9])(0+)$/g, "$1");
+
 export const BNtoDisplay = (value: BN, symbol = "USD"): string => {
 	const integer = value; //.div(BN_HUNDRED);
 	let prefix = "";
@@ -236,13 +252,14 @@ export const BNtoDisplay = (value: BN, symbol = "USD"): string => {
 		prefix = "K";
 		moreDp = 3;
 	}
-	let result = `${BNToFloat(value, moreDp)}`;
+	let result = BNToFloat(value, moreDp);
 
 	const dpLen = count_decimals(result);
 	if (dpLen > MAX_DP) {
 		result = fixDP(result);
 	}
-	return `${result} ${prefix}${symbol}`;
+	const resultClean = removeTrailingZeros(result);
+	return `${resultClean} ${prefix}${symbol}`;
 };
 /** interfaces/lookup.ts
     _enum: ['FundsUnavailable', 'OnlyProvider', 'BelowMinimum', 'CannotCreate', 'UnknownAsset', 'Frozen', 'Unsupported', 'CannotCreateHold', 'NotExpendable', 'Blocked']

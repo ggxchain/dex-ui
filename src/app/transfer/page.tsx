@@ -31,7 +31,7 @@ import { toast } from "react-toastify";
 
 import { Button } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
-import { formatter, strFloatToBN } from "@/services/utils";
+import { bigZero, formatter, fromBig, strFloatToBN } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import Loading from "./loading";
 
@@ -323,10 +323,14 @@ export default function Transfer() {
 
 	const walletIsNotInitialized = !account?.address || !client;
 	const isGGxWalletNotConnected = modalGGxAccount === undefined;
+
 	const total = tokens.reduce((acc, token) => {
-		const balance = new TokenDecimals(token.decimals).BNToFloat(token.balance);
-		return acc + balance * (prices.get(token.symbol) ?? 0);
-	}, 0);
+		const balcBn = token.balance;
+		const balance = fromBig(balcBn, token.decimals);
+		const priceNum = prices.get(token.symbol) ?? 0;
+
+		return acc.plus(balance.multipliedBy(priceNum));
+	}, bigZero);
 
 	let price = 0;
 	if (selectedToken) {

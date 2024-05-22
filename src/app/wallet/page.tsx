@@ -15,18 +15,20 @@ import CexService from "@/services/cex";
 import GGXWallet, { type Account } from "@/services/ggx";
 import {
 	BNtoDisplay,
+	bigZero,
 	bn,
 	checkBnStr,
 	count_decimals,
 	fixDP,
 	formatter,
+	fromBig,
 	numFloatToBN,
 	strFloatToBN,
 } from "@/services/utils";
 import { MAX_DP, PRICE_DP } from "@/settings";
-import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token, TokenId } from "@/types";
 import { BN, BN_TEN, BN_ZERO } from "@polkadot/util";
+import type BigNumber from "bignumber.js";
 import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Loading from "./loading";
@@ -165,26 +167,25 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	const filteredTokens = tokens.filter((token) => filter(token));
 	const isTokenNotSelected = selectedToken === undefined;
 
-	const totalOnChain = tokens.reduce<number>((total, token) => {
-		const balance = new TokenDecimals(token.decimals).BNToFloat(
-			chainBalances.get(token.id) ?? BN_ZERO,
-		);
-		const price = tokenPrices.get(token.id) ?? 0;
-		return total + balance * price;
-	}, 0);
+	const totalOnChain = tokens.reduce<BigNumber>((total, token) => {
+		const balcBn = chainBalances.get(token.id) ?? BN_ZERO;
+		const balance = fromBig(balcBn, token.decimals);
+		const priceNum = tokenPrices.get(token.id) ?? 0;
 
-	const total = dexOwnedTokens.reduce<number>((total, tokenId) => {
+		return total.plus(balance.multipliedBy(priceNum));
+	}, bigZero);
+
+	const totalDexOwned = dexOwnedTokens.reduce<BigNumber>((total, tokenId) => {
 		const token = tokenMap.get(tokenId);
 		if (token === undefined) {
 			return total;
 		}
 
-		const balance = new TokenDecimals(token.decimals).BNToFloat(
-			dexBalances.get(tokenId) ?? BN_ZERO,
-		);
-		const price = tokenPrices.get(tokenId) ?? 0;
+		const balcBn = dexBalances.get(tokenId) ?? BN_ZERO;
+		const balance = fromBig(balcBn, token.decimals);
+		const priceNum = tokenPrices.get(tokenId) ?? 0;
 
-		return total + balance * price;
+		return total.plus(balance.multipliedBy(priceNum));
 	}, totalOnChain);
 
 	const omModalSubmit = () => {
@@ -313,7 +314,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		<div className="w-full h-full flex flex-col">
 			<div className="flex w-full justify-between items-center">
 				<h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">
-					{formatter().format(total)}
+					{formatter().format(totalDexOwned.toString())}
 				</h1>
 				<div className="flex xl:flex-row flex-col gap-5">
 					<Button

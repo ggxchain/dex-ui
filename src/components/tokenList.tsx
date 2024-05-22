@@ -1,7 +1,8 @@
-import { formatPrice } from "@/services/utils";
+import { big, bnToBig, formatPrice } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token } from "@/types";
 import { BN_ZERO } from "@polkadot/util";
+import type BigNumber from "bignumber.js";
 import Image from "next/image";
 import Spinner from "./common/spinner";
 
@@ -95,24 +96,30 @@ export default function TokenList({
 							</td>
 							<td>
 								<Balance
-									amountConverter={amountConverter}
-									symbol={token.symbol}
-									balance={token.balance}
+									balance={bnToBig(token.balance)}
+									decimal={token.decimals}
 									estimatedPrice={token.estimatedPrice}
+									toDisplay={amountConverter.BNtoDisplay(
+										token.balance,
+										token.symbol,
+									)}
 								/>
 							</td>
 							{onChain && (
 								<td>
 									<Balance
-										amountConverter={amountConverter}
-										symbol={token.symbol}
-										balance={token.onChainBalance ?? BN_ZERO}
+										balance={bnToBig(token.onChainBalance)}
+										decimal={token.decimals}
 										estimatedPrice={token.estimatedPrice}
+										toDisplay={amountConverter.BNtoDisplay(
+											token.onChainBalance ?? BN_ZERO,
+											token.symbol,
+										)}
 									/>
 								</td>
 							)}
 							<td data-testid={`price-${token.symbol}`}>
-								{formatPrice(token.estimatedPrice)}
+								{formatPrice(big(token.estimatedPrice))}
 							</td>
 						</tr>
 					);
@@ -123,25 +130,26 @@ export default function TokenList({
 }
 
 interface BalanceProperties {
-	balance: Amount;
+	balance: BigNumber;
+	decimal: number;
 	estimatedPrice: number;
-	symbol: string;
-	amountConverter: TokenDecimals;
+	toDisplay: string;
 }
 
 function Balance({
 	balance,
+	decimal,
 	estimatedPrice,
-	symbol,
-	amountConverter,
+	toDisplay,
 }: BalanceProperties) {
-	const estimatedPriceWithPrecision =
-		amountConverter.BNToFloat(balance) * estimatedPrice;
+	const estimatedPriceWithPrecision = balance
+		.shiftedBy(-1 * decimal)
+		.multipliedBy(estimatedPrice);
 
 	return (
 		<div className="text-[18px] font-medium text-left break-words">
 			<p className="mt-1">
-				{amountConverter.BNtoDisplay(balance, symbol)}
+				{toDisplay}
 				<sup className="ml-1 font- text-[10px]">
 					({formatPrice(estimatedPriceWithPrecision)})
 				</sup>
