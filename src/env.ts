@@ -19,7 +19,7 @@ export const env = {
 			.parse(process.env.NEXT_PUBLIC_PARACHAIN_URL);
 	})(),
 
-	GGX_NETWORK: (() => {
+	NEXT_PUBLIC_GGX_NETWORK: (() => {
 		return z
 			.enum(["brooklyn", "sydney"], {
 				required_error: "Must provide a NEXT_PUBLIC_GGX_NETWORK env var",
