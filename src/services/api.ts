@@ -63,6 +63,7 @@ export default class Contract {
 	public tokenCache: Map<TokenId, Token> = new Map<TokenId, Token>();
 	public tokenList: TokenId[] = new Array<TokenId>();
 	private lastUpdated = 0;
+	public wallet: string | undefined = "";
 
 	constructor(api: ApiInterface) {
 		this.api = api;
@@ -259,11 +260,9 @@ export default class Contract {
 		);
 	}
 
-	walletAddress(): string {
+	walletAddress(): string | undefined {
 		const wallet = new GGXWallet().pubkey()?.address;
-		if (wallet === undefined) {
-			throw new Error(Errors.WalletIsNotConnected);
-		}
+		this.wallet = wallet;
 		return wallet;
 	}
 

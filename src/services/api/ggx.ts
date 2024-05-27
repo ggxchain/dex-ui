@@ -47,7 +47,6 @@ export default class GGxNetwork implements ApiInterface {
 
 	async balanceOf(tokenId: TokenId, address: string): Promise<Amount> {
 		const addressParam = this.createAddress(address);
-
 		const result = await this.api.query.dex.userTokenInfoes(
 			addressParam,
 			tokenId,
