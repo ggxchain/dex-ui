@@ -274,6 +274,7 @@ declare module '@polkadot/api-base/types/consts' {
     };
     dex: {
       palletId: FrameSupportPalletId & AugmentedConst<ApiType>;
+      unsignedPriority: u64 & AugmentedConst<ApiType>;
       /**
        * Generic const
        **/
