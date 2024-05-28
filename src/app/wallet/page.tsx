@@ -6,6 +6,7 @@ import LoadingButton from "@/components/common/loadButton";
 import Modal from "@/components/common/modal";
 import Ruler from "@/components/common/ruler";
 import { SelectDark } from "@/components/common/select";
+import GgxContext from "@/components/providers/ggx";
 import TokenList from "@/components/tokenList";
 import { useParachain } from "@/parachain_provider";
 import Contract, { errorHandler } from "@/services/api";
@@ -27,7 +28,14 @@ import { MAX_DP, PRICE_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token, TokenId } from "@/types";
 import { BN, BN_TEN, BN_ZERO } from "@polkadot/util";
-import { type ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
+import {
+	type ChangeEvent,
+	Suspense,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { toast } from "react-toastify";
 import Loading from "./loading";
 
@@ -66,10 +74,12 @@ const useOwnedTokens = (
 
 	return [tokens, balances, refreshBalances] as const;
 };
+
 export interface PageProps {
 	params: { slug: string; isMocked: boolean };
 	searchParams: { [key: string]: string | string[] | undefined };
 }
+
 export default function Wallet({ params, searchParams }: PageProps) {
 	const [isMocked, setIsMocked] = useState(params.isMocked);
 	const [tokenMap, setTokenMap] = useState<Map<TokenId, Token>>(
@@ -89,11 +99,10 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	);
 
 	// Wallet
-	const [ggx] = useState<GGXWallet>(new GGXWallet());
+	const [ggx] = useContext(GgxContext);
 
 	// Modal related states
 	const [modal, setModal] = useState<boolean>(false);
-	const [walletsError, setWalletsError] = useState<boolean>(false);
 	const [modalAmount, setModalAmount] = useState("");
 	const modalTitle = useRef<InteractType>("Deposit");
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
@@ -238,11 +247,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	const connectWallet = async () => {
 		const accounts = await ggx.getAccounts().catch(errorHandler);
 		if (accounts === undefined) {
-			setWalletsError(true);
 			return;
-		}
-		if (accounts.length === 0) {
-			setWalletsError(true);
 		}
 		setGGXAccounts(accounts);
 		setSelectedAccount(ggx.pubkey());
@@ -316,22 +321,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		}
 		setModalAmount(input);
 	};
-	if (walletsError) {
-		return (
-			<div className="w-full h-full flex flex-col">
-				<div className="w-full">
-					<Modal modalTitle="Warning!" fixed={false} hideClose isOpen>
-						<div className="flex flex-col w-full">
-							<p className="text-GGx-dark">
-								Please install any wallets plugin: Keplr, Polkadot.{"{"}js{"}"},
-								SubWallet
-							</p>
-						</div>
-					</Modal>
-				</div>
-			</div>
-		);
-	}
+
 	return (
 		<div className="w-full h-full flex flex-col">
 			<div className="flex w-full justify-between items-center">
