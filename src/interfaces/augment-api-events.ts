@@ -374,6 +374,7 @@ declare module '@polkadot/api-base/types/events' {
       NativeWithdrawed: AugmentedEvent<ApiType, [amount: u128], { amount: u128 }>;
       OrderCanceled: AugmentedEvent<ApiType, [orderIndex: u64], { orderIndex: u64 }>;
       OrderCreated: AugmentedEvent<ApiType, [orderIndex: u64, order: PalletDexOrder], { orderIndex: u64, order: PalletDexOrder }>;
+      OrderMatched: AugmentedEvent<ApiType, [quantityBase: u128, quantityQuote: u128, takerOrder: PalletDexOrder, makerOrder: PalletDexOrder], { quantityBase: u128, quantityQuote: u128, takerOrder: PalletDexOrder, makerOrder: PalletDexOrder }>;
       OrderTaken: AugmentedEvent<ApiType, [account: AccountId32, orderIndex: u64, order: PalletDexOrder], { account: AccountId32, orderIndex: u64, order: PalletDexOrder }>;
       SubmitProcessedReceipts: AugmentedEvent<ApiType, [blockNumber: u64], { blockNumber: u64 }>;
       Withdrawed: AugmentedEvent<ApiType, [assetId: u32, amount: u128], { assetId: u32, amount: u128 }>;
