@@ -260,10 +260,10 @@ export default class Contract {
 		);
 	}
 
-	walletAddress(): string | undefined {
+	walletAddress(): string {
 		const wallet = new GGXWallet().pubkey()?.address;
 		this.wallet = wallet;
-		return wallet;
+		return wallet as unknown as string;
 	}
 
 	async validateTokenId(tokenId: TokenId) {
