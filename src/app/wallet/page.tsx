@@ -88,6 +88,9 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		undefined,
 	);
 
+	// Wallet
+	const [ggx] = useState<GGXWallet>(new GGXWallet());
+
 	// Modal related states
 	const [modal, setModal] = useState<boolean>(false);
 	const [walletsError, setWalletsError] = useState<boolean>(false);
@@ -99,12 +102,6 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	const { isConnected, error, api } = useParachain();
 	const ggxNetwork = isMocked ? new GgxNetworkMock() : new GGxNetwork(api!);
 	const contract = new Contract(ggxNetwork);
-
-	useEffect(() => {
-		if (contract) {
-			setWalletsError(contract && !contract.wallet);
-		}
-	}, [contract]);
 
 	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
 		Contract.prototype.allTokensOfOwner,
@@ -238,15 +235,16 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		setModalAmount("");
 		setModal(true);
 	};
-
 	const connectWallet = async () => {
-		const ggx = new GGXWallet();
 		const accounts = await ggx.getAccounts().catch(errorHandler);
 		if (accounts === undefined) {
 			setWalletsError(true);
 			return;
 		}
-		if (ggx) setGGXAccounts(accounts);
+		if (accounts.length === 0) {
+			setWalletsError(true);
+		}
+		setGGXAccounts(accounts);
 		setSelectedAccount(ggx.pubkey());
 	};
 
@@ -325,7 +323,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 					<Modal modalTitle="Warning!" fixed={false} hideClose isOpen>
 						<div className="flex flex-col w-full">
 							<p className="text-GGx-dark">
-								Please install any wallets plugin: Keprl, Polkadot.{"{"}js{"}"},
+								Please install any wallets plugin: Keplr, Polkadot.{"{"}js{"}"},
 								SubWallet
 							</p>
 						</div>
