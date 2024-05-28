@@ -99,7 +99,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	);
 
 	// Wallet
-	const [ggx] = useContext(GgxContext);
+	const { ggx } = useContext(GgxContext);
 
 	// Modal related states
 	const [modal, setModal] = useState<boolean>(false);
@@ -245,12 +245,14 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		setModal(true);
 	};
 	const connectWallet = async () => {
-		const accounts = await ggx.getAccounts().catch(errorHandler);
-		if (accounts === undefined) {
-			return;
+		if (ggx) {
+			const accounts = await ggx.getAccounts().catch(errorHandler);
+			if (accounts === undefined) {
+				return;
+			}
+			setGGXAccounts(accounts);
+			setSelectedAccount(ggx.pubkey());
 		}
-		setGGXAccounts(accounts);
-		setSelectedAccount(ggx.pubkey());
 	};
 
 	const walletIsNotInitialized = ggxAccounts.length === 0;

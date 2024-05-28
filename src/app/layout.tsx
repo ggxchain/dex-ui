@@ -49,7 +49,7 @@ export default function Layout({
 		<html lang="en">
 			<body className={`${inter.className} relative min-h-dvh`}>
 				<ParachainProviderProvider>
-					<GgxContext.Provider value={ggx}>
+					<GgxContext.Provider value={{ ggx }}>
 						<ChainPicker>
 							<main className="h-dvh flex flex-col">
 								<ToastContainer
