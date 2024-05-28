@@ -72,21 +72,6 @@ export interface PageProps {
 }
 export default function Wallet({ params, searchParams }: PageProps) {
 	const [isMocked, setIsMocked] = useState(params.isMocked);
-	const { isConnected, error, api } = useParachain();
-	const ggxNetwork = isMocked ? new GgxNetworkMock() : new GGxNetwork(api!);
-	const contract = new Contract(ggxNetwork);
-	const [isInitialized, setIsInitialized] = useState(false);
-
-	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
-		Contract.prototype.allTokensOfOwner,
-		Contract.prototype.balanceOf,
-		contract,
-	);
-	const [_, chainBalances, refreshChainBalances] = useOwnedTokens(
-		Contract.prototype.allTokens,
-		Contract.prototype.onChainBalanceOf,
-		contract,
-	);
 	const [tokenMap, setTokenMap] = useState<Map<TokenId, Token>>(
 		new Map<TokenId, Token>(),
 	);
@@ -103,11 +88,31 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		undefined,
 	);
 
+	// Wallet
+	const [ggx] = useState<GGXWallet>(new GGXWallet());
+
 	// Modal related states
 	const [modal, setModal] = useState<boolean>(false);
+	const [walletsError, setWalletsError] = useState<boolean>(false);
 	const [modalAmount, setModalAmount] = useState("");
 	const modalTitle = useRef<InteractType>("Deposit");
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
+	const [isInitialized, setIsInitialized] = useState(false);
+
+	const { isConnected, error, api } = useParachain();
+	const ggxNetwork = isMocked ? new GgxNetworkMock() : new GGxNetwork(api!);
+	const contract = new Contract(ggxNetwork);
+
+	const [dexOwnedTokens, dexBalances, refreshDexBalances] = useOwnedTokens(
+		Contract.prototype.allTokensOfOwner,
+		Contract.prototype.balanceOf,
+		contract,
+	);
+	const [_, chainBalances, refreshChainBalances] = useOwnedTokens(
+		Contract.prototype.allTokens,
+		Contract.prototype.onChainBalanceOf,
+		contract,
+	);
 
 	const refreshBalances = () => {
 		refreshDexBalances();
@@ -230,12 +235,14 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		setModalAmount("");
 		setModal(true);
 	};
-
 	const connectWallet = async () => {
-		const ggx = new GGXWallet();
 		const accounts = await ggx.getAccounts().catch(errorHandler);
 		if (accounts === undefined) {
+			setWalletsError(true);
 			return;
+		}
+		if (accounts.length === 0) {
+			setWalletsError(true);
 		}
 		setGGXAccounts(accounts);
 		setSelectedAccount(ggx.pubkey());
@@ -309,6 +316,22 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		}
 		setModalAmount(input);
 	};
+	if (walletsError) {
+		return (
+			<div className="w-full h-full flex flex-col">
+				<div className="w-full">
+					<Modal modalTitle="Warning!" fixed={false} hideClose isOpen>
+						<div className="flex flex-col w-full">
+							<p className="text-GGx-dark">
+								Please install any wallets plugin: Keplr, Polkadot.{"{"}js{"}"},
+								SubWallet
+							</p>
+						</div>
+					</Modal>
+				</div>
+			</div>
+		);
+	}
 	return (
 		<div className="w-full h-full flex flex-col">
 			<div className="flex w-full justify-between items-center">
