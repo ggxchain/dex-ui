@@ -136,6 +136,7 @@ export default class Contract {
 	}
 
 	async allUserOrders(): Promise<DetailedOrder[]> {
+		this.checkWallet();
 		const address = this.walletAddress();
 		const orders = await this.api.userOrders(address);
 		return await Promise.all(
@@ -163,14 +164,22 @@ export default class Contract {
 	}
 
 	async balanceOf(tokenId: TokenId): Promise<Amount> {
+		this.checkWallet();
 		const address = this.walletAddress();
 		await this.validateTokenId(tokenId);
 
 		return this.api.balanceOf(tokenId, address);
 	}
 
+	checkWallet() {
+		const wallet = this.walletAddress(); // Check if wallet is initialized
+		if (wallet === undefined) {
+			throw new Error(Errors.WalletIsNotConnected);
+		}
+	}
+
 	async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
-		const _ = this.walletAddress(); // Check if wallet is initialized
+		this.checkWallet();
 		if (amount.lten(0)) {
 			throw new Error(Errors.AmountIsLessOrEqualToZero);
 		}
@@ -184,7 +193,7 @@ export default class Contract {
 	}
 
 	async withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize) {
-		const _ = this.walletAddress(); // Check if wallet is initialized
+		this.checkWallet();
 		await this.validateTokenId(tokenId);
 
 		if (amount.lten(0)) {
@@ -204,7 +213,7 @@ export default class Contract {
 
 	// biome-ignore lint: TODO: get rid of async
 	async cancelOrder(counterId: CounterId, callback: onFinalize) {
-		const _ = this.walletAddress(); // Check if wallet is initialized
+		this.checkWallet();
 		wrapCallWithNotifications(
 			curry(this.api.cancelOrder, this.api, counterId),
 			"Cancel order",
@@ -220,7 +229,7 @@ export default class Contract {
 		endTime: Amount,
 		callback: onFinalize,
 	) {
-		const _ = this.walletAddress(); // Check if wallet is initialized
+		this.checkWallet();
 		await this.validateTokenId(pair[0]);
 		await this.validateTokenId(pair[1]);
 
@@ -252,7 +261,7 @@ export default class Contract {
 
 	// biome-ignore lint: TODO: get rid of async
 	async takeOrder(counterId: CounterId, callback: onFinalize) {
-		const _ = this.walletAddress(); // Check if wallet is initialized
+		this.checkWallet();
 		wrapCallWithNotifications(
 			curry(this.api.takeOrder, this.api, counterId),
 			"Order",
