@@ -1,4 +1,5 @@
 import "@/__utils__/localstore.mock";
+import GgxContainer from "@/components/providers/ggx_container";
 import mockedTokens from "@/mock";
 import Contract from "@/services/api";
 import GgxNetworkMock from "@/services/api/mock";
@@ -7,7 +8,13 @@ import { BN_MILLION } from "@polkadot/util";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { debug } from "jest-preview";
 import { act } from "react-dom/test-utils";
-import Wallet from "../wallet/page";
+import Wallet, { type PageProps } from "../wallet/page";
+
+const WalletPage = (props: PageProps) => (
+	<GgxContainer>
+		<Wallet {...props} />
+	</GgxContainer>
+);
 
 jest.mock("../../services/cex", () => ({
 	__esModule: true,
@@ -35,7 +42,7 @@ jest.mock("../../services/ggx", () => ({
 		async getAccounts(): Promise<any> {
 			return [this.pubkey(), { address: "blahblah", name: "Account 2" }];
 		}
-		selectAccount(a: any) {
+		selectAccount(_a: any) {
 			selectFn();
 		}
 		pubkey(): any {
@@ -67,7 +74,7 @@ describe("Wallet", () => {
 	test("renders default component", async () => {
 		await act(() =>
 			render(
-				<Wallet
+				<WalletPage
 					params={{ isMocked: true, slug: "" }}
 					searchParams={{ pair: undefined }}
 				/>,
@@ -89,7 +96,7 @@ describe("Wallet", () => {
 	test("deposit opens modal", async () => {
 		await act(() =>
 			render(
-				<Wallet
+				<WalletPage
 					params={{ isMocked: true, slug: "" }}
 					searchParams={{ pair: undefined }}
 				/>,
@@ -110,7 +117,7 @@ describe("Wallet", () => {
 	test("withdraw opens modal", async () => {
 		await act(() =>
 			render(
-				<Wallet
+				<WalletPage
 					params={{ isMocked: true, slug: "" }}
 					searchParams={{ pair: undefined }}
 				/>,
@@ -131,7 +138,7 @@ describe("Wallet", () => {
 	test("select account", async () => {
 		await act(() =>
 			render(
-				<Wallet
+				<WalletPage
 					params={{ isMocked: true, slug: "" }}
 					searchParams={{ pair: undefined }}
 				/>,
@@ -148,7 +155,7 @@ describe("Wallet", () => {
 	test("click on table replaces selected token", async () => {
 		await act(() =>
 			render(
-				<Wallet
+				<WalletPage
 					params={{ isMocked: true, slug: "" }}
 					searchParams={{ pair: undefined }}
 				/>,
@@ -171,7 +178,7 @@ describe("Wallet", () => {
 		//contract.deposit(1, BN_BILLION, () => {});
 		await act(() =>
 			render(
-				<Wallet
+				<WalletPage
 					params={{ isMocked: true, slug: "" }}
 					searchParams={{ pair: undefined }}
 				/>,
@@ -208,7 +215,7 @@ describe("Wallet", () => {
 	test("withdraw doesn't open on balance < 0", async () => {
 		await act(() =>
 			render(
-				<Wallet
+				<WalletPage
 					params={{ isMocked: true, slug: "" }}
 					searchParams={{ pair: undefined }}
 				/>,
