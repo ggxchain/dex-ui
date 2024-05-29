@@ -20,7 +20,7 @@ import GgxContext from "@/components/providers/ggx";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const metadata: Metadata = {
+const _metadata: Metadata = {
 	title: "RfQ by GGX",
 	description: "Request for quote service powered by GGX",
 };
