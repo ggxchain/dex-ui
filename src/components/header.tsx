@@ -1,5 +1,6 @@
 "use client";
 
+import Settings from "@/components/common/settings";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -95,7 +96,7 @@ export default function HeaderWithNavbar() {
 				/>
 				<div className="pt-20 px-3 py-10 overflow-y-auto h-full text-xl">
 					<ul className="space-y-10 font-medium flex flex-col items-center w-full">
-						{menus.map((menu, index) => (
+						{menus.map((menu, _index) => (
 							<Link
 								key={JSON.stringify(menu)}
 								href={menu.path}
@@ -106,6 +107,7 @@ export default function HeaderWithNavbar() {
 							</Link>
 						))}
 					</ul>
+					<Settings />
 				</div>
 			</aside>
 		</>

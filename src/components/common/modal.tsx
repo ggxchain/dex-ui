@@ -8,6 +8,7 @@ interface ModalProps {
 	onClose?: () => void;
 	hideClose?: boolean;
 	fixed?: boolean;
+	style?: React.CSSProperties;
 }
 
 export default function Modal({
@@ -17,6 +18,7 @@ export default function Modal({
 	modalTitle,
 	hideClose,
 	fixed = true,
+	style = {},
 }: Readonly<ModalProps>) {
 	const modalClassNames = `${
 		fixed ? "fixed" : ""
@@ -25,7 +27,7 @@ export default function Modal({
 	return (
 		<div
 			data-testid="modal"
-			style={{ display: isOpen ? "block" : "none" }}
+			style={{ display: isOpen ? "block" : "none", ...style }}
 			className={modalClassNames}
 			aria-modal="true"
 		>
