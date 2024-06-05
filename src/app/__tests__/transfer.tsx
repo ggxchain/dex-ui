@@ -66,7 +66,7 @@ jest.mock("../../services/ggx", () => ({
 		async getAccounts(): Promise<any> {
 			return [this.pubkey(), { address: "blahblah", name: "Account 2" }];
 		}
-		selectAccount(a: any) {
+		selectAccount(_a: any) {
 			selectFn();
 		}
 		pubkey(): any {
@@ -155,16 +155,18 @@ describe("Transfer", () => {
 
 	test("click on table replaces selected token", async () => {
 		await act(() => render(<Transfer />));
-		const deposit = screen.getByTestId("deposit");
+		const deposit = await screen.findByTestId("deposit");
 		expect(deposit.textContent).toBe("Deposit USDT");
-		const withdraw = screen.getByTestId("withdraw");
+		const withdraw = await screen.findByTestId("withdraw");
 		expect(withdraw.textContent).toBe("Withdraw USDT");
 
 		const rows = screen.getAllByRole("row");
 		await act(() => fireEvent.click(rows[2])); // Header + 2 tokens
 
-		expect(deposit.textContent).toBe("Deposit USDC");
-		expect(withdraw.textContent).toBe("Withdraw USDC");
+		const depositUpdated = await screen.findByTestId("deposit");
+		const withdrawUpdated = await screen.findByTestId("withdraw");
+		expect(depositUpdated.textContent).toBe("Deposit USDC");
+		expect(withdrawUpdated.textContent).toBe("Withdraw USDC");
 	});
 
 	test("withdraw doesn't open on balance < 0", async () => {

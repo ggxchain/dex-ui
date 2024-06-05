@@ -277,11 +277,27 @@ export default function Dex({ params, searchParams }: PageProps) {
 		<div className="text-GGx-gray flex flex-col w-full items-center">
 			<div className="flex flex-col w-full">
 				<div className="flex text-xl justify-between text-[30px] pb-[10px]">
-					<button onClick={() => setIsMaker(false)} type="button">
-						<p className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}>Byu</p>
+					<button
+						data-testid="buy-btn"
+						onClick={() => setIsMaker(false)}
+						type="button"
+					>
+						<p
+							data-testid="buy-btn-p"
+							className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}
+						>
+							Byu
+						</p>
 					</button>
-					<button onClick={() => setIsMaker(true)} type="button">
-						<p className={isMaker ? "text-GGx-yellow" : "text-GGx-gray"}>
+					<button
+						data-testid="sell-btn"
+						onClick={() => setIsMaker(true)}
+						type="button"
+					>
+						<p
+							data-testid="sell-btn-p"
+							className={isMaker ? "text-GGx-yellow" : "text-GGx-gray"}
+						>
 							Sell
 						</p>
 					</button>
@@ -339,9 +355,11 @@ export default function Dex({ params, searchParams }: PageProps) {
 						<div className="pt-[18px]">
 							<GrayRuler />
 							<div className="flex justify-between pt-[10px]">
-								<p className="font-semibold">Available:</p>
+								<p data-testid="available-label" className="font-semibold">
+									Available:
+								</p>
 								<p className="text-GGx-light">
-									<span className="font-bold">
+									<span data-testid={"available-balance"} className="font-bold">
 										{" "}
 										{amountConverter.BNtoDisplay(
 											availableBalanceNormalized,
