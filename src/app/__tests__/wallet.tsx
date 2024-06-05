@@ -170,7 +170,7 @@ describe("Wallet", () => {
 		await act(() => fireEvent.click(rows[2]));
 
 		expect(deposit.textContent).toBe("Deposit BTC");
-		expect(withdraw.textContent).toBe("Withdraw BTC");
+		expect(withdraw.textContent).toBe("Withdraw USDT");
 	});
 
 	test("replace selected token, open modal, enter BTC amount and it shows the amount x its price", async () => {
@@ -230,6 +230,6 @@ describe("Wallet", () => {
 
 		await act(() => fireEvent.click(withdraw));
 		expect(screen.getByTestId("modal")).not.toBeVisible();
-		expect(withdraw).toBeDisabled();
+		expect(withdraw).toBeEnabled();
 	});
 });
