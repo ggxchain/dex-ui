@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/common/button";
+import { Button, GrayButton } from "@/components/common/button";
 import { InputWithPriceInfo } from "@/components/common/input";
 import LoadingButton from "@/components/common/loadButton";
 import Modal from "@/components/common/modal";
@@ -323,7 +323,14 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		}
 		setModalAmount(input);
 	};
-
+	const DepositButton =
+		walletIsNotInitialized || isTokenNotSelected ? GrayButton : Button;
+	const WithdrawButton =
+		walletIsNotInitialized ||
+		isTokenNotSelected ||
+		selectedTokenBalance.lte(BN_ZERO)
+			? GrayButton
+			: Button;
 	return (
 		<div className="w-full h-full flex flex-col">
 			<div className="flex w-full justify-between items-center">
@@ -331,15 +338,19 @@ export default function Wallet({ params, searchParams }: PageProps) {
 					{formatter().format(total)}
 				</h1>
 				<div className="flex xl:flex-row flex-col gap-5">
-					<Button
+					<DepositButton
 						data-testid="deposit"
 						onClick={() => onModalOpen("Deposit")}
 						disabled={walletIsNotInitialized || isTokenNotSelected}
-						className="w-1/4"
+						className={`w-1/4 ${
+							walletIsNotInitialized || isTokenNotSelected
+								? " cursor-not-allowed"
+								: ""
+						}`}
 					>
 						Deposit {selectedToken?.name ?? ""}
-					</Button>
-					<Button
+					</DepositButton>
+					<WithdrawButton
 						data-testid="withdraw"
 						onClick={() => onModalOpen("Withdraw")}
 						disabled={
@@ -347,10 +358,16 @@ export default function Wallet({ params, searchParams }: PageProps) {
 							isTokenNotSelected ||
 							selectedTokenBalance.lte(BN_ZERO)
 						}
-						className="w-1/4"
+						className={`w-1/4 ${
+							walletIsNotInitialized ||
+							isTokenNotSelected ||
+							selectedTokenBalance.lte(BN_ZERO)
+								? "cursor-not-allowed"
+								: ""
+						}`}
 					>
 						Withdraw {selectedToken?.name ?? ""}
-					</Button>
+					</WithdrawButton>
 				</div>
 			</div>
 
@@ -386,10 +403,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 							Connect the wallet
 						</Button>
 					) : (
-						<div
-							data-testid="userSelect"
-							className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]"
-						>
+						<div data-testid="userSelect" className="flex w-full h-full">
 							<p className="h-full p-4 text-[14px] text-GGx-gray">Account</p>
 							<SelectDark<Account>
 								onChange={handleSelectChange}

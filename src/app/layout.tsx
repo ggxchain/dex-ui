@@ -52,6 +52,7 @@ export default function Layout({
 				<ParachainProviderProvider>
 					<GgxContext.Provider value={{ ggx }}>
 						<ChainPicker>
+							<div className={"sun"} />
 							<main className="h-dvh flex flex-col">
 								<ToastContainer
 									position="top-right"
