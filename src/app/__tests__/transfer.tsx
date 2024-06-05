@@ -180,7 +180,10 @@ describe("Transfer", () => {
 
 		await act(() => fireEvent.click(withdraw));
 		expect(screen.getByTestId("modal")).not.toBeVisible();
-		expect(withdraw).toBeDisabled();
+
+		const withdrawZero = screen.getByTestId("withdraw");
+
+		expect(withdrawZero).toBeDisabled();
 	});
 
 	test("modal loads active ggx account", async () => {
