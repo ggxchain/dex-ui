@@ -51,7 +51,7 @@ export default function Dex({ params, searchParams }: PageProps) {
 	const [order, setOrder] = useState<Order>();
 	const [tokens, loadTokens] = useTokens(contractRef.current);
 	const [userOrders, updateUserOrders] = useUserOrders(contractRef.current);
-	const [expireNumber, convertToMillis] = useExpire();
+	const [expireNumber, , convertToMillis] = useExpire();
 	const isConnected = useRef<boolean>();
 	const [isInitialized, setIsInitialized] = useState(false);
 

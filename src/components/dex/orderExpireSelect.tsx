@@ -23,7 +23,7 @@ type Days = { value: "Days" };
 type Option = Minutes | Hours | Days;
 
 export function useExpire() {
-	const [expNum, setExpNum] = useState<string>("365000");
+	const [expNum, setExpNum] = useState<string>("360");
 	const [unit, setUnit] = useState<Option>({ value: "Days" });
 
 	const onChange = (str: string, unit: Option) => {
