@@ -5,7 +5,6 @@ type Order = {
 	pubkey: PubKey;
 	pair: Pair;
 	counter: CounterId;
-	expiration: number;
 	orderType: OrderType;
 	amountOffered: Amount;
 	amoutRequested: Amount;

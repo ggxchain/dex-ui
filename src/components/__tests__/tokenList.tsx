@@ -74,7 +74,7 @@ describe("OrdersList", () => {
 
 	test("render empty token list", async () => {
 		await act(() => render(<TokenList tokens={[]} />));
-		setTimeout((done) => {
+		setTimeout((done: () => void) => {
 			expect(screen.getByText("No tokens found")).toBeInTheDocument();
 			done();
 		}, 2000);

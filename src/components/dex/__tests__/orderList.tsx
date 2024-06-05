@@ -27,7 +27,6 @@ describe("OrdersList", () => {
 			amoutRequested: BN_ONE.mul(bnE6),
 			amountOffered: BN_MILLION.mul(bn(100)).mul(bnE18),
 			pubkey: "0x123",
-			expiration: Date.now() + 10000,
 			orderType: "SELL",
 		},
 		{
@@ -50,7 +49,6 @@ describe("OrdersList", () => {
 			amoutRequested: BN_ONE.mul(bnE6),
 			amountOffered: BN_THOUSAND.mul(bnE18),
 			pubkey: "0x123",
-			expiration: Date.now() + 10000,
 			orderType: "SELL",
 		},
 		{
@@ -73,7 +71,6 @@ describe("OrdersList", () => {
 			amoutRequested: BN_ONE.mul(bnE6),
 			amountOffered: BN_ONE.mul(bnE18),
 			pubkey: "0x123",
-			expiration: Date.now() + 10000,
 			orderType: "SELL",
 		},
 		{
@@ -96,7 +93,6 @@ describe("OrdersList", () => {
 			amoutRequested: BN_THOUSAND.mul(bnE6),
 			amountOffered: BN_ONE.mul(bnE18),
 			pubkey: "0x123",
-			expiration: Date.now() + 10000,
 			orderType: "SELL",
 		},
 	];
@@ -118,7 +114,6 @@ describe("OrdersList", () => {
 		expect(screen.getByText("Buy")).toBeInTheDocument();
 		expect(screen.getByText("Price")).toBeInTheDocument();
 		expect(screen.getByText("Sell")).toBeInTheDocument();
-		expect(screen.getByText("Expire in")).toBeInTheDocument();
 		expect(screen.getByText("Actions")).toBeInTheDocument();
 
 		const elem = screen.getAllByRole("row");
