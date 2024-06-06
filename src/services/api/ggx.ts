@@ -98,7 +98,7 @@ export default class GGxNetwork implements ApiInterface {
 				return Promise.resolve([]);
 			}
 			//@ts-ignore
-			const output = await this.api.query.dex.get.tokenInfoes();
+			const output = await this.api.query.dex.tokenInfoes();
 			if (output !== undefined) {
 				return output.map((tokenId: TokenId) => tokenId);
 			}
