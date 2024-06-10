@@ -269,12 +269,10 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		}
 		setSelectedAccount(e);
 	};
-
 	const displayTokens = filteredTokens.map((token) => {
 		const balance = dexBalances.get(token.id);
 		const price = tokenPrices.get(token.id);
 		const chainBalance = chainBalances.get(token.id);
-
 		return {
 			...token,
 			balance: balance ?? BN_ZERO,
@@ -434,6 +432,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 					className={`${
 						walletIsNotInitialized ? "opacity-50" : "opacity-100"
 					} w-full`}
+					selected={selectedToken}
 					tokens={displayTokens}
 					onClick={onTokenSelect}
 					isInitialized={isInitialized}

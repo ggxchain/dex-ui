@@ -34,7 +34,6 @@ export default function TokenList({
 			onClick(token);
 		}
 	};
-
 	return (
 		<table
 			className={`font-main table-fixed border-separate border-spacing-y-2 rounded-xl md:text-base text-sm mt-[25px] [&>td]:px-6 [&>td]:py-20 ${className}`}
@@ -74,8 +73,10 @@ export default function TokenList({
 						<tr
 							key={token.symbol}
 							onClick={() => handleClick(token)}
-							className={`text-left font-medium text-[18px] text-GGx-light even:bg-GGx-black2 even:bg-opacity-70 [&>td]:px-6 [&>td]:py-1 ${
-								isSelected ? "filter backdrop-brightness-125" : ""
+							className={`text-left font-medium text-[18px] text-GGx-light  [&>td]:px-6 [&>td]:py-1 ${
+								isSelected
+									? "filter bg-black "
+									: "even:bg-GGx-black2 even:bg-opacity-70"
 							} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}
 						>
 							<td>
