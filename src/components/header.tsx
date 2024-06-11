@@ -53,7 +53,11 @@ export default function HeaderWithNavbar() {
 								key={JSON.stringify(menu)}
 								href={menu.path}
 								className={`w-full text-center p-2 rounded-lg hover:bg-gray-800 
-									${pathname === menu.path ? "secondary-gradient" : ""}`}
+									${
+										pathname === menu.path
+											? "secondary-gradient bg-blue-900"
+											: ""
+									}`}
 							>
 								<li>{menu.name}</li>
 							</Link>

@@ -146,6 +146,7 @@ export default function Transfer() {
 	const getBalances = async () => {
 		if (client && account?.address) {
 			const balances = await client.getAllBalances(account.address);
+
 			const filtered = balances.reduce<Coin[]>((acc, value) => {
 				if (value.denom.includes("ibc/")) {
 					const info = ibcHashToDenom(chain.chainName, value.denom);

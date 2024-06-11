@@ -51,7 +51,7 @@ export default class GgxNetworkMock implements ApiInterface {
 			this.ordersByPair = new Map(JSON.parse(ordersByPair));
 			// We use BN that is a class, so we need to convert it back to BN
 			this.deposits = new Map(JSON.parse(deposits));
-			this.deposits.forEach((value, key) => {
+			this.deposits.forEach((value, _key) => {
 				value.forEach((deposit) => {
 					deposit.amount = new BN(deposit.amount, 16);
 				});
@@ -64,7 +64,7 @@ export default class GgxNetworkMock implements ApiInterface {
 		}
 	}
 
-	async onChainBalanceOf(tokenId: number, address: string): Promise<Amount> {
+	async onChainBalanceOf(tokenId: number, _address: string): Promise<Amount> {
 		const tokenInfo = await this.tokenInfo(tokenId);
 		return Promise.resolve(
 			new TokenDecimals(tokenInfo.decimals).strFloatToBN("1000"),
@@ -127,13 +127,13 @@ export default class GgxNetworkMock implements ApiInterface {
 
 	balanceOf(tokenId: TokenId, account: string): Promise<Amount> {
 		const deposit = this.deposits.get(account);
+
 		if (deposit === undefined) {
 			return Promise.resolve(BN_ZERO);
 		}
 		const token = deposit.find(
 			(value) => JSON.stringify(value.tokenId) === JSON.stringify(tokenId),
 		);
-
 		if (token !== undefined) {
 			return Promise.resolve(token.amount);
 		}
@@ -243,7 +243,7 @@ export default class GgxNetworkMock implements ApiInterface {
 		orderType: OrderType,
 		amountOffered: Amount,
 		amoutRequested: Amount,
-		timestamp: number,
+		_timestamp: number,
 		callback: onFinalize,
 	): Promise<void> {
 		const counterId = (this.orders.at(-1)?.counter ?? 0) + 1;
