@@ -3,9 +3,7 @@
 import { GrayButton, YellowButton } from "@/components/common/button";
 import Ruler, { GrayRuler } from "@/components/common/ruler";
 import OrderBook, { useOrderBookOrders } from "@/components/dex/orderBook";
-import OrderExpireSelect, {
-	useExpire,
-} from "@/components/dex/orderExpireSelect";
+import { useExpire } from "@/components/dex/orderExpireSelect";
 import OrdersList, { useUserOrders } from "@/components/dex/orderList";
 import TokenSelector, {
 	type TokenWithPrice,
@@ -53,8 +51,7 @@ export default function Dex({ params, searchParams }: PageProps) {
 	const [order, setOrder] = useState<Order>();
 	const [tokens, loadTokens] = useTokens(contractRef.current);
 	const [userOrders, updateUserOrders] = useUserOrders(contractRef.current);
-	const [expireNumber, expireUnit, convertToMillis, setExpiration] =
-		useExpire();
+	const [expireNumber, , convertToMillis] = useExpire();
 	const isConnected = useRef<boolean>();
 	const [isInitialized, setIsInitialized] = useState(false);
 
@@ -100,7 +97,6 @@ export default function Dex({ params, searchParams }: PageProps) {
 		setBuy(undefined);
 		setOrder(undefined);
 		setAvailableBalanceNormalized(BN_ZERO);
-		setExpiration("0", { value: "Minutes" });
 	};
 
 	const onLogin = () => {
@@ -281,14 +277,28 @@ export default function Dex({ params, searchParams }: PageProps) {
 		<div className="text-GGx-gray flex flex-col w-full items-center">
 			<div className="flex flex-col w-full">
 				<div className="flex text-xl justify-between text-[30px] pb-[10px]">
-					<button onClick={() => setIsMaker(false)} type="button">
-						<p className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}>
-							Taker order
+					<button
+						data-testid="buy-btn"
+						onClick={() => setIsMaker(false)}
+						type="button"
+					>
+						<p
+							data-testid="buy-btn-p"
+							className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}
+						>
+							Byu
 						</p>
 					</button>
-					<button onClick={() => setIsMaker(true)} type="button">
-						<p className={isMaker ? "text-GGx-yellow" : "text-GGx-gray"}>
-							Maker order
+					<button
+						data-testid="sell-btn"
+						onClick={() => setIsMaker(true)}
+						type="button"
+					>
+						<p
+							data-testid="sell-btn-p"
+							className={isMaker ? "text-GGx-yellow" : "text-GGx-gray"}
+						>
+							Sell
 						</p>
 					</button>
 				</div>
@@ -299,18 +309,7 @@ export default function Dex({ params, searchParams }: PageProps) {
 					<div className="flex flex-col rounded-3xl secondary-gradient mt-5 basis-3/5">
 						<div className="flex justify-between text-[18px]">
 							<p className="font-medium">Sell</p>
-							<div className="flex">
-								<p>
-									Available:
-									<span className="font-bold">
-										{" "}
-										{amountConverter.BNtoDisplay(
-											availableBalanceNormalized,
-											sell?.symbol ?? "",
-										)}
-									</span>
-								</p>
-							</div>
+							<div className="flex"></div>
 						</div>
 						<TokenSelector
 							token={sell}
@@ -353,21 +352,23 @@ export default function Dex({ params, searchParams }: PageProps) {
 							onChange={onBuyChange}
 						/>
 
-						{isMaker && (
-							<div>
-								<p className="text-[18px] font-medium mt-5">Expiration</p>
-								<OrderExpireSelect
-									expNum={expireNumber}
-									unit={expireUnit}
-									onChange={setExpiration}
-								/>
-							</div>
-						)}
-
 						<div className="pt-[18px]">
 							<GrayRuler />
-
 							<div className="flex justify-between pt-[10px]">
+								<p data-testid="available-label" className="font-semibold">
+									Available:
+								</p>
+								<p className="text-GGx-light">
+									<span data-testid={"available-balance"} className="font-bold">
+										{" "}
+										{amountConverter.BNtoDisplay(
+											availableBalanceNormalized,
+											sell?.symbol ?? "",
+										)}
+									</span>
+								</p>
+							</div>
+							<div className="flex justify-between">
 								<p className="font-semibold">RATE:</p>
 								{rate > 0 && !isTokenNotSelected && !isTokenSame ? (
 									<div className="flex flex-col text-GGx-light">

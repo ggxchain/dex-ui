@@ -29,7 +29,7 @@ import {
 } from "react";
 import { toast } from "react-toastify";
 
-import { Button } from "@/components/common/button";
+import { Button, GrayButton } from "@/components/common/button";
 import Ruler from "@/components/common/ruler";
 import { formatter, strFloatToBN } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
@@ -49,7 +49,7 @@ export default function Transfer() {
 	const [selectedToken, setSelectedToken] = useState<ListElement>();
 	const [GGxAccounts, setGGxAccounts] = useState<Account[]>([]);
 	const [tx, setTx] = useState<string>();
-	const [txRes, setTxRes] = useState<IndexedTx>();
+	const [_txRes, setTxRes] = useState<IndexedTx>();
 
 	// Modal related states
 	const [modal, setModal] = useState<boolean>(false);
@@ -146,6 +146,7 @@ export default function Transfer() {
 	const getBalances = async () => {
 		if (client && account?.address) {
 			const balances = await client.getAllBalances(account.address);
+
 			const filtered = balances.reduce<Coin[]>((acc, value) => {
 				if (value.denom.includes("ibc/")) {
 					const info = ibcHashToDenom(chain.chainName, value.denom);
@@ -169,7 +170,7 @@ export default function Transfer() {
 	};
 
 	// get tx by hash
-	const getTx = async () => {
+	const _getTx = async () => {
 		if (!tx || !client) return;
 		const result = await client.getTx(tx);
 
@@ -344,7 +345,14 @@ export default function Transfer() {
 		toast.warn("price calculation failed");
 		return;
 	}
-
+	const DepositButton =
+		walletIsNotInitialized || selectedToken === undefined ? GrayButton : Button;
+	const WithdrawButton =
+		walletIsNotInitialized ||
+		selectedToken === undefined ||
+		selectedToken.balance.eq(BN_ZERO)
+			? GrayButton
+			: Button;
 	return (
 		<div className="flex flex-col w-full items-center h-full">
 			<div className="flex w-full justify-between items-center">
@@ -352,15 +360,19 @@ export default function Transfer() {
 					{formatter().format(total)}
 				</h1>
 				<div className="flex md:flex-row flex-col gap-5">
-					<Button
+					<DepositButton
 						data-testid="deposit"
 						onClick={() => onModalOpen("Deposit")}
 						disabled={walletIsNotInitialized || selectedToken === undefined}
-						className="w-1/4"
+						className={`w-1/4 ${
+							walletIsNotInitialized || selectedToken === undefined
+								? " cursor-not-allowed"
+								: ""
+						}`}
 					>
 						Deposit {selectedToken?.name ?? ""}
-					</Button>
-					<Button
+					</DepositButton>
+					<WithdrawButton
 						data-testid="withdraw"
 						onClick={() => onModalOpen("Withdraw")}
 						disabled={
@@ -368,10 +380,16 @@ export default function Transfer() {
 							selectedToken === undefined ||
 							selectedToken.balance.eq(BN_ZERO)
 						}
-						className="w-1/4"
+						className={`w-1/4 ${
+							walletIsNotInitialized ||
+							selectedToken === undefined ||
+							selectedToken.balance.eq(BN_ZERO)
+								? " cursor-not-allowed"
+								: ""
+						}`}
 					>
 						Withdraw {selectedToken?.name ?? ""}
-					</Button>
+					</WithdrawButton>
 				</div>
 			</div>
 			<div className="w-full mt-5">
@@ -380,10 +398,7 @@ export default function Transfer() {
 
 			<div className="mt-10 flex flex-col items-end w-full">
 				<div className="w-full h-full md:max-w-96 max-w-48">
-					<div
-						data-testid="selectNetwork"
-						className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]"
-					>
+					<div data-testid="selectNetwork" className="flex w-full h-full ">
 						<p className="h-full p-4 text-[14px] text-GGx-gray">Chain</p>
 						<SelectDark<ChainInfo>
 							onChange={(chain) => setChain(chain)}

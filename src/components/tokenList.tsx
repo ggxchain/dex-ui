@@ -1,7 +1,7 @@
 import { formatPrice } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token } from "@/types";
-import { BN_ZERO } from "@polkadot/util";
+import { BN, BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
 import Spinner from "./common/spinner";
 
@@ -19,6 +19,12 @@ interface TokenListProperties {
 	selected?: ListElement;
 	onChain?: boolean;
 	isInitialized?: boolean;
+	onDeposit?: (token: ListElement) => void;
+	onWithdraw?: (token: ListElement) => void;
+	depositDisabled?: boolean;
+	withdrawDisabled?: boolean;
+	dexBalances?: Map<number, BN>;
+	showDepositWithdraw?: boolean;
 }
 
 export default function TokenList({
@@ -28,13 +34,19 @@ export default function TokenList({
 	selected,
 	onChain,
 	isInitialized,
+	onDeposit,
+	onWithdraw,
+	depositDisabled,
+	withdrawDisabled,
+	dexBalances,
+	showDepositWithdraw = false,
 }: Readonly<TokenListProperties>) {
 	const handleClick = (token: ListElement) => {
 		if (onClick !== undefined) {
 			onClick(token);
 		}
 	};
-
+	const colSpan = showDepositWithdraw ? (!onChain ? 4 : 5) : 3;
 	return (
 		<table
 			className={`font-main table-fixed border-separate border-spacing-y-2 rounded-xl md:text-base text-sm mt-[25px] [&>td]:px-6 [&>td]:py-20 ${className}`}
@@ -45,12 +57,13 @@ export default function TokenList({
 					<th>Balance</th>
 					{onChain && <th>On chain balance</th>}
 					<th>Price</th>
+					{showDepositWithdraw ? <th></th> : ""}
 				</tr>
 			</thead>
 			<tbody>
 				{!isInitialized && tokens.length === 0 ? (
 					<tr>
-						<td>
+						<td colSpan={colSpan}>
 							<div className="flex w-full justify-center">
 								<div className="w-20 h-20 mt-5">
 									<Spinner />
@@ -62,21 +75,32 @@ export default function TokenList({
 
 				{isInitialized && tokens.length === 0 ? (
 					<tr>
-						<td className="text-center">No tokens found</td>
+						<td colSpan={colSpan} className="text-center">
+							No tokens found
+						</td>
 					</tr>
 				) : null}
 
 				{tokens.map((token) => {
-					const isSelected = token.id === selected?.id;
+					const _isSelected = token.id === selected?.id;
 					const amountConverter = new TokenDecimals(token.decimals);
+
+					const tokenBalance = dexBalances
+						? new BN(dexBalances.get(token.id) ?? new BN(0))
+						: new BN(0);
+
+					const withdrawBtnDisable =
+						(showDepositWithdraw &&
+							(withdrawDisabled || tokenBalance.lte(BN_ZERO))) ||
+						0;
 
 					return (
 						<tr
 							key={token.symbol}
 							onClick={() => handleClick(token)}
-							className={`text-left font-medium text-[18px] text-GGx-light even:bg-GGx-black2 even:bg-opacity-70 [&>td]:px-6 [&>td]:py-1 ${
-								isSelected ? "filter backdrop-brightness-125" : ""
-							} ${onClick ? "glow-on-hover cursor-pointer" : ""}`}
+							className={`text-left font-medium text-[18px] text-GGx-light  [&>td]:px-6 [&>td]:py-1 even:bg-GGx-black2 even:bg-opacity-70 ${
+								onClick ? "glow-on-hover cursor-pointer" : ""
+							}`}
 						>
 							<td>
 								<div className="flex flex-col md:flex-row items-center w-full">
@@ -114,6 +138,35 @@ export default function TokenList({
 							<td data-testid={`price-${token.symbol}`}>
 								{formatPrice(token.estimatedPrice)}
 							</td>
+							{showDepositWithdraw ? (
+								<td>
+									<span
+										data-testid={`deposit-${token.symbol}`}
+										onClick={() => !depositDisabled && onDeposit?.(token)}
+										className={`font-thin cursor-pointer text-GGx-light underline  ${
+											depositDisabled && "cursor-not-allowed opacity-35"
+										}`}
+									>
+										Deposit
+									</span>
+									<span
+										className={"font-thin  ml-2 mr-2 text-GGx-light opacity-35"}
+									>
+										|
+									</span>
+									<span
+										data-testid={`withdraw-${token.symbol}`}
+										onClick={() => !withdrawBtnDisable && onWithdraw?.(token)}
+										className={`font-thin cursor-pointer text-GGx-light underline ${
+											withdrawBtnDisable && "cursor-not-allowed opacity-35"
+										}`}
+									>
+										Withdraw
+									</span>
+								</td>
+							) : (
+								""
+							)}
 						</tr>
 					);
 				})}

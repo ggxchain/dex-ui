@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/common/button";
+import { Button, GrayButton } from "@/components/common/button";
 import { InputWithPriceInfo } from "@/components/common/input";
 import LoadingButton from "@/components/common/loadButton";
 import Modal from "@/components/common/modal";
@@ -269,12 +269,10 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		}
 		setSelectedAccount(e);
 	};
-
 	const displayTokens = filteredTokens.map((token) => {
 		const balance = dexBalances.get(token.id);
 		const price = tokenPrices.get(token.id);
 		const chainBalance = chainBalances.get(token.id);
-
 		return {
 			...token,
 			balance: balance ?? BN_ZERO,
@@ -284,11 +282,11 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		};
 	});
 
-	const onTokenSelect = (token: Token) => {
+	const _onTokenSelect = (token: Token) => {
 		setSelectedToken(token);
 	};
 
-	const onContractTypeChange = () => {
+	const _onContractTypeChange = () => {
 		setIsMocked(!isMocked);
 	};
 
@@ -324,53 +322,36 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		setModalAmount(input);
 	};
 
+	const onDeposit = (token: Token) => {
+		modalTitle.current = "Deposit";
+		setSelectedToken(token);
+		onModalOpen(modalTitle.current);
+	};
+
+	const onWithdraw = (token: Token) => {
+		modalTitle.current = "Withdraw";
+		setSelectedToken(token);
+		onModalOpen(modalTitle.current);
+	};
+	const _DepositButton =
+		walletIsNotInitialized || isTokenNotSelected ? GrayButton : Button;
+	const _WithdrawButton =
+		walletIsNotInitialized ||
+		isTokenNotSelected ||
+		selectedTokenBalance.lte(BN_ZERO)
+			? GrayButton
+			: Button;
+
 	return (
 		<div className="w-full h-full flex flex-col">
 			<div className="flex w-full justify-between items-center">
 				<h1 className="text-xl md:text-3xl break-words w-[40%] text-GGx-yellow font-telegraf">
 					{formatter().format(total)}
 				</h1>
-				<div className="flex xl:flex-row flex-col gap-5">
-					<Button
-						data-testid="deposit"
-						onClick={() => onModalOpen("Deposit")}
-						disabled={walletIsNotInitialized || isTokenNotSelected}
-						className="w-1/4"
-					>
-						Deposit {selectedToken?.name ?? ""}
-					</Button>
-					<Button
-						data-testid="withdraw"
-						onClick={() => onModalOpen("Withdraw")}
-						disabled={
-							walletIsNotInitialized ||
-							isTokenNotSelected ||
-							selectedTokenBalance.lte(BN_ZERO)
-						}
-						className="w-1/4"
-					>
-						Withdraw {selectedToken?.name ?? ""}
-					</Button>
-				</div>
 			</div>
 
 			<div className="mt-5">
 				<Ruler />
-			</div>
-
-			<div className="flex w-full justify-end mt-5">
-				<label className="inline-flex relative items-center cursor-pointer ">
-					<input
-						type="checkbox"
-						checked={!isMocked}
-						onChange={onContractTypeChange}
-						className="sr-only peer"
-					/>
-					<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-bg-gr-2" />
-					<span className="ms-3 text-sm font-medium text-GGx-light dark:text-gray-300">
-						Contract
-					</span>
-				</label>
 			</div>
 
 			<div className="flex justify-between md:mt-10 mt-1 items-center">
@@ -386,10 +367,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 							Connect the wallet
 						</Button>
 					) : (
-						<div
-							data-testid="userSelect"
-							className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]"
-						>
+						<div data-testid="userSelect" className="flex w-full h-full">
 							<p className="h-full p-4 text-[14px] text-GGx-gray">Account</p>
 							<SelectDark<Account>
 								onChange={handleSelectChange}
@@ -421,8 +399,13 @@ export default function Wallet({ params, searchParams }: PageProps) {
 						walletIsNotInitialized ? "opacity-50" : "opacity-100"
 					} w-full`}
 					tokens={displayTokens}
-					onClick={onTokenSelect}
 					isInitialized={isInitialized}
+					showDepositWithdraw
+					onDeposit={onDeposit}
+					onWithdraw={onWithdraw}
+					dexBalances={dexBalances}
+					depositDisabled={walletIsNotInitialized || isTokenNotSelected}
+					withdrawDisabled={walletIsNotInitialized || isTokenNotSelected}
 				/>
 			</Suspense>
 

@@ -24,7 +24,7 @@ import { toast } from "react-toastify";
 //const wsProviderURL = "ws://127.0.0.1:9944";
 //https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/chainstate
 
-let mesg = "";
+let _mesg = "";
 const DAPP_NAME = "RfQ by GGx";
 const tokenSymbol = "BTC";
 const tokenSymbolOnChain = "KBTC";
@@ -43,12 +43,12 @@ const BridgeBtc = () => {
 	const [balcWalletToGGXT, setBalcWalletToGGXT] = useState<BN>(new BN(0));
 	const [balcWalletToKBTC, setBalcWalletToKBTC] = useState<BN>(new BN(0));
 	const [userTokenList, setUserTokenList] = useState<string[]>();
-	const addrAlice = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+	const _addrAlice = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 	const walletTo = process.env.NEXT_PUBLIC_WALLET1 || "INVALID_WALLET_ADDRESS";
 
 	//const amount = new BN(10).mul(new BN(10).pow(new BN(12)));//.toString();
 
-	let unsubscribe: () => void; // this is the function of type `() => void` that should be called to unsubscribe
+	let _unsubscribe: () => void; // this is the function of type `() => void` that should be called to unsubscribe
 
 	//await connectWallet()
 
@@ -63,7 +63,7 @@ const BridgeBtc = () => {
 			console.error("checkBalances: No_API_found");
 			return;
 		}
-		const asset = await api.query.assets.metadata(0 /* Asset Id */);
+		const _asset = await api.query.assets.metadata(0 /* Asset Id */);
 		//asset.name.toString(), asset.symbol.toString(), asset.decimals.toString()
 
 		const selected = selectedAccount?.address;
@@ -85,12 +85,12 @@ const BridgeBtc = () => {
 		}
 		setUserTokenList(userTokList);
 
-		let balcFrom = await getBalcToken(selected, "GGXT");
+		let _balcFrom = await getBalcToken(selected, "GGXT");
 		let balcTo = await getBalcToken(walletTo, "GGXT");
 		if (balcTo) setBalcWalletToGGXT(new BN(balcTo.toString()));
 		//1,180,591,620,717,411,303,424 or 2^70
 
-		balcFrom = await getBalcToken(selected, "KBTC");
+		_balcFrom = await getBalcToken(selected, "KBTC");
 		balcTo = await getBalcToken(walletTo, "KBTC");
 		if (balcTo) setBalcWalletToKBTC(new BN(balcTo.toString()));
 	};
@@ -131,7 +131,7 @@ const BridgeBtc = () => {
 				return;
 			}
 			if (extensions.length === 0) {
-				mesg =
+				_mesg =
 					"no extension installed. Click the link here to install an extension, or the user did not accept the authorization";
 				return;
 			}
@@ -163,9 +163,9 @@ const BridgeBtc = () => {
 			}
 
 			// we subscribe to any account change and log the new list. note that `web3AccountsSubscribe` returns the function to unsubscribe
-			unsubscribe = await web3AccountsSubscribe((injectedAccounts) => {
+			_unsubscribe = await web3AccountsSubscribe((injectedAccounts) => {
 				//'new injected accounts found'
-				injectedAccounts.map((account) => {
+				injectedAccounts.map((_account) => {
 					//(account.address);
 				});
 			});
@@ -193,7 +193,7 @@ const BridgeBtc = () => {
 			console.error("No_API_found");
 			return;
 		}
-		const beforeAccountData = await api.query.system.account(
+		const _beforeAccountData = await api.query.system.account(
 			selectedAccount?.address,
 		); //addrAlice
 		if (!selectedAccount) {
@@ -207,7 +207,7 @@ const BridgeBtc = () => {
 				return;
 			}
 			if (extensions.length === 0) {
-				mesg =
+				_mesg =
 					"no extension installed. Click here to install an extension, or the user did not accept the authorization";
 				return;
 			}
@@ -236,7 +236,7 @@ const BridgeBtc = () => {
 			}
 			//'tokenSymbol:', tokenSymbol
 			//const txHash = api.tx.balances.transfer(BOB, 1000).signAndSend(alice);
-			const subscription = await api.tx.tokens
+			const _subscription = await api.tx.tokens
 				.transferKeepAlive(walletTo, { Token: tokenSymbol }, amount.toString())
 				.signAndSend(
 					selectedAccount.address,
@@ -288,7 +288,7 @@ const BridgeBtc = () => {
 		setModal(true);
 	};
 
-	const [tokens, setTokens] = useState<Token[]>([]);
+	const [_tokens, setTokens] = useState<Token[]>([]);
 	useEffect(() => {
 		const run = async () => {
 			const contract = new Contract(new GGxNetwork(api!));
@@ -407,10 +407,7 @@ const BridgeBtc = () => {
 							Connect Wallet
 						</Button>
 					) : (
-						<div
-							data-testid="userSelect"
-							className="flex w-full h-full border-GGx-black2 border-2 rounded-[4px]"
-						>
+						<div data-testid="userSelect" className="flex w-full h-full ">
 							<p className="h-full p-2 text-[14px] text-GGx-gray">Account</p>
 							<SelectDark<Account>
 								onChange={handleAccountSelection}

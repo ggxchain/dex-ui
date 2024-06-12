@@ -118,7 +118,6 @@ describe("OrdersList", () => {
 		expect(screen.getByText("Buy")).toBeInTheDocument();
 		expect(screen.getByText("Price")).toBeInTheDocument();
 		expect(screen.getByText("Sell")).toBeInTheDocument();
-		expect(screen.getByText("Expire in")).toBeInTheDocument();
 		expect(screen.getByText("Actions")).toBeInTheDocument();
 
 		const elem = screen.getAllByRole("row");

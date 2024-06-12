@@ -58,7 +58,7 @@ describe("OrderExpireSelect", () => {
 		const convertToMillis = () => result.current[2]();
 		const onChange = (number: number, unit: any) =>
 			result.current[3](number.toString(), unit);
-		expect(convertToMillis().toString()).toBe("0");
+		expect(convertToMillis().toString()).toBe("31104000000");
 
 		act(() => onChange(5, { value: "Hours" }));
 		expect(convertToMillis().toString()).toBe("18000000");

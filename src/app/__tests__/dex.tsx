@@ -131,21 +131,19 @@ describe("Dex", () => {
 				/>,
 			),
 		);
-		const taker = screen.getByText("Taker order");
+		const taker = await screen.findByTestId("buy-btn-p");
 		expect(taker).toBeInTheDocument();
 		await act(() => fireEvent.click(taker));
 		expect(
 			Array.prototype.slice.call(screen.getAllByTestId("tokenSelector")).length,
 		).toBe(2);
-		expect(screen.queryByTestId("expireSelect")).toBeNull();
 
-		const maker = screen.getByText("Maker order");
+		const maker = await screen.findByTestId("sell-btn-p");
 		expect(maker).toBeInTheDocument();
 		await act(() => fireEvent.click(maker));
 		expect(
 			Array.prototype.slice.call(screen.getAllByTestId("tokenSelector")).length,
 		).toBe(2);
-		expect(screen.getByTestId("expireSelect")).toBeInTheDocument();
 	});
 
 	test("Balance is displayed", async () => {
@@ -157,9 +155,9 @@ describe("Dex", () => {
 				/>,
 			),
 		);
-		const available = screen.getByText("Available:");
+		const available = await screen.findByTestId("available-label");
 		expect(available).toBeInTheDocument();
-		const balance = available.getElementsByTagName("span")[0];
+		const balance = await screen.findByTestId("available-balance");
 		expect(balance).toBeInTheDocument();
 		expect(balance.textContent).toBe(" 0.00001 USDT");
 
@@ -168,7 +166,7 @@ describe("Dex", () => {
 		const option = screen.getByText(mockedTokens()[1].symbol);
 		await act(() => fireEvent.click(option));
 
-		const balanceNew = available.getElementsByTagName("span")[0];
+		const balanceNew = await screen.findByTestId("available-balance");
 		expect(balanceNew).toBeInTheDocument();
 		expect(balanceNew.textContent).toBe(" 0 BTC");
 	});

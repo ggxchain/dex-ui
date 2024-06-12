@@ -1,5 +1,6 @@
 "use client";
 
+import { isMobile } from "react-device-detect";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
@@ -15,6 +16,7 @@ import { Inter } from "next/font/google";
 import { ToastContainer } from "react-toastify";
 import ChainPicker from "./chain_picker";
 
+import MobileInfo from "@/components/common/mobileInfo";
 import WalletError from "@/components/common/walletError";
 import GgxContext from "@/components/providers/ggx";
 
@@ -44,13 +46,13 @@ export default function Layout({
 			setWalletsError(true);
 		}
 	};
-
 	return (
 		<html lang="en">
 			<body className={`${inter.className} relative min-h-dvh`}>
 				<ParachainProviderProvider>
 					<GgxContext.Provider value={{ ggx }}>
 						<ChainPicker>
+							<div className={"sun"} />
 							<main className="h-dvh flex flex-col">
 								<ToastContainer
 									position="top-right"
@@ -60,7 +62,9 @@ export default function Layout({
 								<HeaderWithNavbar />
 								<div className="flex h-dvh flex-col items-center justify-between lg:ml-80">
 									<div className="text-GGx-light flex lg:h-[80vh] w-[90%] p-5 lg:mt-10">
-										{(walletsError && <WalletError />) || children}
+										{(isMobile && <MobileInfo />) ||
+											(walletsError && <WalletError />) ||
+											children}
 									</div>
 								</div>
 							</main>

@@ -36,7 +36,7 @@ export default function OrdersList({
 	cancelOrder,
 	isInitialized,
 }: Readonly<UserOrderProps>) {
-	const [now, setNow] = useState(Date.now());
+	const [_now, setNow] = useState(Date.now());
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
@@ -62,13 +62,13 @@ export default function OrdersList({
 						<th>Buy</th>
 						<th>Price</th>
 						<th>Sell</th>
-						<th>Expire in</th>
+
 						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr className="relative w-full h-[18px]">
-						<td>
+						<td colSpan={5}>
 							<div className="absolute top-0 xl:pl-10 w-full">
 								<GrayRuler />
 							</div>
@@ -77,7 +77,10 @@ export default function OrdersList({
 
 					{orders.length === 0 ? (
 						<tr>
-							<td className="text-GGx-light text-[18px] font-medium text-left">
+							<td
+								colSpan={5}
+								className="text-GGx-light text-[18px] font-medium text-left"
+							>
 								No orders found
 							</td>
 						</tr>
@@ -110,9 +113,6 @@ export default function OrdersList({
 
 							const formattedPrice = bnFormat(priceBn);
 
-							const expiration = order.expiration - now;
-							const expiredText =
-								expiration < 0 ? "Expired" : expirationFormat(expiration);
 							return (
 								<tr
 									key={order.counter}
@@ -159,7 +159,6 @@ export default function OrdersList({
 											{ownedToken.network}
 										</sup>
 									</td>
-									<td className="text-left">{expiredText}</td>
 									<td className="rounded-r-xl">
 										<button
 											type="button"
