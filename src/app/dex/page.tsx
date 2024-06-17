@@ -286,7 +286,7 @@ export default function Dex({ params, searchParams }: PageProps) {
 							data-testid="buy-btn-p"
 							className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}
 						>
-							Byu
+							Buy
 						</p>
 					</button>
 					<button
