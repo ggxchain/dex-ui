@@ -28,15 +28,14 @@ export const useUserOrders = (contract: Contract) => {
 interface UserOrderProps {
 	orders: DetailedOrder[];
 	cancelOrder: (order: DetailedOrder) => void;
-	isInitialized: boolean;
+	isInitialized?: boolean;
 }
 
 export default function OrdersList({
 	orders,
 	cancelOrder,
-	isInitialized,
 }: Readonly<UserOrderProps>) {
-	const [_now, setNow] = useState(Date.now());
+	const [, setNow] = useState(Date.now());
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
@@ -179,24 +178,4 @@ export default function OrdersList({
 			</table>
 		</div>
 	);
-}
-
-function expirationFormat(timeLeft: number) {
-	const seconds = Math.floor((timeLeft / 1000) % 60);
-	const minutes = Math.floor((timeLeft / (1000 * 60)) % 60);
-	const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
-	const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-
-	let result = "";
-	if (days > 0) {
-		result += `${days} Days `;
-	}
-	if (hours > 0) {
-		result += `${hours} Hours `;
-	}
-	if (minutes > 0) {
-		result += `${minutes} Minutes `;
-	}
-	result += `${seconds} Seconds `;
-	return result;
 }

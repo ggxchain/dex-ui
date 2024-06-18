@@ -12,7 +12,6 @@ import { ibcHashToDenom } from "@/services/keplr";
 import {
 	type Coin,
 	type DeliverTxResponse,
-	type IndexedTx,
 	SigningStargateClient,
 	assertIsDeliverTxSuccess,
 } from "@cosmjs/stargate";
@@ -48,8 +47,7 @@ export default function Transfer() {
 	const [prices, setPrices] = useState<Map<string, number>>(new Map());
 	const [selectedToken, setSelectedToken] = useState<ListElement>();
 	const [GGxAccounts, setGGxAccounts] = useState<Account[]>([]);
-	const [tx, setTx] = useState<string>();
-	const [_txRes, setTxRes] = useState<IndexedTx>();
+	const [_tx, setTx] = useState<string>();
 
 	// Modal related states
 	const [modal, setModal] = useState<boolean>(false);
@@ -167,14 +165,6 @@ export default function Transfer() {
 				refreshEstimatePrice(filtered);
 			}
 		}
-	};
-
-	// get tx by hash
-	const _getTx = async () => {
-		if (!tx || !client) return;
-		const result = await client.getTx(tx);
-
-		setTxRes(result ?? undefined);
 	};
 
 	const sendIbcToken = async () => {

@@ -6,7 +6,6 @@ import { errorHandler } from "@/services/api";
 import { formatPrice } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, DetailedOrder, Token } from "@/types";
-import { BN_ZERO } from "@polkadot/util";
 import { useEffect, useMemo, useState } from "react";
 import { GrayRuler } from "../common/ruler";
 
@@ -111,23 +110,6 @@ export default function OrderBook({
 			onChange(buyOrders[0]);
 		}
 	}, [onChange, buyOrders]);
-
-	const buyTotalVolume = useMemo<Amount>(
-		() =>
-			buyOrders.reduce(
-				(acc, order: NormalizedOrder) => order.amoutRequested.add(acc),
-				BN_ZERO,
-			),
-		[buyOrders],
-	);
-	const sellTotalVolume = useMemo<Amount>(
-		() =>
-			sellOrders.reduce(
-				(acc, order: NormalizedOrder) => order.amountOffered.add(acc),
-				BN_ZERO,
-			),
-		[sellOrders],
-	);
 
 	return (
 		<div className="flex flex-col border-GGx-gray border rounded-[4px] px-[26px] py-[22px]">

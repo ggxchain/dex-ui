@@ -33,7 +33,7 @@ type TokenData = TokenWithPrice & {
 
 const milisecPerYear = new BN(31536000).mul(new BN(1000));
 
-export default function Dex({ params, searchParams }: PageProps) {
+export default function Dex({ params }: PageProps) {
 	let mesg = "";
 	const { api } = useParachain();
 	const ggxNetwork = params.isMocked
