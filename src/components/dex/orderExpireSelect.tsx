@@ -61,7 +61,7 @@ export default function OrderExpireSelect(props: Props) {
 		if (dpLen > MAX_DP) {
 			input = fixDP(input);
 		}
-		const { amount, isValid } = checkBnStr(input);
+		const { isValid } = checkBnStr(input);
 		if (!isValid) {
 			toast.warn("amount invalid");
 			return;

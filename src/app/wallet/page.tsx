@@ -77,7 +77,7 @@ const useOwnedTokens = (
 
 export interface PageProps {
 	params: { slug: string; isMocked: boolean };
-	searchParams: { [key: string]: string | string[] | undefined };
+	searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 export default function Wallet({ params, searchParams }: PageProps) {
@@ -108,7 +108,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 	const [isInitialized, setIsInitialized] = useState(false);
 
-	const { isConnected, error, api } = useParachain();
+	const { api } = useParachain();
 	const ggxNetwork = isMocked ? new GgxNetworkMock() : new GGxNetwork(api!);
 	const contract = new Contract(ggxNetwork);
 
@@ -117,7 +117,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		Contract.prototype.balanceOf,
 		contract,
 	);
-	const [_, chainBalances, refreshChainBalances] = useOwnedTokens(
+	const [, chainBalances, refreshChainBalances] = useOwnedTokens(
 		Contract.prototype.allTokens,
 		Contract.prototype.onChainBalanceOf,
 		contract,
@@ -314,7 +314,7 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		if (dpLen > MAX_DP) {
 			input = fixDP(input);
 		}
-		const { amount, isValid } = checkBnStr(input);
+		const { isValid } = checkBnStr(input);
 		if (!isValid) {
 			toast.warn("amount invalid");
 			return;
