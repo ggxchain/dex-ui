@@ -1,10 +1,10 @@
 "use client";
 
+import type React from "react";
+import { useEffect, useState } from "react";
 import { isMobile } from "react-device-detect";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
-
-import { useEffect, useState } from "react";
 
 import HeaderWithNavbar from "@/components/header";
 import { ParachainProviderProvider } from "@/parachain_provider";

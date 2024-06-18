@@ -1,5 +1,6 @@
+import type React from "react";
 export function Button(props: Readonly<React.ComponentPropsWithRef<"button">>) {
-	const { type = "button", ...otherProps } = props;
+	const { type = "button" } = props;
 
 	return (
 		<button
@@ -15,7 +16,7 @@ export function Button(props: Readonly<React.ComponentPropsWithRef<"button">>) {
 export function YellowButton(
 	props: Readonly<React.ComponentPropsWithRef<"button">>,
 ) {
-	const { type = "button", ...otherProps } = props;
+	const { type = "button" } = props;
 
 	return (
 		<button
@@ -31,7 +32,7 @@ export function YellowButton(
 export function GrayButton(
 	props: Readonly<React.ComponentPropsWithRef<"button">>,
 ) {
-	const { type = "button", ...otherProps } = props;
+	const { type = "button" } = props;
 
 	return (
 		<button
