@@ -501,6 +501,7 @@ export default function Transfer() {
 
 					<InputWithPriceInfo
 						name="Amount"
+						isOpen={modal}
 						className="mt-1 rounded-[4px] border pl-5 p-3 basis-1/4 text-GGx-gray border-GGx-gray bg-transparent w-full"
 						wrapperClassName="mt-2"
 						value={modalAmount}

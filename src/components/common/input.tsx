@@ -1,7 +1,9 @@
 import type React from "react";
+import { useEffect, useRef } from "react";
 
 type InputProps = React.ComponentPropsWithRef<"input"> & {
 	name?: string;
+	isOpen?: boolean;
 	wrapperClassName?: string;
 };
 
@@ -10,8 +12,17 @@ export function Input({
 	placeholder,
 	wrapperClassName,
 	className,
+	isOpen = false,
 	...props
 }: InputProps) {
+	const inputRef = useRef(null);
+
+	useEffect(() => {
+		if (isOpen && inputRef?.current) {
+			(inputRef.current as HTMLElement)?.focus();
+		}
+	}, [isOpen]);
+
 	const inputPlaceholder = placeholder ?? name;
 
 	return (
@@ -26,6 +37,7 @@ export function Input({
 			)}
 			<input
 				{...props}
+				ref={inputRef}
 				placeholder={inputPlaceholder}
 				value={props.value || ""}
 				className={className}
