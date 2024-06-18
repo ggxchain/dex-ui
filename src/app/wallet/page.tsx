@@ -108,6 +108,8 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	const [modalLoading, setModalLoading] = useState<boolean>(false);
 	const [isInitialized, setIsInitialized] = useState(false);
 
+	const inputRes = useRef(null);
+
 	const { api } = useParachain();
 	const ggxNetwork = isMocked ? new GgxNetworkMock() : new GGxNetwork(api!);
 	const contract = new Contract(ggxNetwork);
@@ -417,6 +419,8 @@ export default function Wallet({ params, searchParams }: PageProps) {
 				<div className="flex flex-col w-full">
 					<InputWithPriceInfo
 						name="Amount"
+						ref={inputRes}
+						isOpen={modal}
 						className="mt-1 rounded-[4px] border p-3 basis-1/4 bg-transparent text-GGx-gray border-GGx-gray w-full"
 						value={modalAmount}
 						onChange={handleAmountChange}
