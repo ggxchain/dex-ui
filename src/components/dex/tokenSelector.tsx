@@ -52,6 +52,8 @@ export default function TokenSelector({
 	tokens,
 	lockedAmount,
 }: Readonly<TokenSelectorProps>) {
+	const [errorIcon, setErrorIcon] = useState<Map<string, boolean>>(new Map());
+
 	useEffect(() => {
 		//lg('tokenSelector', token, amount, tokens, lockedAmount)
 		if (tokens.length > 0 && token === undefined) {
@@ -104,15 +106,30 @@ export default function TokenSelector({
 				childFormatter={(token: Token) => {
 					return (
 						<div className="flex items-center text-GGx-light w-full border-GGx-gray md:text-lg text-base px-[10px] py-[10px]">
-							<Image
-								width={0}
-								height={0}
-								src={`/svg/${token.symbol.toLowerCase()}.svg`}
-								className="w-[32px] h-[32px] mr-2"
-								alt={`${token.name} icon`}
-							/>
+							{errorIcon.get(token.symbol) ? (
+								<Image
+									width={0}
+									height={0}
+									src={"/svg/ggxt.svg"}
+									className="opacity-35 md:w-6 md:h-6 w-5 h-5 my-1 mr-2"
+									alt={`${token.name} icon`}
+								/>
+							) : (
+								<Image
+									width={0}
+									height={0}
+									src={`/svg/${token.symbol.toLowerCase()}.svg`}
+									className="w-[32px] h-[32px] mr-2"
+									alt={`${token.name} icon`}
+									onError={() => {
+										setErrorIcon(
+											(errorIcons) =>
+												new Map(errorIcons.set(token.symbol, true)),
+										);
+									}}
+								/>
+							)}
 							<p className="font-bold">{token.name}</p>
-							<sup className="pl-1 opacity-90">{token.network}</sup>
 						</div>
 					);
 				}}

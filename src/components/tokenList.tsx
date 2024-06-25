@@ -228,10 +228,7 @@ interface TokenDetailInterface {
 const TokenDetail = ({ tokenName, tokenNetwork }: TokenDetailInterface) => {
 	return (
 		<>
-			<p className="font-bold">
-				{tokenName}
-				<sup className="pl-1 font-normal text-[10px]">{tokenNetwork}</sup>
-			</p>
+			<p className="font-bold">{tokenName}</p>
 		</>
 	);
 };

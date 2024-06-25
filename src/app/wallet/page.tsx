@@ -1,11 +1,9 @@
 "use client";
-
-import { Button, GrayButton } from "@/components/common/button";
 import { InputWithPriceInfo } from "@/components/common/input";
 import LoadingButton from "@/components/common/loadButton";
 import Modal from "@/components/common/modal";
 import Ruler from "@/components/common/ruler";
-import { SelectDark } from "@/components/common/select";
+import { useOwnedTokens } from "@/components/hooks/useOwnedTokens";
 import GgxContext from "@/components/providers/ggx";
 import TokenList from "@/components/tokenList";
 import { useParachain } from "@/parachain_provider";
@@ -13,7 +11,7 @@ import Contract, { errorHandler } from "@/services/api";
 import GGxNetwork from "@/services/api/ggx";
 import GgxNetworkMock from "@/services/api/mock";
 import CexService from "@/services/cex";
-import GGXWallet, { type Account } from "@/services/ggx";
+import type { Account } from "@/services/ggx";
 import {
 	BNtoDisplay,
 	bn,
@@ -26,8 +24,8 @@ import {
 } from "@/services/utils";
 import { MAX_DP, PRICE_DP } from "@/settings";
 import TokenDecimals from "@/tokenDecimalsConverter";
-import type { Amount, Token, TokenId } from "@/types";
-import { BN, BN_TEN, BN_ZERO } from "@polkadot/util";
+import type { Token, TokenId } from "@/types";
+import { BN_TEN, BN_ZERO } from "@polkadot/util";
 import {
 	type ChangeEvent,
 	Suspense,
@@ -41,59 +39,24 @@ import Loading from "./loading";
 
 type InteractType = "Deposit" | "Withdraw";
 
-type FetchUserTokenId = () => Promise<TokenId[]>;
-type FetchBalance = (tokenId: TokenId) => Promise<Amount>;
-
-const useOwnedTokens = (
-	fetchUserTokens: FetchUserTokenId,
-	fetchUserBalance: FetchBalance,
-	contract: Contract,
-) => {
-	const [tokens, setTokens] = useState<TokenId[]>([]);
-	const [balances, setBalances] = useState<Map<TokenId, Amount>>(
-		new Map<TokenId, Amount>(),
-	);
-
-	const refreshBalances = async () => {
-		const tokens = await fetchUserTokens.call(contract).catch(errorHandler);
-		if (tokens === undefined) {
-			return;
-		}
-		setTokens(tokens);
-		setBalances(new Map<TokenId, Amount>());
-		const balancesPromises = tokens.map((token) => {
-			return fetchUserBalance.call(contract, token).catch(errorHandler);
-		});
-		const balancesResults = await Promise.all(balancesPromises);
-		const balances = new Map<TokenId, Amount>();
-		balancesResults.forEach((balance, index) => {
-			balances.set(tokens[index], balance ?? BN_ZERO);
-		});
-		setBalances(balances);
-	};
-
-	return [tokens, balances, refreshBalances] as const;
-};
-
 export interface PageProps {
 	params: { slug: string; isMocked: boolean };
 	searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 export default function Wallet({ params, searchParams }: PageProps) {
-	const [isMocked, setIsMocked] = useState(params.isMocked);
+	const [isMocked] = useState(params.isMocked);
 	const [tokenMap, setTokenMap] = useState<Map<TokenId, Token>>(
 		new Map<TokenId, Token>(),
 	);
+
 	const [tokens, setTokens] = useState<Token[]>([]);
 	const [search, setSearch] = useState<string>("");
 	const [tokenPrices, setTokenPrices] = useState<Map<TokenId, number>>(
 		new Map<TokenId, number>(),
 	);
 	const [ggxAccounts, setGGXAccounts] = useState<Account[]>([]);
-	const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(
-		undefined,
-	);
+
 	const [selectedToken, setSelectedToken] = useState<Token | undefined>(
 		undefined,
 	);
@@ -129,7 +92,19 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		refreshDexBalances();
 		refreshChainBalances();
 	};
+	const connectWallet = async () => {
+		if (ggx) {
+			const accounts = await ggx.getAccounts().catch(errorHandler);
+			if (accounts === undefined) {
+				return;
+			}
+			setGGXAccounts(accounts);
+		}
+	};
 
+	useEffect(() => {
+		console.log("*** useEffect->ggx: ", ggx);
+	}, [ggx]);
 	// biome-ignore lint: do not include` contract` as a dependency of this effect, as it causes an inf loop
 	useEffect(() => {
 		setTokens([]);
@@ -159,12 +134,11 @@ export default function Wallet({ params, searchParams }: PageProps) {
 			.then(() => {
 				setIsInitialized(true);
 			});
-
 		connectWallet();
 		refreshBalances();
 		// do not add `contract` OR `refreshBalances` to dependencies here because they cause an infinite loop.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [ggx]);
 
 	const onSearch = (e: ChangeEvent<HTMLInputElement>) => {
 		setSearch(e.target.value);
@@ -246,31 +220,9 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		setModalAmount("");
 		setModal(true);
 	};
-	const connectWallet = async () => {
-		if (ggx) {
-			const accounts = await ggx.getAccounts().catch(errorHandler);
-			if (accounts === undefined) {
-				return;
-			}
-			setGGXAccounts(accounts);
-			setSelectedAccount(ggx.pubkey());
-		}
-	};
 
 	const walletIsNotInitialized = ggxAccounts.length === 0;
-	const handleSelectChange = (e: Account) => {
-		const wallet = new GGXWallet();
-		if (e === null) {
-			return;
-		}
-		try {
-			wallet.selectAccount(e);
-		} catch (err) {
-			console.warn(err);
-			toast.warn(`${err}`);
-		}
-		setSelectedAccount(e);
-	};
+
 	const displayTokens = filteredTokens.map((token) => {
 		const balance = dexBalances.get(token.id);
 		const price = tokenPrices.get(token.id);
@@ -283,14 +235,6 @@ export default function Wallet({ params, searchParams }: PageProps) {
 			url: `/svg/${token.symbol.toLowerCase()}.svg`,
 		};
 	});
-
-	const _onTokenSelect = (token: Token) => {
-		setSelectedToken(token);
-	};
-
-	const _onContractTypeChange = () => {
-		setIsMocked(!isMocked);
-	};
 
 	const selectedTokenPrice = selectedToken
 		? tokenPrices.get(selectedToken.id) ?? 0
@@ -306,9 +250,6 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	} catch (err) {
 		console.error("valueBn calculation failed. ", err);
 	}
-	const selectedTokenBalance = selectedToken
-		? new BN(dexBalances.get(selectedToken.id) ?? 0)
-		: BN_ZERO;
 
 	const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
 		let input = e.target.value;
@@ -335,14 +276,6 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		setSelectedToken(token);
 		onModalOpen(modalTitle.current);
 	};
-	const _DepositButton =
-		walletIsNotInitialized || isTokenNotSelected ? GrayButton : Button;
-	const _WithdrawButton =
-		walletIsNotInitialized ||
-		isTokenNotSelected ||
-		selectedTokenBalance.lte(BN_ZERO)
-			? GrayButton
-			: Button;
 
 	return (
 		<div className="w-full h-full flex flex-col">
@@ -363,36 +296,6 @@ export default function Wallet({ params, searchParams }: PageProps) {
 					onChange={onSearch}
 					className="md:w-[30%] w-[45%] px-[15px] py-[16px] rounded-md bg-GGx-black2 text-GGx-light"
 				/>
-				<div className="w-[45%] md:w-[30%] md:max-w-96 max-w-48">
-					{walletIsNotInitialized ? (
-						<Button onClick={connectWallet} className="w-full h-full">
-							Connect the wallet
-						</Button>
-					) : (
-						<div data-testid="userSelect" className="flex w-full h-full">
-							<p className="h-full p-4 text-[14px] text-GGx-gray">Account</p>
-							<SelectDark<Account>
-								onChange={handleSelectChange}
-								options={ggxAccounts}
-								value={selectedAccount}
-								className="w-full h-full"
-								childFormatter={(account) => {
-									return (
-										<div className="w-full p-3 h-full text-GGx-light rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
-											<span className="text-base">
-												{account.name
-													? account.name
-													: `Account ${ggxAccounts.findIndex(
-															(acc) => acc.address === account.address,
-														)}`}
-											</span>
-										</div>
-									);
-								}}
-							/>
-						</div>
-					)}
-				</div>
 			</div>
 			<Suspense fallback={<Loading />}>
 				<TokenList
