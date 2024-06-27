@@ -102,9 +102,6 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		}
 	};
 
-	useEffect(() => {
-		console.log("*** useEffect->ggx: ", ggx);
-	}, [ggx]);
 	// biome-ignore lint: do not include` contract` as a dependency of this effect, as it causes an inf loop
 	useEffect(() => {
 		setTokens([]);

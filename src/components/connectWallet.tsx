@@ -110,7 +110,7 @@ export default function ConnectWallet({ isMocked }: { isMocked: boolean }) {
 
 	return (
 		<>
-			{walletIsNotInitialized ? (
+			{!isMocked && walletIsNotInitialized ? (
 				<Button onClick={connectWallet} className="w-full h-full">
 					Connect the wallet
 				</Button>

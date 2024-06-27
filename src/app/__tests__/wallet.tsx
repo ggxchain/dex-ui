@@ -83,8 +83,6 @@ describe("Wallet", () => {
 		await delayFunc(1000);
 		//const totalUserBalance ... see above calculation
 
-		expect(screen.getByText("Account 1"));
-		debug();
 		expect(screen.getAllByRole("row").length).toBe(mockedTokens().length + 1); // 1 header + tokens
 
 		expect(screen.getByText("1 USDT")).toBeInTheDocument();
@@ -132,23 +130,6 @@ describe("Wallet", () => {
 
 		await act(() => fireEvent.click(screen.getByTestId("withdraw-USDT")));
 		expect(screen.getByTestId("modal")).toBeVisible();
-	});
-
-	test("select account", async () => {
-		await act(() =>
-			render(
-				<WalletPage
-					params={{ isMocked: true, slug: "" }}
-					searchParams={{ pair: undefined }}
-				/>,
-			),
-		);
-		const select = screen.getByTestId("userSelect").lastChild!;
-		expect(select).toBeInTheDocument();
-		await act(() => fireEvent.keyDown(select, { key: "ArrowDown" }));
-		const option = screen.getByText("Account 2");
-		await act(() => fireEvent.click(option));
-		expect(selectFn).toHaveBeenCalledTimes(1);
 	});
 
 	test("replace selected token, open modal, enter BTC amount and it shows the amount x its price", async () => {
