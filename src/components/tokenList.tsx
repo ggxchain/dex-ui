@@ -3,6 +3,7 @@ import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token } from "@/types";
 import { BN, BN_ZERO } from "@polkadot/util";
 import Image from "next/image";
+import { useState } from "react";
 import Spinner from "./common/spinner";
 
 export interface ListElement extends Token {
@@ -41,6 +42,8 @@ export default function TokenList({
 	dexBalances,
 	showDepositWithdraw = false,
 }: Readonly<TokenListProperties>) {
+	const [errorIcon, setErrorIcon] = useState<Map<number, boolean>>(new Map());
+
 	const handleClick = (token: ListElement) => {
 		if (onClick !== undefined) {
 			onClick(token);
@@ -81,7 +84,7 @@ export default function TokenList({
 					</tr>
 				) : null}
 
-				{tokens.map((token) => {
+				{tokens.map((token, index) => {
 					const _isSelected = token.id === selected?.id;
 					const amountConverter = new TokenDecimals(token.decimals);
 
@@ -104,13 +107,29 @@ export default function TokenList({
 						>
 							<td>
 								<div className="flex flex-col md:flex-row items-center w-full">
-									<Image
-										width={0}
-										height={0}
-										src={token.url}
-										className="md:w-6 md:h-6 w-5 h-5 my-1 mr-2"
-										alt={`${token.name} icon`}
-									/>
+									{errorIcon.get(index) ? (
+										<Image
+											width={0}
+											height={0}
+											src={"/svg/ggxt.svg"}
+											className="opacity-35 md:w-6 md:h-6 w-5 h-5 my-1 mr-2"
+											alt={`${token.name} icon`}
+										/>
+									) : (
+										<Image
+											width={0}
+											height={0}
+											onError={() => {
+												setErrorIcon(
+													(errorIcons) => new Map(errorIcons.set(index, true)),
+												);
+											}}
+											src={token.url}
+											className="md:w-6 md:h-6 w-5 h-5 my-1 mr-2"
+											alt={`${token.name} icon`}
+										/>
+									)}
+
 									<TokenDetail
 										tokenName={token.name}
 										tokenNetwork={token.network}
@@ -209,10 +228,7 @@ interface TokenDetailInterface {
 const TokenDetail = ({ tokenName, tokenNetwork }: TokenDetailInterface) => {
 	return (
 		<>
-			<p className="font-bold">
-				{tokenName}
-				<sup className="pl-1 font-normal text-[10px]">{tokenNetwork}</sup>
-			</p>
+			<p className="font-bold">{tokenName}</p>
 		</>
 	);
 };

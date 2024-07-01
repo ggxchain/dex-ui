@@ -123,6 +123,7 @@ export default function Dex({ params }: PageProps) {
 			? amountConverter.strFloatToBN(sellAmountStr)
 			: orderRequested
 		: BN_ZERO; //sell.amount
+
 	const buyAmount = !isTokenNotSelected
 		? isMaker
 			? amountConverter.strFloatToBN(buyAmountStr)
@@ -149,7 +150,7 @@ export default function Dex({ params }: PageProps) {
 		isUserBalanceNotEnough ||
 		(isTaker && isOrderNotChosen);
 
-	const onSwap = () => {
+	const onSwap = (isMaker = true) => {
 		if (sellAmount.lte(BN_ZERO)) {
 			mesg = "Sell amount should be greater than zero";
 			console.warn(mesg);
@@ -276,8 +277,9 @@ export default function Dex({ params }: PageProps) {
 	return (
 		<div className="text-GGx-gray flex flex-col w-full items-center">
 			<div className="flex flex-col w-full">
-				<div className="flex text-xl justify-between text-[30px] pb-[10px]">
+				<div className="flex text-xl justify-start  text-[30px] pb-[10px]">
 					<button
+						className={"mr-3"}
 						data-testid="buy-btn"
 						onClick={() => setIsMaker(false)}
 						type="button"
@@ -324,17 +326,15 @@ export default function Dex({ params }: PageProps) {
 									<p className="w-4/5">
 										The balance is not enough to make this swap
 									</p>
-									{isMaker && ( // Taker can't regulate the amount of the order.
-										<button
-											type="button"
-											className="ml-2 p-1 rounded-2xl border grow-on-hover"
-											onClick={() =>
-												setSell({ ...sell, amount: availableBalanceNormalized })
-											}
-										>
-											Set max
-										</button>
-									)}
+									<button
+										type="button"
+										className="ml-2 p-1 rounded-2xl border grow-on-hover"
+										onClick={() =>
+											setSell({ ...sell, amount: availableBalanceNormalized })
+										}
+									>
+										Set max
+									</button>
 								</div>
 							)}
 							{isTokenSame && !isAmountZero && (
@@ -351,7 +351,6 @@ export default function Dex({ params }: PageProps) {
 							amount={buyAmountStr}
 							onChange={onBuyChange}
 						/>
-
 						<div className="pt-[18px]">
 							<GrayRuler />
 							<div className="flex justify-between pt-[10px]">
@@ -414,9 +413,21 @@ export default function Dex({ params }: PageProps) {
 								{isWalletNotConnected ? (
 									<YellowButton onClick={onLogin}>Connect wallet</YellowButton>
 								) : (
-									<YellowButton disabled={isFormHasErrors} onClick={onSwap}>
-										{isTaker ? "Take order" : "Make order"}
-									</YellowButton>
+									<>
+										<YellowButton
+											disabled={isFormHasErrors}
+											onClick={() => onSwap()}
+										>
+											Take order
+										</YellowButton>
+
+										<YellowButton
+											disabled={isFormHasErrors}
+											onClick={() => onSwap(false)}
+										>
+											Make order
+										</YellowButton>
+									</>
 								)}
 								<GrayButton className="basis-1/5" onClick={onClear}>
 									Clear

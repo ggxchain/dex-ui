@@ -32,8 +32,9 @@ export default function Layout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const [ggx] = useState<GGXWallet>(new GGXWallet());
+	const [ggx, setGgx] = useState<GGXWallet>(new GGXWallet());
 	const [walletsError, setWalletsError] = useState<boolean>(false);
+	const [_selectedWallet, _setSelectedWallet] = useState<string>("");
 	useEffect(() => {
 		if (ggx) {
 			connectWallet();
@@ -46,11 +47,12 @@ export default function Layout({
 			setWalletsError(true);
 		}
 	};
+
 	return (
 		<html lang="en">
 			<body className={`${inter.className} relative min-h-dvh`}>
 				<ParachainProviderProvider>
-					<GgxContext.Provider value={{ ggx }}>
+					<GgxContext.Provider value={{ ggx, setGgx }}>
 						<ChainPicker>
 							<div className={"sun"} />
 							<main className="h-dvh flex flex-col">

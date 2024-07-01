@@ -278,7 +278,10 @@ export default class Contract {
 	async validateTokenId(tokenId: TokenId) {
 		// Should be safe to do as it cached
 		const tokens = await this.allTokens();
-		if (tokens.findIndex((value) => value === tokenId) === -1) {
+		const index = tokens.findIndex((value) => {
+			return value.toString() === tokenId.toString();
+		});
+		if (index === -1) {
 			throw new Error(Errors.InvalidTokenId);
 		}
 	}
