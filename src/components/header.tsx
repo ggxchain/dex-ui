@@ -2,6 +2,7 @@
 
 import ConnectMetaMask from "@/components/common/connectMetamask";
 import Logo from "@/components/common/logo";
+import ConnectWallet from "@/components/connectWallet";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThreeDotsImage from "./common/threeDots";
@@ -14,12 +15,12 @@ export default function HeaderWithNavbar() {
 			name: "Wallet",
 			path: "/wallet",
 		},
-		{
+		/*{
 			name: "Transfers",
 			path: "/transfer",
-		},
+		},*/
 		{
-			name: "DEX",
+			name: "TRADE",
 			path: "/dex",
 		},
 		/*{
@@ -41,6 +42,8 @@ export default function HeaderWithNavbar() {
 				<div className="w-full flex justify-end">
 					<div className="w-[50%] text-GGx-gray text-base flex justify-end mr-[5%]">
 						<ConnectMetaMask />
+						<ConnectWallet isMocked={false} />
+
 					</div>
 				</div>
 			</header>

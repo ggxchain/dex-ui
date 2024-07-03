@@ -11,7 +11,7 @@ export default function GgxContainer({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const [ggx] = useState<GGXWallet>(new GGXWallet());
+	const [ggx, setGgx] = useState<GGXWallet>(new GGXWallet());
 	const [_walletsError, setWalletsError] = useState<boolean>(false);
 	useEffect(() => {
 		if (ggx) {
@@ -26,5 +26,9 @@ export default function GgxContainer({
 		}
 	};
 
-	return <GgxContext.Provider value={{ ggx }}>{children}</GgxContext.Provider>;
+	return (
+		<GgxContext.Provider value={{ ggx, setGgx }}>
+			{children}
+		</GgxContext.Provider>
+	);
 }
