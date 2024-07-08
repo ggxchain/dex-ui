@@ -7,6 +7,12 @@ interface MetaMaskContextProps {
 	disconnectMetaMask: () => void;
 }
 
+declare global {
+	interface Window {
+		ethereum: any;
+	}
+}
+
 export const MetaMaskContext = createContext<MetaMaskContextProps>({
 	account: null,
 	connectMetaMask: () => {},
