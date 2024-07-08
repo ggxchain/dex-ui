@@ -1,7 +1,7 @@
 import type Contract from "@/services/api";
 import { errorHandler } from "@/services/api";
 import CexService from "@/services/cex";
-import { BNtoDisplay, bn, numFloatToBN, strFloatToBN } from "@/services/utils";
+import { bn, formatPrice, numFloatToBN, strFloatToBN } from "@/services/utils";
 import { MAX_DP, PRICE_DP } from "@/settings";
 import type { Token } from "@/types";
 import { BN_TEN, BN_ZERO } from "@polkadot/util";
@@ -138,7 +138,7 @@ export default function TokenSelector({
 				symbol=""
 				wrapperClassName="basis-4/6"
 				value={amount}
-				amtValue={BNtoDisplay(valueBn)}
+				amtValue={formatPrice(valueBn.toNumber())}
 				suffixStyle="text-GGx-black2"
 				step="2"
 				className="w-full bg-GGx-gray text-GGx-black2 px-[15px] py-[16px] rounded-r-[4px] border-GGx-gray border text-left disabled:cursor-not-allowed"

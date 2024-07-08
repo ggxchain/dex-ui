@@ -40,8 +40,10 @@
     "react-dom": "^18",
     "react-select": "^5.8.0",
     "react-toastify": "^10.0.4",
+    "sass": "^1.77.6",
     "sst": "^3.0.1",
     "tailwindcss-safe-area": "^0.4.1",
+    "web3": "^4.10.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {

@@ -46,8 +46,8 @@ export interface PageProps {
 
 export default function Wallet({ params, searchParams }: PageProps) {
 	const [isMocked] = useState(params.isMocked);
-	const [tokenMap, setTokenMap] = useState<Map<TokenId, Token>>(
-		new Map<TokenId, Token>(),
+	const [tokenMap, setTokenMap] = useState<Map<string, Token>>(
+		new Map<string, Token>(),
 	);
 
 	const [tokens, setTokens] = useState<Token[]>([]);
@@ -63,7 +63,6 @@ export default function Wallet({ params, searchParams }: PageProps) {
 
 	// Wallet
 	const { ggx } = useContext(GgxContext);
-
 	// Modal related states
 	const [modal, setModal] = useState<boolean>(false);
 	const [modalAmount, setModalAmount] = useState("");
@@ -109,7 +108,8 @@ export default function Wallet({ params, searchParams }: PageProps) {
 			.allTokensWithInfo()
 			.then((tokens) => {
 				setTokens(tokens);
-				setTokenMap(new Map(tokens.map((token) => [token.id, token])));
+
+				setTokenMap(new Map(tokens.map((token) => [`${token.id}`, token])));
 				if (tokens.length > 0) {
 					setSelectedToken(tokens[0]);
 				}
@@ -161,11 +161,11 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	}, 0);
 
 	const total = dexOwnedTokens.reduce<number>((total, tokenId) => {
-		const token = tokenMap.get(tokenId);
+		const token = tokenMap.get(`${tokenId}`);
+
 		if (token === undefined) {
 			return total;
 		}
-
 		const balance = new TokenDecimals(token.decimals).BNToFloat(
 			dexBalances.get(tokenId) ?? BN_ZERO,
 		);
@@ -222,8 +222,10 @@ export default function Wallet({ params, searchParams }: PageProps) {
 
 	const displayTokens = filteredTokens.map((token) => {
 		const balance = dexBalances.get(token.id);
+
 		const price = tokenPrices.get(token.id);
 		const chainBalance = chainBalances.get(token.id);
+
 		return {
 			...token,
 			balance: balance ?? BN_ZERO,

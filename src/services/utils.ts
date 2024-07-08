@@ -77,7 +77,7 @@ export const fixDP = (str: string, dp = MAX_DP) => {
 		return `${arr[0]}.+${"0".repeat(dp)}`;
 	return `${arr[0]}.${arr[1].substring(0, dp)}`;
 };
-export const formatPrice = (n: number, symbol = "na") => {
+export const formatPrice = (n: number, symbol = "na", currency = "$") => {
 	if (["dai"].includes(symbol.toLowerCase())) {
 		return formatter(8).format(n);
 	}
@@ -88,12 +88,13 @@ export const formatPrice = (n: number, symbol = "na") => {
 		return formatter().format(n);
 	}
 	if (n === 1) {
-		return "$1.00";
+		return `${currency}1.00`;
 	}
 	if (n === 0) {
-		return "$0.00";
+		return `${currency}0.00`;
 	}
-	return `$${sigFig(n, 4)}`;
+
+	return `${currency}${sigFig(n, 4)}`;
 };
 export const sigFig = (n: number, sig: number) => {
 	const mult = 10 ** (sig - Math.floor(Math.log(n) / Math.LN10) - 1);
@@ -316,7 +317,7 @@ export const translateErrorMesg = (error: string | undefined) => {
 };
 
 export const delayFunc = (delay: number): Promise<boolean> =>
-	new Promise((resolve, reject) =>
+	new Promise((resolve, _reject) =>
 		setTimeout(() => {
 			//lg("delay:", delay)
 			resolve(true); //or reject()

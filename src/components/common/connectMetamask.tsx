@@ -1,32 +1,38 @@
 "use client";
+import { Button } from "@/components/common/button";
 import Modal from "@/components/common/modal";
-import {
-	MetaMaskButton,
-	useAccount,
-	useSignMessage,
-} from "@metamask/sdk-react-ui";
+
+import { MetaMaskContext } from "@/components/providers/metamask";
+import { Ellipsis } from "@/components/utils/ellipsis";
+import GGXWallet from "@/services/ggx";
 import Image from "next/image";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 export default function ConnectMetaMask() {
 	const [modal, setModal] = useState<boolean>(false);
+	const { account, connectMetaMask, disconnectMetaMask } =
+		useContext(MetaMaskContext);
 
-	const { isConnected } = useAccount();
-	const {
-		data: signData,
-		isError: isSignError,
-		isLoading: isSignLoading,
-		isSuccess: isSignSuccess,
-		signMessage,
-	} = useSignMessage({
-		message: "gm wagmi frens",
-	});
+	useEffect(() => {
+		if (account) {
+			const wallet = new GGXWallet();
+			try {
+				wallet.selectAccount({ address: account, name: "Metamask" });
+			} catch (err) {
+				console.warn(err);
+				toast.warn(`${err}`);
+			}
+		}
+	}, [account]);
 
 	return (
-		<div data-testid="connectMetaMask">
-			{(!isConnected && (
-				<div className="flex justify-between md:mt-10 mt-1 items-center">
-					<MetaMaskButton theme={"light"} color="white"></MetaMaskButton>
+		<div className="flex justify-between  items-center">
+			{(!account && (
+				<div className="flex justify-between  mr-4 items-center">
+					<Button onClick={connectMetaMask} className="w-full h-full  ">
+						Connect Metamask
+					</Button>
 					<Image
 						width={0}
 						height={0}
@@ -37,19 +43,17 @@ export default function ConnectMetaMask() {
 					/>
 				</div>
 			)) || (
-				<>
-					<div style={{ marginTop: 20 }}>
-						<button
-							type={"button"}
-							disabled={isSignLoading}
-							onClick={() => signMessage()}
-						>
-							Sign message
-						</button>
-						{isSignSuccess && <div>Signature: {signData}</div>}
-						{isSignError && <div>Error signing message</div>}
+				<div className={"flex justify-between  items-center text-GGx-light"}>
+					<div className={"flex justify-between content-center text-GGx-light"}>
+						<div className={"flex text-nowrap items-stretch "}>
+							Metamask address:
+						</div>
+						{Ellipsis(account as unknown as string)}
 					</div>
-				</>
+					<Button onClick={disconnectMetaMask} className="w-full h-full ">
+						Disconnect
+					</Button>
+				</div>
 			)}
 			<Modal
 				modalTitle={"Connect Metamask"}

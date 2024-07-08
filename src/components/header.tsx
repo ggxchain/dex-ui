@@ -1,6 +1,4 @@
 "use client";
-
-import ConnectMetaMask from "@/components/common/connectMetamask";
 import Logo from "@/components/common/logo";
 import ConnectWallet from "@/components/connectWallet";
 import Link from "next/link";
@@ -20,7 +18,7 @@ export default function HeaderWithNavbar() {
 			path: "/transfer",
 		},*/
 		{
-			name: "TRADE",
+			name: "Trade",
 			path: "/dex",
 		},
 		/*{
@@ -31,7 +29,7 @@ export default function HeaderWithNavbar() {
 
 	return (
 		<>
-			<header className="peer flex justify-between items-center secondary-gradient w-full sticky top-0 z-50 p-safe-or-4 ">
+			<header className="peer menu flex justify-between items-center secondary-gradient w-full sticky top-0 z-50 p-safe-or-4 ">
 				<button
 					type="button"
 					className="inline-flex items-center p-2 rounded-lg lg:hidden"
@@ -39,11 +37,9 @@ export default function HeaderWithNavbar() {
 					<ThreeDotsImage />
 				</button>
 
-				<div className="w-full flex justify-end">
+				<div className="w-full  flex justify-end">
 					<div className="w-[50%] text-GGx-gray text-base flex justify-end mr-[5%]">
-						<ConnectMetaMask />
 						<ConnectWallet isMocked={false} />
-
 					</div>
 				</div>
 			</header>

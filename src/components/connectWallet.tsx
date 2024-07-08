@@ -1,9 +1,11 @@
 "use client";
 
 import { Button } from "@/components/common/button";
+import ConnectMetaMask from "@/components/common/connectMetamask";
 import { SelectDark } from "@/components/common/select";
 import { useOwnedTokens } from "@/components/hooks/useOwnedTokens";
 import GgxContext from "@/components/providers/ggx";
+import { MetaMaskContext } from "@/components/providers/metamask";
 import { useParachain } from "@/parachain_provider";
 import Contract, { errorHandler } from "@/services/api";
 import GGxNetwork from "@/services/api/ggx";
@@ -24,6 +26,7 @@ export default function ConnectWallet({ isMocked }: { isMocked: boolean }) {
 	const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(
 		undefined,
 	);
+	const { account } = useContext(MetaMaskContext);
 
 	// Wallet
 	const { ggx, setGgx } = useContext(GgxContext);
@@ -75,7 +78,7 @@ export default function ConnectWallet({ isMocked }: { isMocked: boolean }) {
 			})
 			.then(() => {});
 
-		connectWallet();
+		//connectWallet();
 		refreshBalances();
 		// do not add `contract` OR `refreshBalances` to dependencies here because they cause an infinite loop.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -107,37 +110,45 @@ export default function ConnectWallet({ isMocked }: { isMocked: boolean }) {
 
 		setSelectedAccount(e);
 	};
-
+	if (walletIsNotInitialized && !account) {
+		return (
+			<>
+				<ConnectMetaMask />
+				<div className="flex justify-between  items-center">
+					<Button onClick={connectWallet} className="w-full h-full ">
+						Connect the wallet
+					</Button>
+				</div>
+			</>
+		);
+	}
+	if (account) {
+		return <ConnectMetaMask />;
+	}
 	return (
 		<>
-			{!isMocked && walletIsNotInitialized ? (
-				<Button onClick={connectWallet} className="w-full h-full">
-					Connect the wallet
-				</Button>
-			) : (
-				<div data-testid="userSelect" className="flex w-full h-full">
-					<p className="h-full p-4 text-[14px] text-GGx-gray">Account</p>
-					<SelectDark<Account>
-						onChange={handleSelectChange}
-						options={ggxAccounts}
-						value={selectedAccount}
-						className="w-full h-full"
-						childFormatter={(account) => {
-							return (
-								<div className="w-full p-3 h-full text-GGx-light rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
-									<span className="text-base">
-										{account.name
-											? account.name
-											: `Account ${ggxAccounts.findIndex(
-													(acc) => acc.address === account.address,
-												)}`}
-									</span>
-								</div>
-							);
-						}}
-					/>
-				</div>
-			)}
+			<div data-testid="userSelect" className="flex w-full h-full">
+				<p className="h-full p-4 text-[14px] text-GGx-gray">Account</p>
+				<SelectDark<Account>
+					onChange={handleSelectChange}
+					options={ggxAccounts}
+					value={selectedAccount}
+					className="w-full h-full"
+					childFormatter={(account) => {
+						return (
+							<div className="w-full p-3 h-full text-GGx-light rounded-2xl md:text-base text-sm grow-on-hover glow-on-hover">
+								<span className="text-base">
+									{account.name
+										? account.name
+										: `Account ${ggxAccounts.findIndex(
+												(acc) => acc.address === account.address,
+											)}`}
+								</span>
+							</div>
+						);
+					}}
+				/>
+			</div>
 		</>
 	);
 }

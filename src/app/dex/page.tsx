@@ -41,7 +41,7 @@ export default function Dex({ params }: PageProps) {
 		: new GGxNetwork(api!);
 	const contract = new Contract(ggxNetwork);
 	const contractRef = useRef<Contract>(contract);
-	const [isMaker, setIsMaker] = useState<boolean>(false);
+
 	const [sellAmountStr, setSellAmountStr] = useState("");
 	const [buyAmountStr, setbuyAmountStr] = useState("");
 	const [sell, setSell] = useState<TokenData>();
@@ -103,38 +103,24 @@ export default function Dex({ params }: PageProps) {
 		router.push("/wallet");
 	};
 
-	const isTaker = !isMaker;
 	const isTokenNotSelected = sell === undefined || buy === undefined;
 	const isTokenSame = sell?.symbol === buy?.symbol;
 	const isWalletNotConnected = !isConnected.current;
 	const isOrderNotChosen = order === undefined;
 
-	const orderRequested = amountConverter.normalize(
-		order?.amoutRequested ?? BN_ZERO,
-		sell?.decimals ?? 1,
-	);
-	const orderOffered = amountConverter.normalize(
-		order?.amountOffered ?? BN_ZERO,
-		buy?.decimals ?? 1,
-	);
-
 	const sellAmount = !isTokenNotSelected
-		? isMaker
-			? amountConverter.strFloatToBN(sellAmountStr)
-			: orderRequested
+		? amountConverter.strFloatToBN(sellAmountStr)
 		: BN_ZERO; //sell.amount
 
 	const buyAmount = !isTokenNotSelected
-		? isMaker
-			? amountConverter.strFloatToBN(buyAmountStr)
-			: orderOffered
+		? amountConverter.strFloatToBN(buyAmountStr)
 		: BN_ZERO; //buy.amount
 
 	const isSellAmountZero = sellAmount.eq(BN_ZERO);
 	const isUserBalanceNotEnough =
 		!isWalletNotConnected && availableBalanceNormalized.lt(sellAmount);
 	const isAmountZero = isSellAmountZero || buyAmount.eq(BN_ZERO);
-	const isExpirationZero = isMaker && expireNumber === "0";
+	const isExpirationZero = expireNumber === "0";
 
 	const rate =
 		!isTokenNotSelected && !buyAmount.eq(BN_ZERO) && !sellAmount.eq(BN_ZERO)
@@ -148,9 +134,9 @@ export default function Dex({ params }: PageProps) {
 		isAmountZero ||
 		isWalletNotConnected ||
 		isUserBalanceNotEnough ||
-		(isTaker && isOrderNotChosen);
+		isOrderNotChosen;
 
-	const onSwap = (isMaker = true) => {
+	const onSwap = () => {
 		if (sellAmount.lte(BN_ZERO)) {
 			mesg = "Sell amount should be greater than zero";
 			console.warn(mesg);
@@ -174,36 +160,29 @@ export default function Dex({ params }: PageProps) {
 			onClear();
 		};
 
-		if (isMaker) {
-			// Basically, we need to send the amount of tokens that we want to sell but we need to convert it to the decimals of the token.
-			const sellTokenAmount = amountConverter.denormalize(
-				sellAmount,
-				sell.decimals,
-			);
-			const buyTokenAmount = amountConverter.denormalize(
-				buyAmount,
-				buy.decimals,
-			);
-			const milisec = convertToMillis();
-			if (milisec.gt(milisecPerYear)) {
-				mesg = "cannot be greater than 1 year";
-				console.warn(mesg);
-				toast.warn(mesg);
-				return;
-			}
-			contract
-				.makeOrder(
-					pair,
-					sellTokenAmount,
-					buyTokenAmount,
-					"SELL",
-					milisec,
-					callback,
-				)
-				.catch(errorHandler);
-		} else if (!isOrderNotChosen) {
-			contract.takeOrder(order.counter, callback).catch(errorHandler);
+		// Basically, we need to send the amount of tokens that we want to sell but we need to convert it to the decimals of the token.
+		const sellTokenAmount = amountConverter.denormalize(
+			sellAmount,
+			sell.decimals,
+		);
+		const buyTokenAmount = amountConverter.denormalize(buyAmount, buy.decimals);
+		const milisec = convertToMillis();
+		if (milisec.gt(milisecPerYear)) {
+			mesg = "cannot be greater than 1 year";
+			console.warn(mesg);
+			toast.warn(mesg);
+			return;
 		}
+		contract
+			.makeOrder(
+				pair,
+				sellTokenAmount,
+				buyTokenAmount,
+				"SELL",
+				milisec,
+				callback,
+			)
+			.catch(errorHandler);
 	};
 
 	const onOrderChange = (order: Order) => {
@@ -273,38 +252,14 @@ export default function Dex({ params }: PageProps) {
 		!isTokenNotSelected && !isAmountZero && buyPrice > 0
 			? ((sellPrice - buyPrice) * 100) / buyPrice
 			: 0;
-
+	const filterTokens = (selectedToken: TokenData | undefined) => {
+		return selectedToken === undefined
+			? tokens
+			: tokens.filter((value) => value.symbol !== selectedToken.symbol);
+	};
 	return (
 		<div className="text-GGx-gray flex flex-col w-full items-center">
 			<div className="flex flex-col w-full">
-				<div className="flex text-xl justify-start  text-[30px] pb-[10px]">
-					<button
-						className={"mr-3"}
-						data-testid="buy-btn"
-						onClick={() => setIsMaker(false)}
-						type="button"
-					>
-						<p
-							data-testid="buy-btn-p"
-							className={isTaker ? "text-GGx-yellow" : "text-GGx-gray"}
-						>
-							Buy
-						</p>
-					</button>
-					<button
-						data-testid="sell-btn"
-						onClick={() => setIsMaker(true)}
-						type="button"
-					>
-						<p
-							data-testid="sell-btn-p"
-							className={isMaker ? "text-GGx-yellow" : "text-GGx-gray"}
-						>
-							Sell
-						</p>
-					</button>
-				</div>
-
 				<Ruler />
 
 				<div className="flex flex-col xl:flex-row w-full">
@@ -315,8 +270,7 @@ export default function Dex({ params }: PageProps) {
 						</div>
 						<TokenSelector
 							token={sell}
-							tokens={tokens}
-							lockedAmount={isTaker}
+							tokens={filterTokens(buy)}
 							amount={sellAmountStr}
 							onChange={onSellChange}
 						/>
@@ -346,8 +300,7 @@ export default function Dex({ params }: PageProps) {
 						<p className="text-[18px] font-medium mt-5">Buy</p>
 						<TokenSelector
 							token={buy}
-							tokens={tokens}
-							lockedAmount={isTaker}
+							tokens={filterTokens(sell)}
 							amount={buyAmountStr}
 							onChange={onBuyChange}
 						/>
@@ -360,10 +313,16 @@ export default function Dex({ params }: PageProps) {
 								<p className="text-GGx-light">
 									<span data-testid={"available-balance"} className="font-bold">
 										{" "}
-										{amountConverter.BNtoDisplay(
+										{formatPrice(
+											availableBalanceNormalized.toNumber(),
+											"na",
+											"",
+										)}
+										{sell?.symbol ?? ""}
+										{/*{amountConverter.BNtoDisplay(
 											availableBalanceNormalized,
 											sell?.symbol ?? "",
-										)}
+										)}*/}
 									</span>
 								</p>
 							</div>
@@ -372,11 +331,11 @@ export default function Dex({ params }: PageProps) {
 								{rate > 0 && !isTokenNotSelected && !isTokenSame ? (
 									<div className="flex flex-col text-GGx-light">
 										<p className="font-semibold">
-											1 {sell.name} = {formatPrice(rate)} {buy.name} ≈ $
+											1 {sell.name} = {formatPrice(rate)} {buy.name} ≈{" "}
 											{formatPrice(buyPriceRate)}
 										</p>
 										<p className="text-base text-right text-GGx-gray">
-											1 {buy.name} = {formatPrice(reverseRate)} {sell.name} ≈ $
+											1 {buy.name} = {formatPrice(reverseRate)} {sell.name} ≈{" "}
 											{formatPrice(sellPriceRate)}
 										</p>
 									</div>
@@ -413,21 +372,12 @@ export default function Dex({ params }: PageProps) {
 								{isWalletNotConnected ? (
 									<YellowButton onClick={onLogin}>Connect wallet</YellowButton>
 								) : (
-									<>
-										<YellowButton
-											disabled={isFormHasErrors}
-											onClick={() => onSwap()}
-										>
-											Take order
-										</YellowButton>
-
-										<YellowButton
-											disabled={isFormHasErrors}
-											onClick={() => onSwap(false)}
-										>
-											Make order
-										</YellowButton>
-									</>
+									<YellowButton
+										disabled={isFormHasErrors}
+										onClick={() => onSwap()}
+									>
+										Create order
+									</YellowButton>
 								)}
 								<GrayButton className="basis-1/5" onClick={onClear}>
 									Clear
