@@ -30,7 +30,11 @@ export default function ConnectMetaMask() {
 		<div className="flex justify-between  items-center">
 			{(!account && (
 				<div className="flex justify-between  mr-4 items-center">
-					<Button onClick={connectMetaMask} className="w-full h-full  ">
+					<Button
+						data-testid="connectMetaMask"
+						onClick={connectMetaMask}
+						className="w-full h-full  "
+					>
 						Connect Metamask
 					</Button>
 					<Image

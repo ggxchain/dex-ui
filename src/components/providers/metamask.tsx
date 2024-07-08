@@ -24,15 +24,18 @@ export const MetaMaskProvider: React.FC<{ children: ReactNode }> = ({
 					const accounts = await window.ethereum.request({
 						method: "eth_accounts",
 					});
+					// @ts-ignore
 					if (accounts?.length > 0) {
 						setAccount((accounts as unknown as string[])[0]);
 					}
 				} catch (error) {
 					console.error(error);
 				}
-
+				// @ts-ignore
 				window.ethereum.on("accountsChanged", (accounts: string[]) => {
-					setAccount(accounts[0] || null);
+					if (accounts?.length) {
+						setAccount((accounts as unknown as string[])[0] || null);
+					}
 				});
 			}
 		};
@@ -46,7 +49,7 @@ export const MetaMaskProvider: React.FC<{ children: ReactNode }> = ({
 				const accounts = await window.ethereum.request({
 					method: "eth_requestAccounts",
 				});
-				setAccount(accounts[0]);
+				setAccount((accounts as unknown as string[])[0]);
 			} catch (error) {
 				console.error(error);
 			}

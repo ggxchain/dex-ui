@@ -90,7 +90,7 @@ describe("TokenSelector", () => {
 		const input = screen.getByDisplayValue("10");
 		expect(input).toBeDefined();
 
-		expect(screen.getByText(/634.258 KUSD/)).toBeInTheDocument();
+		expect(screen.getByText(/634,258.00/)).toBeInTheDocument();
 
 		fireEvent.change(input!, { target: { value: "99.12345678" } });
 		expect(onChangeMock).toHaveBeenCalledWith(selectedToken, "99.12345678");
@@ -114,6 +114,6 @@ describe("TokenSelector", () => {
 
 		debug();
 		//99.12345678×63425.82 = 6286986,52750606
-		expect(screen.getByText(/6.286986 MUSD/)).toBeInTheDocument();
+		expect(screen.getByText(/6,286,986.00/)).toBeInTheDocument();
 	});
 });
