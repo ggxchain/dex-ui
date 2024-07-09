@@ -63,7 +63,6 @@ export default class Contract {
 	public tokenCache: Map<TokenId, Token> = new Map<TokenId, Token>();
 	public tokenList: TokenId[] = new Array<TokenId>();
 	private lastUpdated = 0;
-	public wallet: string | undefined = "";
 
 	constructor(api: ApiInterface) {
 		this.api = api;
@@ -136,7 +135,6 @@ export default class Contract {
 	}
 
 	async allUserOrders(): Promise<DetailedOrder[]> {
-		this.checkWallet();
 		const address = this.walletAddress();
 		const orders = await this.api.userOrders(address);
 		return await Promise.all(
@@ -164,22 +162,14 @@ export default class Contract {
 	}
 
 	async balanceOf(tokenId: TokenId): Promise<Amount> {
-		this.checkWallet();
 		const address = this.walletAddress();
 		await this.validateTokenId(tokenId);
 
 		return this.api.balanceOf(tokenId, address);
 	}
 
-	checkWallet() {
-		const wallet = this.walletAddress(); // Check if wallet is initialized
-		if (wallet === undefined) {
-			throw new Error(Errors.WalletIsNotConnected);
-		}
-	}
-
 	async deposit(tokenId: TokenId, amount: Amount, callback: onFinalize) {
-		this.checkWallet();
+		const _ = this.walletAddress(); // Check if wallet is initialized
 		if (amount.lten(0)) {
 			throw new Error(Errors.AmountIsLessOrEqualToZero);
 		}
@@ -193,7 +183,7 @@ export default class Contract {
 	}
 
 	async withdraw(tokenId: TokenId, amount: Amount, callback: onFinalize) {
-		this.checkWallet();
+		const _ = this.walletAddress(); // Check if wallet is initialized
 		await this.validateTokenId(tokenId);
 
 		if (amount.lten(0)) {
@@ -213,7 +203,7 @@ export default class Contract {
 
 	// biome-ignore lint: TODO: get rid of async
 	async cancelOrder(counterId: CounterId, callback: onFinalize) {
-		this.checkWallet();
+		const _ = this.walletAddress(); // Check if wallet is initialized
 		wrapCallWithNotifications(
 			curry(this.api.cancelOrder, this.api, counterId),
 			"Cancel order",
@@ -229,7 +219,7 @@ export default class Contract {
 		endTime: Amount,
 		callback: onFinalize,
 	) {
-		this.checkWallet();
+		const _ = this.walletAddress(); // Check if wallet is initialized
 		await this.validateTokenId(pair[0]);
 		await this.validateTokenId(pair[1]);
 
@@ -261,7 +251,7 @@ export default class Contract {
 
 	// biome-ignore lint: TODO: get rid of async
 	async takeOrder(counterId: CounterId, callback: onFinalize) {
-		this.checkWallet();
+		const _ = this.walletAddress(); // Check if wallet is initialized
 		wrapCallWithNotifications(
 			curry(this.api.takeOrder, this.api, counterId),
 			"Order",
@@ -271,17 +261,16 @@ export default class Contract {
 
 	walletAddress(): string {
 		const wallet = new GGXWallet().pubkey()?.address;
-		this.wallet = wallet;
-		return wallet as unknown as string;
+		if (wallet === undefined) {
+			throw new Error(Errors.WalletIsNotConnected);
+		}
+		return wallet;
 	}
 
 	async validateTokenId(tokenId: TokenId) {
 		// Should be safe to do as it cached
 		const tokens = await this.allTokens();
-		const index = tokens.findIndex((value) => {
-			return value.toString() === tokenId.toString();
-		});
-		if (index === -1) {
+		if (tokens.findIndex((value) => value === tokenId) === -1) {
 			throw new Error(Errors.InvalidTokenId);
 		}
 	}

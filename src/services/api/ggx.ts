@@ -47,6 +47,7 @@ export default class GGxNetwork implements ApiInterface {
 
 	async balanceOf(tokenId: TokenId, address: string): Promise<Amount> {
 		const addressParam = this.createAddress(address);
+
 		const result = await this.api.query.dex.userTokenInfoes(
 			addressParam,
 			tokenId,
@@ -93,20 +94,14 @@ export default class GGxNetwork implements ApiInterface {
 	}
 
 	async tokens(): Promise<TokenId[]> {
-		try {
-			if (this.api === undefined) {
-				return Promise.resolve([]);
-			}
-			//@ts-ignore
-			const output = await this.api.query.dex.tokenInfoes();
-			if (output !== undefined) {
-				//@ts-ignore
-				return output.map((tokenId: TokenId) => tokenId);
-			}
-			return Promise.resolve([]);
-		} catch {
+		if (this.api === undefined) {
 			return Promise.resolve([]);
 		}
+		const output = await this.api.query.dex.tokenInfoes();
+		if (output !== undefined) {
+			return output.map((tokenId) => tokenId.toNumber());
+		}
+		return Promise.resolve([]);
 	}
 
 	async tokenInfo(tokenId: TokenId): Promise<Token> {
