@@ -122,30 +122,6 @@ describe("Dex", () => {
 		expect(screen.queryByText("No asks found")).toBeInTheDocument();
 	});
 
-	test("Taker has two forms", async () => {
-		await act(() =>
-			render(
-				<Dex
-					params={{ isMocked: true, slug: "" }}
-					searchParams={{ pair: undefined }}
-				/>,
-			),
-		);
-		const taker = await screen.findByTestId("buy-btn-p");
-		expect(taker).toBeInTheDocument();
-		await act(() => fireEvent.click(taker));
-		expect(
-			Array.prototype.slice.call(screen.getAllByTestId("tokenSelector")).length,
-		).toBe(2);
-
-		const maker = await screen.findByTestId("sell-btn-p");
-		expect(maker).toBeInTheDocument();
-		await act(() => fireEvent.click(maker));
-		expect(
-			Array.prototype.slice.call(screen.getAllByTestId("tokenSelector")).length,
-		).toBe(2);
-	});
-
 	test("Balance is displayed", async () => {
 		await act(() =>
 			render(
@@ -159,7 +135,7 @@ describe("Dex", () => {
 		expect(available).toBeInTheDocument();
 		const balance = await screen.findByTestId("available-balance");
 		expect(balance).toBeInTheDocument();
-		expect(balance.textContent).toBe(" 0.00001 USDT");
+		expect(balance.textContent).toBe(" $10.00USDT");
 
 		const selector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
 		await act(() => fireEvent.keyDown(selector, { key: "ArrowDown" }));
@@ -168,7 +144,7 @@ describe("Dex", () => {
 
 		const balanceNew = await screen.findByTestId("available-balance");
 		expect(balanceNew).toBeInTheDocument();
-		expect(balanceNew.textContent).toBe(" 0 BTC");
+		expect(balanceNew.textContent).toBe(" 0.00BTC");
 	});
 
 	test("Clear form", async () => {

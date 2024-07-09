@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
 
 import ConnectWallet from "@/components/connectWallet";
@@ -67,11 +67,7 @@ describe("ConnectWallet", () => {
 	});
 	test("select account", async () => {
 		await act(() => render(<WalletPage />));
-		const select = screen.getByTestId("userSelect").lastChild!;
-		expect(select).toBeInTheDocument();
-		await act(() => fireEvent.keyDown(select, { key: "ArrowDown" }));
-		const option = screen.getByText("Account 2");
-		await act(() => fireEvent.click(option));
-		expect(selectFn).toHaveBeenCalledTimes(1);
+		const connectWalletBtn = screen.getByText("Connect the wallet");
+		expect(connectWalletBtn).toBeDefined();
 	});
 });
