@@ -1,6 +1,6 @@
 "use client";
 
-import { YellowButton } from "@/components/common/button";
+import { GrayButton, YellowButton } from "@/components/common/button";
 import Ruler, { GrayRuler } from "@/components/common/ruler";
 import OrderBook, { useOrderBookOrders } from "@/components/dex/orderBook";
 import { useExpire } from "@/components/dex/orderExpireSelect";
@@ -92,12 +92,12 @@ export default function Dex({ params }: PageProps) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [sell, buy]);
 
-	/*const onClear = () => {
+	const onClear = () => {
 		setSell(undefined);
 		setBuy(undefined);
 		setOrder(undefined);
 		setAvailableBalanceNormalized(BN_ZERO);
-	};*/
+	};
 
 	const onLogin = () => {
 		router.push("/wallet");
@@ -265,18 +265,7 @@ export default function Dex({ params }: PageProps) {
 				<div className="flex flex-col xl:flex-row w-full">
 					<div className="flex flex-col rounded-3xl secondary-gradient mt-5 basis-3/5">
 						<div className="flex justify-between text-[18px]">
-							<p className="text-[18px] font-medium ">Buy</p>
-							<div className="flex"></div>
-						</div>
-						<TokenSelector
-							token={buy}
-							tokens={filterTokens(sell)}
-							amount={buyAmountStr}
-							onChange={onBuyChange}
-						/>
-
-						<div className="flex justify-between text-[18px]">
-							<p className="text-[18px] font-medium mt-5">Sell</p>
+							<p className="font-medium">Sell</p>
 							<div className="flex"></div>
 						</div>
 						<TokenSelector
@@ -308,7 +297,13 @@ export default function Dex({ params }: PageProps) {
 								</div>
 							)}
 						</div>
-
+						<p className="text-[18px] font-medium mt-5">Buy</p>
+						<TokenSelector
+							token={buy}
+							tokens={filterTokens(sell)}
+							amount={buyAmountStr}
+							onChange={onBuyChange}
+						/>
 						<div className="pt-[18px]">
 							<GrayRuler />
 							<div className="flex justify-between pt-[10px]">
@@ -384,9 +379,9 @@ export default function Dex({ params }: PageProps) {
 										Create order
 									</YellowButton>
 								)}
-								{/*<GrayButton className="basis-1/5" onClick={onClear}>
+								<GrayButton className="basis-1/5" onClick={onClear}>
 									Clear
-								</GrayButton>*/}
+								</GrayButton>
 							</div>
 						</div>
 					</div>
