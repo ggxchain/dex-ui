@@ -36,7 +36,7 @@ export default class TokenDecimals {
 		const fractional = value.mod(multiplier);
 
 		if (fractional.isZero()) {
-			return integer.toNumber();
+			return Number(integer.toString());
 		}
 
 		return Number(`${integer}.${fractional.toString(10, this.decimalPlaces)}`);
