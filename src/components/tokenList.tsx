@@ -218,7 +218,11 @@ function Balance({
 			<p className="mt-1">
 				{amountConverter.BNtoDisplay(balance, symbol)}
 				<sup className="ml-1 font- text-[10px]">
-					(${fromExponential(estimatedPriceWithPrecision)})
+					($
+					{estimatedPriceWithPrecision < 1
+						? fromExponential(estimatedPriceWithPrecision)
+						: amountConverter.NumbertoDisplay(estimatedPriceWithPrecision)}
+					)
 				</sup>
 			</p>
 		</div>

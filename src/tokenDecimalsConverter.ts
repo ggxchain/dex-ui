@@ -42,7 +42,9 @@ export default class TokenDecimals {
 
 		return Number(`${integer}.${fractional.toString(10, this.decimalPlaces)}`);
 	}
-
+	NumbertoDisplay(value: number): string {
+		return `${formatter(0, "token").format(value, "")}`;
+	}
 	BNtoDisplay(value: BN, symbol: string): string {
 		const fromWeiValue = fromWei(value as unknown as bigint, "ether");
 		const parsedValue = Number.parseFloat(fromWeiValue);
@@ -58,11 +60,11 @@ export default class TokenDecimals {
 
 		let extraPrecision = 0;
 		if (integer.div(BN_BILLION).gt(BN_ONE)) {
-			extraPrecision = 9;
+			extraPrecision = 0;
 		} else if (integer.div(BN_MILLION).gt(BN_ONE)) {
-			extraPrecision = 6;
+			extraPrecision = 0;
 		} else if (integer.div(BN_THOUSAND).gt(BN_ONE)) {
-			extraPrecision = 3;
+			extraPrecision = 0;
 		}
 
 		return `${formatter(extraPrecision, "token").format(
