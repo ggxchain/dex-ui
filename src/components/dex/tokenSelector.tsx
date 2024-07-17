@@ -16,6 +16,7 @@ interface TokenSelectorProps {
 	tokens: TokenWithPrice[];
 	amount: string;
 	lockedAmount?: boolean;
+	buy?: boolean;
 	onChange: (tokenId: TokenWithPrice, amount: string) => void;
 }
 
@@ -50,14 +51,14 @@ export default function TokenSelector({
 	amount,
 	onChange,
 	tokens,
+	buy = false,
 	lockedAmount,
 }: Readonly<TokenSelectorProps>) {
 	const [errorIcon, setErrorIcon] = useState<Map<string, boolean>>(new Map());
-
 	useEffect(() => {
 		//lg('tokenSelector', token, amount, tokens, lockedAmount)
 		if (tokens.length > 0 && token === undefined) {
-			onChange(tokens[0], "");
+			onChange(tokens[buy ? 1 : 0], "");
 		}
 	});
 

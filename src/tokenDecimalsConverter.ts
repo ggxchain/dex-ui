@@ -7,8 +7,9 @@ import {
 	BN_TEN,
 	BN_THOUSAND,
 } from "@polkadot/util";
-import { bn, count_decimals, fixDP, strFloatToBN } from "./services/utils";
-import { CALCULATION_PRECISION, MAX_DP } from "./settings";
+import { fromWei } from "web3-utils";
+import { bn, formatter, strFloatToBN } from "./services/utils";
+import { CALCULATION_PRECISION } from "./settings";
 
 export default class TokenDecimals {
 	private decimalPlaces: number;
@@ -43,29 +44,31 @@ export default class TokenDecimals {
 	}
 
 	BNtoDisplay(value: BN, symbol: string): string {
+		const fromWeiValue = fromWei(value as unknown as bigint, "ether");
+		const parsedValue = Number.parseFloat(fromWeiValue);
+		if (parsedValue === 0) {
+			return `0 ${symbol}`;
+		}
+		if (Number.parseFloat(fromWei(value as unknown as bigint, "ether")) < 1) {
+			return `${fromWeiValue} ${symbol}`;
+		}
+
 		const multiplier = BN_TEN.pow(bn(this.decimalPlaces));
 		const integer = value.div(multiplier);
 
-		let prefix = "";
 		let extraPrecision = 0;
 		if (integer.div(BN_BILLION).gt(BN_ONE)) {
-			prefix = "B";
 			extraPrecision = 9;
 		} else if (integer.div(BN_MILLION).gt(BN_ONE)) {
-			prefix = "M";
 			extraPrecision = 6;
 		} else if (integer.div(BN_THOUSAND).gt(BN_ONE)) {
-			prefix = "K";
 			extraPrecision = 3;
 		}
-		const converter = new TokenDecimals(this.decimalPlaces + extraPrecision);
-		let result = `${converter.BNToFloat(value)}`;
 
-		const dpLen = count_decimals(result);
-		if (dpLen > MAX_DP) {
-			result = fixDP(result);
-		}
-		return `${result} ${prefix}${symbol}`;
+		return `${formatter(extraPrecision, "token").format(
+			fromWei(value as unknown as bigint, "ether"),
+			"",
+		)} ${symbol}`;
 	}
 
 	normalize(value: BN, oldDecimals: number): BN {
