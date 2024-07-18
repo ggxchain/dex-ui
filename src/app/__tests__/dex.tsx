@@ -101,7 +101,7 @@ describe("Dex", () => {
 		expect(available).toBeInTheDocument();
 		const balance = await screen.findByTestId("available-balance");
 		expect(balance).toBeInTheDocument();
-		expect(balance.textContent).toBe(" 0.000000000000001 USDT");
+		expect(balance.textContent).toBe(" 0.00 USDT");
 
 		const selector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
 		await act(() => fireEvent.keyDown(selector, { key: "ArrowDown" }));
@@ -110,6 +110,6 @@ describe("Dex", () => {
 
 		const balanceNew = await screen.findByTestId("available-balance");
 		expect(balanceNew).toBeInTheDocument();
-		expect(balanceNew.textContent).toBe(" 0.000000000000001 USDT");
+		expect(balanceNew.textContent).toBe(" 0.00 USDT");
 	});
 });

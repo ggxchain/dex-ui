@@ -2,10 +2,8 @@ import { formatPrice } from "@/services/utils";
 import TokenDecimals from "@/tokenDecimalsConverter";
 import type { Amount, Token } from "@/types";
 import { BN, BN_ZERO } from "@polkadot/util";
-import fromExponential from "from-exponential";
 import Image from "next/image";
 import { useState } from "react";
-import { fromWei } from "web3-utils";
 import Spinner from "./common/spinner";
 
 export interface ListElement extends Token {
@@ -210,25 +208,19 @@ function Balance({
 	amountConverter,
 }: BalanceProperties) {
 	const estimatedPriceWithPrecision =
-		Number.parseFloat(fromWei(balance as unknown as bigint, "ether")) *
-		estimatedPrice;
+		amountConverter.BNToFloat(balance) * estimatedPrice;
 
 	return (
 		<div className="text-[18px] font-medium text-left break-words">
 			<p className="mt-1">
 				{amountConverter.BNtoDisplay(balance, symbol)}
 				<sup className="ml-1 font- text-[10px]">
-					($
-					{estimatedPriceWithPrecision < 1
-						? fromExponential(estimatedPriceWithPrecision)
-						: amountConverter.NumbertoDisplay(estimatedPriceWithPrecision)}
-					)
+					({formatPrice(estimatedPriceWithPrecision)})
 				</sup>
 			</p>
 		</div>
 	);
 }
-
 interface TokenDetailInterface {
 	tokenName: string;
 	tokenNetwork: string;

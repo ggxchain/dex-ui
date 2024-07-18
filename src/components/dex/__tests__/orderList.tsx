@@ -126,7 +126,7 @@ describe("OrdersList", () => {
 		//check prices
 		expect(screen.getByText("0.00000001 USDT")).toBeInTheDocument();
 		expect(screen.getByText("0.00100000 USDT")).toBeInTheDocument();
-		expect(screen.getByText("1.00 USDT")).toBeInTheDocument();
+		expect(screen.getAllByText("1.00 USDT").length).toBeGreaterThan(0);
 		expect(screen.getByText("1000.00 USDT")).toBeInTheDocument();
 	});
 

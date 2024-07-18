@@ -8,8 +8,9 @@ import {
 	BN_THOUSAND,
 } from "@polkadot/util";
 import { fromWei } from "web3-utils";
-import { bn, formatter, strFloatToBN } from "./services/utils";
-import { CALCULATION_PRECISION } from "./settings";
+import { formatPrice, formatter } from "./services/utils";
+import { bn, count_decimals, fixDP, strFloatToBN } from "./services/utils";
+import { CALCULATION_PRECISION, MAX_DP } from "./settings";
 
 export default class TokenDecimals {
 	private decimalPlaces: number;
@@ -45,13 +46,16 @@ export default class TokenDecimals {
 	NumbertoDisplay(value: number): string {
 		return `${formatter(0, "token").format(value, "")}`;
 	}
-	BNtoDisplay(value: BN, symbol: string): string {
-		const fromWeiValue = fromWei(value as unknown as bigint, "ether");
+	BNtoDisplay1(value: BN, symbol: string, convertWei = false): string {
+		const fromWeiValue = fromWei(
+			value as unknown as bigint,
+			convertWei ? "ether" : "ether",
+		);
 		const parsedValue = Number.parseFloat(fromWeiValue);
 		if (parsedValue === 0) {
 			return `0 ${symbol}`;
 		}
-		if (Number.parseFloat(fromWei(value as unknown as bigint, "ether")) < 1) {
+		if (Number.parseFloat(fromWeiValue) < 1) {
 			return `${fromWeiValue} ${symbol}`;
 		}
 
@@ -60,19 +64,43 @@ export default class TokenDecimals {
 
 		let extraPrecision = 0;
 		if (integer.div(BN_BILLION).gt(BN_ONE)) {
-			extraPrecision = 0;
+			extraPrecision = 9;
 		} else if (integer.div(BN_MILLION).gt(BN_ONE)) {
-			extraPrecision = 0;
+			extraPrecision = 9;
 		} else if (integer.div(BN_THOUSAND).gt(BN_ONE)) {
-			extraPrecision = 0;
+			extraPrecision = 9;
 		}
 
 		return `${formatter(extraPrecision, "token").format(
-			fromWei(value as unknown as bigint, "ether"),
+			fromWeiValue,
 			"",
 		)} ${symbol}`;
 	}
+	BNtoDisplay(value: BN, symbol: string): string {
+		const multiplier = BN_TEN.pow(bn(this.decimalPlaces));
+		const integer = value.div(multiplier);
 
+		let prefix = "";
+		let extraPrecision = 0;
+		if (integer.div(BN_BILLION).gt(BN_ONE)) {
+			prefix = "";
+			extraPrecision = 0;
+		} else if (integer.div(BN_MILLION).gt(BN_ONE)) {
+			prefix = "";
+			extraPrecision = 0;
+		} else if (integer.div(BN_THOUSAND).gt(BN_ONE)) {
+			prefix = "";
+			extraPrecision = 0;
+		}
+		const converter = new TokenDecimals(this.decimalPlaces + extraPrecision);
+		let result = `${formatPrice(converter.BNToFloat(value), "", "token")}`;
+
+		const dpLen = count_decimals(result);
+		if (dpLen > MAX_DP) {
+			result = fixDP(result);
+		}
+		return `${result} ${prefix}${symbol}`;
+	}
 	normalize(value: BN, oldDecimals: number): BN {
 		assert(
 			oldDecimals <= this.decimalPlaces,
