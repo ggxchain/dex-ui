@@ -101,6 +101,7 @@ export default class TokenDecimals {
 		}
 		return `${result} ${prefix}${symbol}`;
 	}
+
 	normalize(value: BN, oldDecimals: number): BN {
 		assert(
 			oldDecimals <= this.decimalPlaces,

@@ -209,7 +209,6 @@ function Balance({
 }: BalanceProperties) {
 	const estimatedPriceWithPrecision =
 		amountConverter.BNToFloat(balance) * estimatedPrice;
-
 	return (
 		<div className="text-[18px] font-medium text-left break-words">
 			<p className="mt-1">
