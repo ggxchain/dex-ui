@@ -85,9 +85,9 @@ describe("Wallet", () => {
 
 		expect(screen.getAllByRole("row").length).toBe(mockedTokens().length + 1); // 1 header + tokens
 
-		expect(screen.getByText("1 USDT")).toBeInTheDocument();
+		expect(screen.getByText("0.000000000001 USDT")).toBeInTheDocument();
 
-		expect(screen.getByText("$66,373,839.00")).toBeInTheDocument();
+		expect(screen.getByText("$2,945,020.01")).toBeInTheDocument();
 	});
 
 	test("deposit opens modal", async () => {

@@ -24,9 +24,9 @@ import { BN, BN_ZERO } from "@polkadot/util";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
+import { fromWei } from "web3-utils";
 import type { PageProps } from "../wallet/page";
 import Loading from "./loading";
-
 type TokenData = TokenWithPrice & {
 	amount: Amount;
 };
@@ -75,7 +75,6 @@ export default function Dex({ params }: PageProps) {
 		setIsInitialized(true);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
-
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		if (sell !== undefined) {
@@ -206,6 +205,7 @@ export default function Dex({ params }: PageProps) {
 			return;
 		}
 		setSellAmountStr(input);
+
 		setSell({ ...token, amount: amtBn });
 	};
 
@@ -228,6 +228,7 @@ export default function Dex({ params }: PageProps) {
 			return;
 		}
 		setbuyAmountStr(input);
+
 		setBuy({ ...token, amount: amtBn });
 	};
 
@@ -283,9 +284,15 @@ export default function Dex({ params }: PageProps) {
 									<button
 										type="button"
 										className="ml-2 p-1 rounded-2xl border grow-on-hover"
-										onClick={() =>
-											setSell({ ...sell, amount: availableBalanceNormalized })
-										}
+										onClick={() => {
+											setSellAmountStr(
+												fromWei(
+													availableBalanceNormalized as unknown as bigint,
+													"ether",
+												),
+											);
+											setSell({ ...sell, amount: availableBalanceNormalized });
+										}}
 									>
 										Set max
 									</button>
@@ -300,6 +307,7 @@ export default function Dex({ params }: PageProps) {
 						<p className="text-[18px] font-medium mt-5">Buy</p>
 						<TokenSelector
 							token={buy}
+							buy
 							tokens={filterTokens(sell)}
 							amount={buyAmountStr}
 							onChange={onBuyChange}
@@ -313,12 +321,10 @@ export default function Dex({ params }: PageProps) {
 								<p className="text-GGx-light">
 									<span data-testid={"available-balance"} className="font-bold">
 										{" "}
-										{formatPrice(
-											availableBalanceNormalized.toNumber(),
-											"na",
-											"",
+										{amountConverter.BNtoDisplay(
+											availableBalanceNormalized,
+											sell?.symbol ?? "",
 										)}
-										{sell?.symbol ?? ""}
 										{/*{amountConverter.BNtoDisplay(
 											availableBalanceNormalized,
 											sell?.symbol ?? "",

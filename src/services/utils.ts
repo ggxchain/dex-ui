@@ -56,6 +56,11 @@ export const formatter = (mfd = 2, currencyName = "usd") => {
 				//maximumSignificantDigits: 3
 			});
 			break;
+		case "token":
+			formatter = new Intl.NumberFormat("en-US", {
+				minimumFractionDigits: mfd,
+			});
+			break;
 		default:
 			formatter = new Intl.NumberFormat("en-US", {
 				style: "currency",

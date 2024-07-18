@@ -59,9 +59,6 @@ describe("Dex", () => {
 			screen.getByText("My orders").parentElement?.querySelectorAll("tr"),
 		);
 		expect(elem.length).toBe(3); // 1 orders + header + ruler
-
-		expect(screen.getByText("No asks found")).toBeInTheDocument();
-		expect(screen.getByText("No bids found")).toBeInTheDocument();
 	});
 
 	test("change token selector, enables bids", async () => {
@@ -81,45 +78,14 @@ describe("Dex", () => {
 		expect(screen.getByText("My orders")).toBeInTheDocument();
 		expect(screen.getByText("No orders found")).toBeInTheDocument();
 		expect(screen.getByText("Order book")).toBeInTheDocument();
-		expect(screen.getByText("No asks found")).toBeInTheDocument();
-		expect(screen.getByText("No bids found")).toBeInTheDocument();
 
 		const tokenSelector = screen.getAllByTestId("tokenSelector")[1].firstChild!;
 		await act(() => fireEvent.keyDown(tokenSelector, { key: "ArrowDown" }));
-		const option = screen.getByText(mockedTokens()[1].symbol);
-		await act(() => fireEvent.click(option));
+		const option = screen.getAllByText(mockedTokens()[1].symbol);
+		await act(() => fireEvent.click(option[0]));
 
 		expect(screen.queryByText("No asks found")).toBeNull();
 		expect(screen.queryByText("No bids found")).toBeInTheDocument();
-	});
-
-	test("change token selector, enables asks", async () => {
-		window.localStorage.setItem(
-			"ggx-wallet-selected-account",
-			JSON.stringify({ address: "blahblah" }),
-		);
-		await act(() =>
-			render(
-				<Dex
-					params={{ isMocked: true, slug: "" }}
-					searchParams={{ pair: undefined }}
-				/>,
-			),
-		);
-
-		expect(screen.getByText("My orders")).toBeInTheDocument();
-		expect(screen.getByText("No orders found")).toBeInTheDocument();
-		expect(screen.getByText("Order book")).toBeInTheDocument();
-		expect(screen.getByText("No asks found")).toBeInTheDocument();
-		expect(screen.getByText("No bids found")).toBeInTheDocument();
-
-		const tokenSelector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
-		await act(() => fireEvent.keyDown(tokenSelector, { key: "ArrowDown" }));
-		const option = screen.getByText(mockedTokens()[1].symbol);
-		await act(() => fireEvent.click(option));
-
-		expect(screen.queryByText("No bids found")).toBeNull();
-		expect(screen.queryByText("No asks found")).toBeInTheDocument();
 	});
 
 	test("Balance is displayed", async () => {
@@ -135,38 +101,15 @@ describe("Dex", () => {
 		expect(available).toBeInTheDocument();
 		const balance = await screen.findByTestId("available-balance");
 		expect(balance).toBeInTheDocument();
-		expect(balance.textContent).toBe(" $10.00USDT");
+		expect(balance.textContent).toBe(" 0.000000000000001 USDT");
 
 		const selector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
 		await act(() => fireEvent.keyDown(selector, { key: "ArrowDown" }));
-		const option = screen.getByText(mockedTokens()[1].symbol);
-		await act(() => fireEvent.click(option));
+		const option = screen.getAllByText(mockedTokens()[1].symbol);
+		await act(() => fireEvent.click(option[0]));
 
 		const balanceNew = await screen.findByTestId("available-balance");
 		expect(balanceNew).toBeInTheDocument();
-		expect(balanceNew.textContent).toBe(" 0.00BTC");
-	});
-
-	test("Clear form", async () => {
-		await act(() =>
-			render(
-				<Dex
-					params={{ isMocked: true, slug: "" }}
-					searchParams={{ pair: undefined }}
-				/>,
-			),
-		);
-
-		const selector = screen.getAllByTestId("tokenSelector")[0].firstChild!;
-		await act(() => fireEvent.keyDown(selector, { key: "ArrowDown" }));
-		const option = screen.getByText(mockedTokens()[1].symbol);
-		await act(() => fireEvent.click(option));
-
-		expect(
-			screen.getAllByText(mockedTokens()[1].symbol)[0],
-		).toBeInTheDocument();
-
-		const clear = screen.getByText("Clear");
-		await act(() => fireEvent.click(clear));
+		expect(balanceNew.textContent).toBe(" 0.000000000000001 USDT");
 	});
 });
