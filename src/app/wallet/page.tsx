@@ -153,13 +153,11 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	const isTokenNotSelected = selectedToken === undefined;
 
 	const totalOnChain = tokens.reduce<number>((total, token) => {
-		const price = tokenPrices.get(token.id) ?? 0;
-		const weiBalance = fromWei(
-			(chainBalances.get(token.id) ?? BN_ZERO) as unknown as bigint,
-			"ether",
+		const balance = new TokenDecimals(token.decimals).BNToFloat(
+			chainBalances.get(token.id) ?? BN_ZERO,
 		);
-
-		return total + Number.parseFloat(weiBalance) * price; // balance * price;
+		const price = tokenPrices.get(token.id) ?? 0;
+		return total + balance * price;
 	}, 0);
 
 	const total = dexOwnedTokens.reduce<number>((total, tokenId) => {
