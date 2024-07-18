@@ -11,6 +11,7 @@ import Contract, { errorHandler } from "@/services/api";
 import GGxNetwork from "@/services/api/ggx";
 import GgxNetworkMock from "@/services/api/mock";
 import CexService from "@/services/cex";
+
 import type { Account } from "@/services/ggx";
 import {
 	BNtoDisplay,
@@ -153,11 +154,13 @@ export default function Wallet({ params, searchParams }: PageProps) {
 	const isTokenNotSelected = selectedToken === undefined;
 
 	const totalOnChain = tokens.reduce<number>((total, token) => {
-		const balance = new TokenDecimals(token.decimals).BNToFloat(
-			chainBalances.get(token.id) ?? BN_ZERO,
-		);
 		const price = tokenPrices.get(token.id) ?? 0;
-		return total + balance * price;
+		const weiBalance = fromWei(
+			(chainBalances.get(token.id) ?? BN_ZERO) as unknown as bigint,
+			"ether",
+		);
+
+		return total + Number.parseFloat(weiBalance) * price; // balance * price;
 	}, 0);
 
 	const total = dexOwnedTokens.reduce<number>((total, tokenId) => {
