@@ -11,8 +11,6 @@ import Contract, { errorHandler } from "@/services/api";
 import GGxNetwork from "@/services/api/ggx";
 import GgxNetworkMock from "@/services/api/mock";
 import CexService from "@/services/cex";
-import TokenDecimals from "@/tokenDecimalsConverter";
-
 import type { Account } from "@/services/ggx";
 import {
 	BNtoDisplay,
@@ -25,6 +23,8 @@ import {
 	strFloatToBN,
 } from "@/services/utils";
 import { MAX_DP, PRICE_DP } from "@/settings";
+import TokenDecimals from "@/tokenDecimalsConverter";
+
 import type { Token, TokenId } from "@/types";
 import { BN_TEN, BN_ZERO } from "@polkadot/util";
 import {
