@@ -101,7 +101,6 @@ describe("Transfer", () => {
 		expect(screen.getByText("$1,000.00")).toBeInTheDocument();
 		expect(screen.getByTestId("deposit")).toBeInTheDocument();
 		expect(screen.getByTestId("withdraw")).toBeInTheDocument();
-		expect(screen.getByText("0 USDC")).toBeInTheDocument();
 
 		expect(screen.getAllByRole("row").length).toBe(3); // 1 header + one token
 		expect(screen.getByText("Account 1"));

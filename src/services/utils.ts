@@ -89,8 +89,9 @@ export const formatPrice = (n: number, symbol = "na", currency = "$") => {
 	if (["doge", "trx"].includes(symbol.toLowerCase())) {
 		return formatter(5).format(n);
 	}
-	if (n > 1) {
-		return formatter().format(n);
+	return formatter(2, currency).format(n);
+
+	/*if (n > 1) {
 	}
 	if (n === 1) {
 		return `${currency}1.00`;
@@ -99,7 +100,7 @@ export const formatPrice = (n: number, symbol = "na", currency = "$") => {
 		return `${currency}0.00`;
 	}
 
-	return `${currency}${sigFig(n, 4)}`;
+	return `${currency}${sigFig(n, 4)}`;*/
 };
 export const sigFig = (n: number, sig: number) => {
 	const mult = 10 ** (sig - Math.floor(Math.log(n) / Math.LN10) - 1);

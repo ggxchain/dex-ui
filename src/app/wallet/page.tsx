@@ -11,7 +11,6 @@ import Contract, { errorHandler } from "@/services/api";
 import GGxNetwork from "@/services/api/ggx";
 import GgxNetworkMock from "@/services/api/mock";
 import CexService from "@/services/cex";
-
 import type { Account } from "@/services/ggx";
 import {
 	BNtoDisplay,
@@ -24,6 +23,8 @@ import {
 	strFloatToBN,
 } from "@/services/utils";
 import { MAX_DP, PRICE_DP } from "@/settings";
+import TokenDecimals from "@/tokenDecimalsConverter";
+
 import type { Token, TokenId } from "@/types";
 import { BN_TEN, BN_ZERO } from "@polkadot/util";
 import {
@@ -35,7 +36,6 @@ import {
 	useState,
 } from "react";
 import { toast } from "react-toastify";
-import { fromWei } from "web3-utils";
 import Loading from "./loading";
 
 type InteractType = "Deposit" | "Withdraw";
@@ -155,12 +155,11 @@ export default function Wallet({ params, searchParams }: PageProps) {
 
 	const totalOnChain = tokens.reduce<number>((total, token) => {
 		const price = tokenPrices.get(token.id) ?? 0;
-		const weiBalance = fromWei(
-			(chainBalances.get(token.id) ?? BN_ZERO) as unknown as bigint,
-			"ether",
+		const balance = new TokenDecimals(token.decimals).BNToFloat(
+			chainBalances.get(token.id) ?? BN_ZERO,
 		);
 
-		return total + Number.parseFloat(weiBalance) * price; // balance * price;
+		return total + balance * price;
 	}, 0);
 
 	const total = dexOwnedTokens.reduce<number>((total, tokenId) => {
@@ -169,12 +168,11 @@ export default function Wallet({ params, searchParams }: PageProps) {
 		if (token === undefined) {
 			return total;
 		}
-		const weiBalance = fromWei(
-			(dexBalances.get(tokenId) ?? BN_ZERO) as unknown as bigint,
-			"ether",
+		const balance = new TokenDecimals(token.decimals).BNToFloat(
+			dexBalances.get(tokenId) ?? BN_ZERO,
 		);
 
-		return total + Number.parseFloat(weiBalance) * price;
+		return total + balance * price;
 	}, totalOnChain);
 
 	const omModalSubmit = () => {

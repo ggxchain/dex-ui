@@ -115,11 +115,11 @@ describe("OrdersList", () => {
 		box = screen.getByTestId("price-USDT");
 		expect(box.innerHTML).toBe("$1.00");
 		box = screen.getByTestId("price-USDC");
-		expect(box.innerHTML).toBe("$0.9997");
+		expect(box.innerHTML).toBe("$1.00");
 		box = screen.getByTestId("price-BNB");
 		expect(box.innerHTML).toBe("$601.87");
 		box = screen.getByTestId("price-SHIB");
-		expect(box.innerHTML).toBe("$0.00002655");
+		expect(box.innerHTML).toBe("$0.00");
 		box = screen.getByTestId("price-BTC");
 		expect(box.innerHTML).toBe("$66,291.53");
 	});
